@@ -1,0 +1,15 @@
+.flex-col-md {
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: $bp-md) {
+    flex-direction: row;
+  }
+}
+
+.section-spacing {
+  padding: $space-xl $space-lg;
+  @media (min-width: $bp-md) {
+    padding: $space-xl $space-md;
+  }
+}

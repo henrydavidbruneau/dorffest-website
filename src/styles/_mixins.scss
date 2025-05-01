@@ -1,0 +1,14 @@
+@mixin button-base {
+    padding: $space-sm $space-md;
+    border-radius: $radius-sm;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    font-size: $font-base;
+}
+
+@mixin transition($prop...) {
+    transition: $prop 0.3s ease;
+}

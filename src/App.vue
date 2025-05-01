@@ -1,30 +1,38 @@
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
-  <router-view />
+  <div id="app">
+    <Navbar />
+    <!-- Platzhalter für weiteren Seiteninhalt -->
+    <main>
+      <HeaderSection />
+      <InfoSection />
+      <MithelfenSection />
+      <UeberSection />
+      <SpendenSection />
+      <FooterSection />
+    </main>
+  </div>
 </template>
 
-<style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script lang="ts">
+import { defineComponent } from 'vue';
+import Navbar from './components/Navbar.vue';
+import HeaderSection from './components/HeaderSection.vue';
+import InfoSection from './components/InfoSection.vue';
+import MithelfenSection from './components/MithelfenSection.vue';
+import UeberSection from './components/UeberSection.vue';
+import SpendenSection from './components/SpendenSection.vue';
+import FooterSection from './components/FooterSection.vue';
 
-nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
+export default defineComponent({
+  name: 'App',
+  components: {
+    Navbar,
+    HeaderSection,
+    InfoSection,
+    MithelfenSection,
+    UeberSection,
+    SpendenSection,
+    FooterSection
   }
-}
-</style>
+});
+</script>
