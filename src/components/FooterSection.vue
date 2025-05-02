@@ -4,8 +4,8 @@
       <img src="@/assets/logo.svg" alt="Logo" class="footer__logo" />
     </div>
     <div class="footer__right">
-      <a href="/impressum" class="footer__link">Impressum</a>
-      <a href="/datenschutz" class="footer__link">Datenschutz</a>
+      <router-link to="/impressum" class="footer__link">Impressum</router-link>
+      <router-link to="/datenschutz" class="footer__link">Datenschutz</router-link>
     </div>
   </footer>
 </template>
