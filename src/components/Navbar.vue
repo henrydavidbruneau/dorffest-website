@@ -2,6 +2,7 @@
   <header :class="['navbar', { scrolled }]">
     <div class="navbar__left">
       <img
+        href="#mithelfen"
         :src="scrolled ? logoMobile : logoDesktop"
         alt="Logo"
         class="navbar__logo navbar__logo--desktop"

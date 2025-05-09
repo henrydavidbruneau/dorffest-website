@@ -2,8 +2,8 @@
   <section class="header-section section-spacing" id="start">
     <div class="header-section__column header-section__text">
       <div class="header-section__textblock">
-        <h1>Ein echtes Dorffest</h1>
-        <p>– von uns, für uns!</p>
+        <h1>Königsdorf braucht dich!</h1>
+        <p>Sei dabei, wenn wir alle gemeinsam ein Dorffest veranstalten - von uns für uns.</p>
       </div>
     </div>
 
@@ -156,11 +156,12 @@ export default defineComponent({
   text-align: center;
   gap: $space-lg;
   padding-top: 110px;
-  max-height: 50vh;
-  min-height: 350px;
+  max-height: 55vh;
+  min-height: 362px;
 
   @media (min-width: $bp-md) {
     flex-direction: row;
+    max-height: 50vh;
   }
 
   &__column {
@@ -171,7 +172,7 @@ export default defineComponent({
   }
 
   &__textblock {
-    max-width: 800px;
+    max-width: 600px;
     font-size: clamp(1rem, 2.5vw, 2rem);
     color: white;
 
@@ -182,7 +183,7 @@ export default defineComponent({
     }
 
     p {
-      font-size: 1.2em;
+      font-size: 0.8em;
       font-weight: 400;
       margin: 0;
     }

@@ -23,13 +23,13 @@
           <iframe
             src="https://tally.so/embed/w5rg56?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
             loading="lazy"
-            width="100%"
-            height="282"
             frameborder="0"
             marginheight="0"
             marginwidth="0"
-            title="Füll unser Mitmach-Formular aus:"
-          ></iframe>
+            title="Füll unser Mitmach-Formular aus"
+            style="width: 100%; height: 100%; min-height: 411px; border: none; overflow: visible"
+          >
+          </iframe>
         </div>
       </div>
 
@@ -37,6 +37,10 @@
         <img src="@/assets/team.svg" alt="Symbolbild Mithelfen" />
       </div>
     </div>
+    <p id="disclaimer">
+      Wenn das Formular nicht richtig angezeigt wird, klicke auf
+      <a href="https://tally.so/r/w5rg56">diesen Link.</a>
+    </p>
   </section>
 </template>
 
@@ -110,7 +114,7 @@ h1 {
     gap: $space-lg;
     max-width: 900px;
     width: 100%;
-    margin: 40px 0;
+    margin: 50px 0 40px 0;
   }
 
   &__form {
@@ -138,6 +142,14 @@ h1 {
       object-fit: contain;
     }
   }
+}
+
+#disclaimer {
+  font-size: 0.7em;
+}
+
+#mithelfen {
+  gap: 0;
 }
 
 @media (min-width: $bp-md) {

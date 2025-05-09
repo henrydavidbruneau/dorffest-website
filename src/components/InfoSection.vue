@@ -22,6 +22,17 @@
     </p>
 
     <h3>Königsdorf rückt zusammen.</h3>
+
+    <div class="disclaimer">
+      <p>Kommt in unseren Infochannel, um auf dem Laufenden zu bleiben:</p>
+      <a
+        href="https://chat.whatsapp.com/HtfZqwqUXpu6Xu9A4nO7PV"
+        class="button"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Zum Infochannel</a
+      >
+    </div>
   </section>
 </template>
 
@@ -60,6 +71,34 @@ export default defineComponent({
 
   h3 {
     font-size: 1.8rem;
+  }
+
+  .button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    font-size: 1.2rem;
+    background-color: #eb7e44;
+    color: #ffffff;
+    transition: background-color 0.3s ease;
+  }
+
+  .disclaimer {
+    max-width: 1000px;
+    margin: 2.5rem 0 2rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+
+    p {
+      font-size: 0.9rem;
+      text-align: center;
+    }
   }
 }
 </style>
