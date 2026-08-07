@@ -3,13 +3,21 @@
     <div class="impressum-box">
       <h1>Impressum</h1>
 
-      <p>Verantwortlich für den Inhalt dieser Website gemäß § 5 TMG:</p>
+      <p>Verantwortlich im Sinne des § 5 TMG und § 55 RStV:</p>
 
       <p>
-        Bruno Balscheit<br />
-        Baumschulenstraße 28<br />
-        50226 Frechen
+        Bruno Balscheit <br />
+        Baumschulenstraße 28 <br />
+        50226 Frechen <br />
+        E-Mail: kontakt@koenigsdorf-rückt-zusammen.de
       </p>
+      <p>
+        Diese Website wird betrieben im Rahmen der Initiative
+        <strong>„Königsdorf rückt zusammen“</strong> – einer offenen, nicht-formalisierten
+        Gemeinschaft engagierter Bürger:innen aus Königsdorf, die sich für ein solidarisches,
+        vielfältiges und demokratisches Miteinander einsetzen.
+      </p>
+      <p>Die redaktionelle Verantwortung für die Inhalte dieser Seite liegt bei Bruno Balscheit.</p>
 
       <router-link to="/" class="back-button"> Zurück zur Startseite </router-link>
     </div>

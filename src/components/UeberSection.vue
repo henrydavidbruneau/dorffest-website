@@ -106,20 +106,14 @@ export default defineComponent({
       nextEl: '.swiper-nav.next'
     };
     const team = [
-      {
+      /*{
         name: 'Vivian',
         description:
           '"Im Jugendzentrum Königsdorf habe ich früh gelernt, wie wichtig Beteiligung und offene Gespräche sind. Diese Erfahrung motiviert mich bis heute – und deshalb ist es für mich selbstverständlich, mich auch beim Dorffest einzubringen."',
         image: '/images/team/vivian.jpg'
-      },
+      },*/
       {
-        name: 'Bruno',
-        description:
-          '"2015 habe ich mich das erste Mal hier im Ort ehrenamtlich engagiert. Ich war schwer beeindruckt davon, was für eine saubere Arbeit die Geflüchtetenhilfe hier leistet. Seitdem weiß ich, was Gemeinschaft schaffen kann – und hoffe, dass wir darauf auch künftig stolz sein können."',
-        image: '/images/team/bruno.jpg'
-      },
-      {
-        name: 'Ele',
+        name: 'Gabriele',
         description:
           '"Königsdorf ist seit 18 Jahren unser Zuhause – hier sind meine Kinder groß geworden, hier habe ich mit Freunden, bei den Sternensingern und in der Geflüchtetenhilfe echte Gemeinschaft erlebt. Für mich zählt, dass wir einander mit Respekt begegnen und gemeinsam anpacken – auf der ganzen Welt und genau hier, wo wir leben."',
         image: '/images/team/ele.jpg'
@@ -129,6 +123,12 @@ export default defineComponent({
         description:
           '"Ich bin in Königsdorf aufgewachsen und mit dem Ort tief verwurzelt. Darum möchte ich dazu beitragen, dass die vielen schönen Seiten unseres Königsdorfs noch sichtbarer und erlebbarer werden."',
         image: '/images/team/kathie.jpg'
+      },
+      {
+        name: 'Bruno',
+        description:
+          '"2015 habe ich mich das erste Mal hier im Ort ehrenamtlich engagiert. Ich war schwer beeindruckt davon, was für eine saubere Arbeit die Geflüchtetenhilfe hier leistet. Seitdem weiß ich, was Gemeinschaft schaffen kann – und hoffe, dass wir darauf auch künftig stolz sein können."',
+        image: '/images/team/bruno.jpg'
       },
       {
         name: 'Fredde',
@@ -153,6 +153,12 @@ export default defineComponent({
         description:
           '"Ich bin begeisterte Grundschullehrerin und setze mich (nicht nur beruflich) für diese Werte ein: Menschenwürde, das Leben, Innere Sicherheit, Individuelle Freiheit, Rechtliche Gleichheit, Soziale Gerechtigkeit, Volkssouveränität und Demokratie."',
         image: '/images/team/nicola.jpg'
+      },
+      {
+        name: 'Thomas',
+        description:
+          '"Ich bin in Königsdorf aufgewachsen und dann nach dem Studium wieder hier hin zurückgezogen. Das Dorf soll weiterhin lebendig bleiben und Menschen sollen hier wirklich zusammenkommen :)"',
+        image: '/images/team/thomas.jpg'
       }
     ];
 

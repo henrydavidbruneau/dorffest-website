@@ -39,7 +39,9 @@
     </div>
     <p id="disclaimer">
       Wenn das Formular nicht richtig angezeigt wird, klicke auf
-      <a href="https://tally.so/r/w5rg56">diesen Link.</a>
+      <a href="https://tally.so/r/w5rg56">diesen Link.</a> oder schreib uns einfach eine E-Mail an
+      <br />
+      <email>kontakt@königsdorf-rückt-zusammen.de</email>
     </p>
   </section>
 </template>
@@ -146,6 +148,8 @@ h1 {
 
 #disclaimer {
   font-size: 0.7em;
+  max-width: 500px;
+  text-align: center;
 }
 
 #mithelfen {

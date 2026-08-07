@@ -43,7 +43,7 @@
             </a>
             <p class="spenden-hinweis">
               Wichtig: Auch wenn PayPal von "Spenden" schreibt, handelt es sich hierbei um
-              freiwillige Schenkungen an unsere Kampagne, nicht um Spenden.
+              freiwillige Schenkungen für das Fest, nicht um Spenden.
             </p>
             <p id="alternativ">Alternativ du auch per Überweisung:</p>
             <p class="iban">
@@ -96,7 +96,6 @@ export default defineComponent({
 <style lang="scss" scoped>
 .spenden-section {
   background-color: lighten($color-primary, 27%);
-  padding: 3.5rem 0 3.5rem 0;
 }
 .flexwrapper {
   max-width: 1300px;

@@ -4,6 +4,7 @@
       <div class="header-section__textblock">
         <h1>Königsdorf braucht dich!</h1>
         <p>Sei dabei, wenn wir alle gemeinsam ein Dorffest veranstalten - von uns für uns.</p>
+        <button class="button" @click="$router.push('/programm')">Zum Programm</button>
       </div>
     </div>
 
@@ -156,7 +157,6 @@ export default defineComponent({
   text-align: center;
   gap: $space-lg;
   padding-top: 110px;
-  max-height: 55vh;
   min-height: 362px;
 
   @media (min-width: $bp-md) {
@@ -279,6 +279,31 @@ export default defineComponent({
   .fade-enter-from,
   .fade-leave-to {
     opacity: 0;
+  }
+  .button {
+    display: inline-block;
+    box-sizing: border-box;
+    height: 45px;
+    margin-top: 1.5rem;
+    background: white;
+    width: 100%;
+    color: black;
+    font-family: $font-family-base;
+    padding: 0.5rem 1.25rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1.2rem;
+    &:hover {
+      background: none;
+      color: white;
+      border: 2px solid white;
+    }
+    @media screen and (min-width: 768px) {
+      width: auto;
+      margin-top: 2rem;
+    }
   }
 }
 </style>

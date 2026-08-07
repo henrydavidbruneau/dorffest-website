@@ -9,10 +9,9 @@
       />
       <img src="@/assets/logo_mobile.svg" alt="Logo" class="navbar__logo navbar__logo--mobile" />
       <nav class="navbar__desktop-links">
-        <a href="#start">Start</a>
-        <a href="#mithelfen">Mithelfen</a>
-        <a href="#ueber-uns">Über Uns</a>
-        <a href="#spenden">Spenden</a>
+        <a href="./#start">Start</a>
+        <router-link to="/programm" class="footer__link">Programm</router-link>
+        <a @click="goToSection('#ueber-uns')">Über Uns</a>
       </nav>
     </div>
 
@@ -21,7 +20,7 @@
 
     <!-- CTA-Button rechts (nur Desktop) -->
     <div class="navbar__right">
-      <a href="#mithelfen" class="navbar__cta">MITMACHEN</a>
+      <a @click="goToSection('#mithelfen')" class="navbar__cta">MITMACHEN</a>
     </div>
 
     <!-- Overlay (mobil) -->
@@ -33,11 +32,10 @@
     <transition name="slide">
       <nav v-if="isMenuOpen" class="navbar__mobile">
         <button class="navbar__close" @click="closeMenu" aria-label="Menü schließen">×</button>
-        <a href="#start" @click="closeMenu">Start</a>
-        <a href="#mithelfen" @click="closeMenu">Mithelfen</a>
-        <a href="#ueber-uns" @click="closeMenu">Über Uns</a>
-        <a href="#spenden" @click="closeMenu">Spenden</a>
-        <a href="#mithelfen" class="navbar__cta" @click="closeMenu">MITMACHEN</a>
+        <a href="./#start" @click="closeMenu">Start</a>
+        <router-link to="/programm" class="footer__link" @click="closeMenu">Programm</router-link>
+        <a @click="goToSection('#ueber-uns'), closeMenu">Über Uns</a>
+        <a class="navbar__cta" @click="goToSection('#mithelfen'), closeMenu">MITMACHEN</a>
       </nav>
     </transition>
   </header>
@@ -47,6 +45,7 @@
 import { defineComponent, ref, onMounted, onUnmounted } from 'vue';
 import logoDesktop from '@/assets/logo.svg';
 import logoMobile from '@/assets/logo_mobile.svg';
+import { useRoute, useRouter } from 'vue-router';
 
 export default defineComponent({
   name: 'Navbar',
@@ -64,7 +63,27 @@ export default defineComponent({
     const isMenuOpen = ref(false);
     const toggleMenu = () => (isMenuOpen.value = !isMenuOpen.value);
     const closeMenu = () => (isMenuOpen.value = false);
-    return { isMenuOpen, toggleMenu, closeMenu, scrolled, logoMobile, logoDesktop };
+    const route = useRoute();
+    const router = useRouter();
+
+    function goToSection(section: string) {
+      if (route.path === '/' || route.name === 'home') {
+        // Bleib auf der Seite und scrolle zu Anker
+        const el = document.querySelector(section);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        // Navigiere zur Startseite und hänge Hash an
+        router.push({ path: '/' }).then(() => {
+          // Warte minimal, bis DOM bereit
+          requestAnimationFrame(() => {
+            const el = document.querySelector(section);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          });
+        });
+      }
+    }
+
+    return { isMenuOpen, toggleMenu, closeMenu, scrolled, logoMobile, logoDesktop, goToSection };
   }
 });
 </script>
