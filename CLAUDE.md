@@ -35,9 +35,9 @@ Treffpunkte und Hilfe im Dorf organisieren.
 app/
   assets/css/tokens.css   Design-Tokens (Farben, Schriften, Abstände, Radien, Schatten)
   assets/css/base.css     Reset, Fokus, reduced motion
-  assets/fotos/           Fotos (WebP, über @nuxt/image)
-  components/basis/       Basis-Komponenten (Button, Notizzettel, …)
-  components/sektionen/   Seitensektionen
+  components/basis/       Basis-Komponenten (<BasisKnopf>, <BasisNotizzettel>, …)
+  components/layout/      Kopf + Fuß
+  components/start/       Sektionen der Startseite (<StartHero>, …); je Seite ein Ordner
   composables/            useTermine(), useDorfanzeiger(), …
   layouts/default.vue     Nav + Footer
   pages/                  Seiten
@@ -47,6 +47,7 @@ server/api/               Server-Routen (GET + POST)
 server/data/              Platzhalterdaten, bis Directus angebunden ist
 server/utils/             Hilfsfunktionen (später Directus-Client)
 public/illustrationen/    Illustrationen (SVG)
+public/fotos/             Fotos (WebP, über <NuxtImg>)
 scripts/                  später: directus-setup.mjs
 ```
 
@@ -156,9 +157,12 @@ zum Design.
   zusammenziehen, wo es die Optik nicht kostet).
 - **Bilder/Illustrationen:** maßhaltige Platzhalter (richtige Größe + Seitenverhältnis)
   mit **finalen Dateinamen** (z.B. `public/illustrationen/tanzpaar.svg`,
-  `app/assets/fotos/dorffest-buffet.webp`). **Keine Bildextraktion aus dem PDF.** Bruno
+  `public/fotos/dorffest-buffet.webp`). **Keine Bildextraktion aus dem PDF.** Bruno
   exportiert die echten Dateien aus Figma und kopiert sie namensgleich drüber.
-  Illustrationen SVG, Fotos WebP über `@nuxt/image`.
+  Illustrationen SVG, Fotos WebP über `@nuxt/image` (liegen in `public/`, weil
+  `@nuxt/image`/Netlify Image CDN dort lesen).
+- **Zwischenstand:** Fotos/Illustrationen stammen von der alten Seite (`main`). Die
+  Illustrations-SVGs sind vorerst nur WebP-Bitmaps in einer SVG-Hülle.
 
 ### Quality Floor (nicht verhandelbar)
 
@@ -173,7 +177,7 @@ Nach jeder Phase: committen, pushen, Bruno kurz zeigen.
 1. ✅ **Scaffold:** Nuxt 4, Netlify-Preset, `@nuxt/fonts`, `@nuxt/image`, ESLint,
    Ordnerstruktur, `CLAUDE.md`.
 2. ✅ **Tokens + Basis-Komponenten** (nach Figma-Werten) + Layout (Nav, Footer).
-3. **Startseite**, Sektion für Sektion.
+3. ✅ **Startseite**, Sektion für Sektion.
 4. **Über uns.**
 5. **Dorfanzeiger** (Übersicht), dann Artikelseite (Entwurf vorher zeigen).
 6. **Termine** + Termin-Detailseite (Entwurf vorher zeigen).
