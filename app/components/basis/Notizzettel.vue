@@ -9,6 +9,8 @@ withDefaults(
     tape?: false | 'links' | 'mitte' | 'rechts'
     tapeFarbe?: 'gelb' | 'flieder' | 'pfirsich'
     tapeDrehung?: number
+    /** statt Tape: Pinnnadel oder Büroklammer oben */
+    befestigung?: false | 'pin' | 'klammer'
     /** dünner dunkler Rahmen */
     rahmen?: boolean
   }>(),
@@ -19,6 +21,7 @@ withDefaults(
     tape: false,
     tapeFarbe: 'gelb',
     tapeDrehung: -3,
+    befestigung: false,
     rahmen: false,
   },
 )
@@ -32,6 +35,15 @@ withDefaults(
     :style="{ '--drehung': `${drehung}deg` }"
   >
     <BasisKlebeband v-if="tape" :position="tape" :farbe="tapeFarbe" :drehung="tapeDrehung" />
+    <span v-if="befestigung === 'pin'" class="notizzettel__pin" aria-hidden="true" />
+    <svg
+      v-if="befestigung === 'klammer'"
+      class="notizzettel__klammer"
+      viewBox="0 0 24 64"
+      aria-hidden="true"
+    >
+      <path d="M8 22V8a4 4 0 0 1 8 0v40a7 7 0 0 1-14 0V14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+    </svg>
     <slot />
   </component>
 </template>
@@ -58,6 +70,28 @@ withDefaults(
 
 .notizzettel--gelb {
   background: var(--farbe-gelb);
+}
+
+.notizzettel__pin {
+  position: absolute;
+  top: 0.6rem;
+  left: 50%;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--farbe-flieder) 60%, white), var(--farbe-lila));
+  box-shadow: 1px 3px 4px rgb(0 0 0 / 0.35);
+  transform: translateX(-50%);
+}
+
+.notizzettel__klammer {
+  position: absolute;
+  top: -1.6rem;
+  left: 1.5rem;
+  width: 1.4rem;
+  height: auto;
+  color: #555;
+  transform: rotate(8deg);
 }
 
 .notizzettel--rahmen {

@@ -35,7 +35,7 @@ const datum = computed(() => {
     />
     <p class="teaser__ressort">{{ RESSORTS[artikel.ressort] }}</p>
     <component :is="`h${ebene}`" class="teaser__titel">
-      <NuxtLink :to="link" class="teaser__link">{{ artikel.titel }}</NuxtLink>
+      <NuxtLink :to="link" class="teaser__link">{{ artikel.teaser_titel ?? artikel.titel }}</NuxtLink>
     </component>
     <p class="teaser__text">{{ artikel.teaser }}</p>
     <p v-if="variante === 'karte'" class="teaser__datum handschrift">
@@ -98,7 +98,7 @@ const datum = computed(() => {
   font-size: var(--groesse-s);
 }
 
-.teaser__datum {
+.teaser .teaser__datum {
   margin-top: auto;
 }
 
