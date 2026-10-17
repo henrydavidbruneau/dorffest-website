@@ -36,10 +36,9 @@ function absenden() {
 
 <template>
   <section id="anmeldung" class="stoerer" :class="{ 'stoerer--knapp': begrenzt && !ausgebucht }" aria-labelledby="stoerer-titel">
-    <BasisKlebeband position="mitte" farbe="flieder" :drehung="-3" />
-    <p v-if="begrenzt && !ausgebucht && !termin.vergangen" class="stoerer__badge" aria-hidden="true">
-      noch<br><strong>{{ termin.plaetze_frei }}</strong><br>Plätze
-    </p>
+    <BasisKlebeband position="links" farbe="gelb" :drehung="-4" :breite="6" />
+    <BasisKlebeband position="rechts" farbe="flieder" :drehung="3" :breite="6" />
+    <p class="stoerer__zusatz handschrift">{{ termin.anmeldung_aktiv && !termin.vergangen ? 'Anmeldezettel' : 'gut zu wissen' }}</p>
 
     <h2 id="stoerer-titel" class="stoerer__titel">{{ titel }}</h2>
     <p class="stoerer__hinweis">{{ hinweis }}</p>
@@ -81,47 +80,32 @@ function absenden() {
 <style scoped>
 .stoerer {
   position: relative;
-  padding: clamp(1.75rem, 3vw, 2.5rem);
-  border: 4px solid var(--farbe-schwarz);
-  border-radius: var(--radius-l);
-  background: var(--farbe-gelb);
-  box-shadow: 0 0 0 6px var(--farbe-gelb), 0 14px 26px rgb(0 0 0 / 0.15);
-  transform: rotate(-1deg);
+  padding: clamp(2rem, 3.5vw, 3rem) clamp(1.5rem, 3.5vw, 3rem) clamp(1.75rem, 3vw, 2.5rem);
+  border-radius: var(--radius-s);
+  background: var(--farbe-weiss);
+  box-shadow: var(--schatten-karte);
+  transform: rotate(-0.8deg);
+  scroll-margin-top: 7rem;
 }
 
-.stoerer__badge {
-  position: absolute;
-  top: -1.6rem;
-  right: clamp(-1rem, -1.5vw, 0rem);
-  display: grid;
-  place-content: center;
-  width: 5.75rem;
-  height: 5.75rem;
+/* begrenzte Plätze: Rand oben in Orange als Hinweis */
+.stoerer--knapp {
+  border-top: 6px solid var(--farbe-orange);
+}
+
+.stoerer__zusatz {
   margin: 0;
-  border-radius: 50%;
-  background: var(--farbe-orange);
-  font-family: var(--schrift-display);
-  font-weight: var(--gewicht-display);
-  font-size: 0.875rem;
-  line-height: 1;
-  text-align: center;
-  text-transform: uppercase;
-  color: var(--farbe-schwarz);
-  transform: rotate(12deg);
-}
-
-.stoerer__badge strong {
-  font-size: 2.1rem;
+  font-size: var(--groesse-hand-m);
+  color: var(--farbe-orange-text);
 }
 
 .stoerer__titel {
-  padding-right: 4rem;
+  margin-top: 0.2rem;
   font-size: clamp(1.75rem, 3vw, 2.5rem);
-  color: var(--farbe-schwarz);
 }
 
 .stoerer__hinweis {
-  max-width: 34rem;
+  max-width: 36rem;
   margin: 0.6rem 0 0;
   font-weight: var(--gewicht-text-normal);
 }
@@ -130,10 +114,8 @@ function absenden() {
   display: grid;
   gap: var(--abstand-s);
   margin-top: var(--abstand-m);
-}
-
-.stoerer__formular :deep(.feld__eingabe) {
-  border-color: var(--farbe-schwarz);
+  padding-top: var(--abstand-m);
+  border-top: 2px dashed var(--farbe-lila);
 }
 
 .stoerer__felder {
@@ -161,13 +143,15 @@ function absenden() {
   margin: 0;
   padding: 0.6rem 0.9rem;
   border-radius: var(--radius-m);
-  background: var(--farbe-weiss);
+  background: var(--farbe-pfirsich);
   font-weight: var(--gewicht-text-mittel);
   color: #a3001b;
 }
 
 .stoerer__danke {
   margin: var(--abstand-m) 0 0;
+  padding-top: var(--abstand-m);
+  border-top: 2px dashed var(--farbe-lila);
   font-weight: var(--gewicht-text-normal);
 }
 

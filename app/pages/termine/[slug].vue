@@ -18,7 +18,9 @@ const wann = computed(() => {
   if (!t.beginn) return t.hinweis ?? 'Datum folgt'
   const zeit = t.ende ? `${uhrzeit(t.beginn)}–${uhrzeit(t.ende)} Uhr` : `ab ${uhrzeit(t.beginn)} Uhr`
   const rhythmus = t.rhythmus_kurz ? ' · jeden ersten Montag im Monat' : ''
-  return `${datumAusgeschrieben(t.beginn)} · ${zeit}${rhythmus}`
+  // Datum steht schon groß auf dem Zettel – hier Wochentag + Uhrzeit
+  const wochentag = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long' }).format(new Date(t.beginn))
+  return `${wochentag} · ${zeit}${rhythmus}`
 })
 
 const seitenUrl = useRequestURL()
@@ -52,58 +54,64 @@ useHead(() => ({
 
 <template>
   <div v-if="termin" class="termin">
-    <div class="termin__oben inhalt">
-      <NuxtLink to="/#was-kommt" class="termin__zurueck handlink">← alle Termine</NuxtLink>
+    <!-- Kopfband wie ein Veranstaltungsplakat -->
+    <header class="plakat">
+      <div class="plakat__inhalt inhalt">
+        <NuxtLink to="/#was-kommt" class="plakat__zurueck handlink">← alle Termine</NuxtLink>
 
-      <div class="termin__raster">
-        <!-- links: Bild oder großer Datumszettel, Kalender -->
-        <aside class="termin__seite">
-          <div v-if="termin.bild" class="termin__bild">
-            <BasisKlebeband position="links" farbe="gelb" :drehung="-4" />
-            <NuxtImg :src="termin.bild" :alt="termin.bild_alt ?? ''" width="760" height="760" sizes="100vw md:380px" />
+        <div class="plakat__raster">
+          <div class="plakat__text">
+            <p class="plakat__zusatz handschrift">{{ termin.vergangen ? 'war schön!' : 'komm vorbei!' }}</p>
+            <h1 class="plakat__titel">{{ termin.titel }}</h1>
+
+            <div class="plakat__wann">
+              <BasisNotizzettel farbe="pfirsich" radius="l" :drehung="-3" class="plakat__datum">
+                <span class="plakat__datum-gross">{{ datum.gross }}</span>
+                <span v-if="datum.klein" class="plakat__datum-klein">{{ datum.klein }}</span>
+              </BasisNotizzettel>
+              <ul class="plakat__fakten">
+                <li><span class="nur-screenreader">Wann: </span>{{ wann }}</li>
+                <li>
+                  <span class="nur-screenreader">Wo: </span>{{ termin.ort ?? 'Ort folgt' }}<template v-if="termin.adresse">, {{ termin.adresse }}</template>
+                </li>
+              </ul>
+            </div>
+
+            <div class="plakat__knoepfe">
+              <BasisKnopf v-if="termin.anmeldung_aktiv && !termin.vergangen" to="#anmeldung" variante="hell">Anmelden</BasisKnopf>
+              <a v-if="termin.beginn && !termin.vergangen" :href="`/api/termine/${termin.slug}/kalender.ics`" class="plakat__kalender" download>
+                <span aria-hidden="true">+</span> In den Kalender
+              </a>
+            </div>
           </div>
-          <BasisNotizzettel v-else farbe="pfirsich" radius="l" tape="mitte" :drehung="-2" class="termin__datumszettel">
-            <span class="termin__datum-gross">{{ datum.gross }}</span>
-            <span v-if="datum.klein" class="termin__datum-klein">{{ datum.klein }}</span>
-          </BasisNotizzettel>
 
-          <a v-if="termin.beginn && !termin.vergangen" :href="`/api/termine/${termin.slug}/kalender.ics`" class="termin__kalender" download>
-            <span aria-hidden="true">+</span> In den Kalender
-          </a>
-        </aside>
-
-        <!-- rechts: Titel, Fakten, Störer, Beschreibung -->
-        <div class="termin__haupt">
-          <p class="termin__dachzeile handschrift">{{ termin.vergangen ? 'war schön!' : 'komm vorbei!' }}</p>
-          <h1 class="termin__titel">{{ termin.titel }}</h1>
-
-          <ul class="termin__fakten strich-oben-unten">
-            <li>
-              <span class="termin__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
-              </span>
-              <span><span class="nur-screenreader">Wann: </span>{{ wann }}</span>
-            </li>
-            <li>
-              <span class="termin__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
-              </span>
-              <span>
-                <span class="nur-screenreader">Wo: </span>{{ termin.ort ?? 'Ort folgt' }}
-                <template v-if="termin.adresse"><br><span class="termin__adresse">{{ termin.adresse }}</span></template>
-              </span>
-            </li>
-          </ul>
-
-          <TerminStoerer :termin="termin" class="termin__stoerer" />
-
-          <section v-if="termin.beschreibung_html" class="termin__beschreibung" aria-labelledby="beschreibung-titel">
-            <h2 id="beschreibung-titel" class="termin__abschnitt">Worum geht’s?</h2>
-            <!-- eslint-disable-next-line vue/no-v-html -- serverseitig aus Markdown erzeugt, rohes HTML wird escaped -->
-            <div class="termin__text" v-html="termin.beschreibung_html" />
-          </section>
+          <div class="plakat__bild">
+            <BasisPolaroid
+              v-if="termin.bild"
+              :src="termin.bild"
+              :alt="termin.bild_alt ?? ''"
+              :breite="760"
+              :hoehe="760"
+              :drehung="3"
+              tape="mitte"
+              class="plakat__polaroid"
+            />
+            <img v-else src="/illustrationen/disco.svg" alt="" width="700" height="1080" class="plakat__illustration">
+            <TerminSticker :termin="termin" class="plakat__sticker" />
+          </div>
         </div>
       </div>
+    </header>
+
+    <!-- Lesespalte -->
+    <div class="termin__spalte">
+      <section v-if="termin.beschreibung_html" class="termin__beschreibung" aria-labelledby="beschreibung-titel">
+        <h2 id="beschreibung-titel" class="termin__abschnitt">Worum geht’s?</h2>
+        <!-- eslint-disable-next-line vue/no-v-html -- serverseitig aus Markdown erzeugt, rohes HTML wird escaped -->
+        <div class="termin__text" v-html="termin.beschreibung_html" />
+      </section>
+
+      <TerminStoerer :termin="termin" class="termin__anmeldung" />
     </div>
 
     <TerminMitbringen v-if="termin.mitbringen_aktiv && !termin.vergangen" :termin="termin" />
@@ -115,142 +123,147 @@ useHead(() => ({
   overflow-x: clip;
 }
 
-.termin__oben {
-  padding-block: clamp(2rem, 4vw, 3.5rem) var(--abstand-sektion);
+/* ---------- Kopfband ---------- */
+.plakat {
+  --farbe-fokus: var(--farbe-gelb);
+  background: var(--farbe-lila);
+  color: var(--farbe-creme);
 }
 
-.termin__zurueck {
+.plakat__inhalt {
+  padding-block: clamp(1.75rem, 3.5vw, 3rem) clamp(3rem, 6vw, 5.5rem);
+}
+
+.plakat__zurueck {
   display: inline-block;
-  color: var(--farbe-orange-text);
+  color: var(--farbe-pfirsich);
 }
 
-.termin__raster {
+.plakat__raster {
   display: grid;
   gap: var(--abstand-xl);
+  align-items: center;
   margin-top: var(--abstand-l);
 }
 
-/* ---------- links ---------- */
-.termin__seite {
-  display: grid;
-  gap: var(--abstand-l);
-  align-content: start;
-  justify-items: start;
+.plakat__zusatz {
+  margin: 0;
+  color: var(--farbe-orange);
+  transform: rotate(-3deg);
+  transform-origin: left;
 }
 
-.termin__bild {
-  position: relative;
-  width: min(100%, 23.75rem);
-  padding: 0.75rem;
-  background: var(--farbe-weiss);
-  box-shadow: var(--schatten-karte);
-  transform: rotate(-1.5deg);
+.plakat__titel {
+  margin-top: 0.3rem;
+  font-size: clamp(2.75rem, 6.6vw, 6.25rem);
+  line-height: 0.88;
+  color: var(--farbe-pfirsich);
+  overflow-wrap: anywhere;
 }
 
-.termin__bild img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  object-position: top;
+.plakat__wann {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--abstand-m) var(--abstand-l);
+  align-items: center;
+  margin-top: var(--abstand-l);
 }
 
-.termin__datumszettel {
+.plakat__datum {
   display: flex;
   align-items: baseline;
-  gap: 0.4rem;
-  padding: 2rem 2.25rem;
+  gap: 0.35rem;
+  padding: 1rem 1.4rem 0.9rem;
+  color: var(--farbe-schwarz);
 }
 
-.termin__datum-gross {
+.plakat__datum-gross {
   font-family: var(--schrift-display);
   font-weight: var(--gewicht-display);
-  font-size: clamp(4rem, 8vw, 6.5rem);
+  font-size: clamp(2.75rem, 5vw, 4.5rem);
   line-height: 0.9;
   color: var(--farbe-orange);
 }
 
-.termin__datum-klein {
+.plakat__datum-klein {
   font-family: var(--schrift-display);
   font-weight: var(--gewicht-display);
-  font-size: 2rem;
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
   color: var(--farbe-lila);
 }
 
-.termin__kalender {
+.plakat__fakten {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--schrift-display);
+  font-weight: var(--gewicht-display);
+  font-size: clamp(1.125rem, 1.6vw, 1.4rem);
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.plakat__knoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--abstand-xs);
+  margin-top: var(--abstand-l);
+}
+
+.plakat__kalender {
   display: inline-flex;
   gap: 0.4rem;
   align-items: center;
-  padding: 0.5em 1.1em;
-  border: 2px solid var(--farbe-lila);
+  min-height: clamp(2.75rem, 3.68vw, 3.3125rem);
+  padding: 0.55em 1em;
+  border: 2px solid var(--farbe-pfirsich);
   border-radius: var(--radius-m);
   font-family: var(--schrift-display);
   font-weight: var(--gewicht-display);
-  font-size: var(--groesse-knopf-klein);
+  font-size: var(--groesse-knopf);
+  line-height: 1;
   text-transform: uppercase;
   text-decoration: none;
-  color: var(--farbe-lila);
+  color: var(--farbe-pfirsich);
 }
 
-.termin__kalender:hover {
-  background: var(--farbe-weiss);
+.plakat__kalender:hover {
+  background: rgb(255 255 255 / 0.08);
 }
 
-/* ---------- rechts ---------- */
-.termin__haupt {
-  min-width: 0;
+.plakat__bild {
+  position: relative;
+  justify-self: center;
+  width: min(100%, 24rem);
 }
 
-.termin__dachzeile {
-  margin: 0;
-  color: var(--farbe-orange-text);
-  transform: rotate(-2deg);
+.plakat__polaroid {
+  width: 100%;
 }
 
-.termin__titel {
-  margin-top: 0.3rem;
-  font-size: clamp(2.75rem, 6vw, 5.25rem);
-  line-height: 0.92;
-  overflow-wrap: anywhere;
+.plakat__polaroid :deep(.polaroid__bild) {
+  aspect-ratio: 1;
+  object-position: top;
 }
 
-.termin__fakten {
-  display: grid;
-  gap: var(--abstand-s);
-  margin: var(--abstand-l) 0 0;
-  padding: var(--abstand-m) 0;
-  list-style: none;
-  font-size: var(--groesse-l);
-  font-weight: var(--gewicht-text-normal);
+.plakat__illustration {
+  width: min(70%, 13rem);
+  margin-inline: auto;
 }
 
-.termin__fakten li {
-  display: flex;
-  gap: var(--abstand-s);
-  align-items: center;
+.plakat__sticker {
+  position: absolute;
+  bottom: -1.5rem;
+  left: -2rem;
 }
 
-.termin__icon {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 50%;
-  background: var(--farbe-pfirsich);
-  color: var(--farbe-lila);
-}
-
-.termin__adresse {
-  font-size: var(--groesse-s);
-  font-weight: var(--gewicht-text);
-}
-
-.termin__stoerer {
-  margin-top: var(--abstand-xl);
-}
-
-.termin__beschreibung {
-  margin-top: var(--abstand-xl);
+/* ---------- Lesespalte ---------- */
+.termin__spalte {
+  max-width: calc(44rem + 2 * var(--seitenrand));
+  margin-inline: auto;
+  padding: var(--abstand-xl) var(--seitenrand) var(--abstand-sektion);
 }
 
 .termin__abschnitt {
@@ -258,7 +271,6 @@ useHead(() => ({
 }
 
 .termin__text {
-  max-width: 40rem;
   margin-top: var(--abstand-s);
   font-size: var(--groesse-l);
   line-height: 1.7;
@@ -274,15 +286,24 @@ useHead(() => ({
   text-decoration-color: var(--farbe-orange);
 }
 
+.termin__anmeldung {
+  margin-top: var(--abstand-xl);
+}
+
 @media (min-width: 56rem) {
-  .termin__raster {
-    grid-template-columns: minmax(0, 23.75rem) minmax(0, 1fr);
+  .plakat__raster {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
     gap: clamp(2.5rem, 6vw, 6rem);
   }
+}
 
-  .termin__seite {
-    position: sticky;
-    top: 6.5rem;
+@media (max-width: 55.99rem) {
+  .plakat__bild {
+    width: min(80%, 20rem);
+  }
+
+  .plakat__sticker {
+    left: -1rem;
   }
 }
 </style>
