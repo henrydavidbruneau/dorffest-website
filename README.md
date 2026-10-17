@@ -1,24 +1,10 @@
-# krz_website
+# Königsdorf rückt zusammen
 
-## Project setup
-```
+Website des Vereins „Königsdorf rückt zusammen e.V." – Nuxt 4, SSR auf Netlify.
+
+```bash
 npm install
+npm run dev
 ```
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+Projektbeschreibung, Architektur und Regeln: siehe [CLAUDE.md](CLAUDE.md).
