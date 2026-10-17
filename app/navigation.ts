@@ -39,7 +39,7 @@ export const fussnavigation: { titel: string, links: NavLink[] }[] = [
   {
     titel: 'Rechtliches',
     links: [
-      { text: 'Kontakt', to: '/kontakt' },
+      { text: 'Kontakt', to: `mailto:${KONTAKT_MAIL}` },
       { text: 'Impressum', to: '/impressum' },
       { text: 'Datenschutz', to: '/datenschutz' },
     ],
