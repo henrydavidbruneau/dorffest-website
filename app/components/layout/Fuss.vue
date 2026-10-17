@@ -5,22 +5,22 @@ import { texte } from '~/texte'
 
 <template>
   <footer class="fuss">
-    <div class="inhalt">
+    <div class="fuss__inhalt inhalt">
       <div class="fuss__gruss">
         <div>
           <p class="fuss__titel display">
-            Bis bald<br>im <BasisHervorhebung :drehung="-2">Dorf!</BasisHervorhebung>
+            Bis bald<br>im <BasisHervorhebung>Dorf!</BasisHervorhebung>
           </p>
           <p class="fuss__unterschrift handschrift">{{ texte.fuss.gruss }}</p>
         </div>
         <BasisNewsletterBox variante="schlicht" :label="texte.fuss.newsletterLabel" class="fuss__newsletter" />
       </div>
 
-      <BasisTrennlinie art="gestrichelt" farbe="schwarz" />
+      <BasisTrennlinie class="fuss__linie" />
 
       <div class="fuss__unten">
         <NuxtLink to="/" class="fuss__logo">
-          <img src="/logo.svg" alt="Königsdorf rückt zusammen – zur Startseite" width="512" height="339" loading="lazy">
+          <img src="/logo-mobil.svg" alt="Königsdorf rückt zusammen – zur Startseite" width="512" height="245" loading="lazy">
         </NuxtLink>
         <nav class="fuss__nav" aria-label="Fußnavigation">
           <div v-for="spalte in fussnavigation" :key="spalte.titel" class="fuss__spalte">
@@ -38,37 +38,51 @@ import { texte } from '~/texte'
 </template>
 
 <style scoped>
+/* Maße aus dem Design: 100 oben, Titel 112px, Linie bei 1260, Spalten 267 breit */
 .fuss {
-  padding-block: var(--abstand-2xl) var(--abstand-l);
+  padding-block: clamp(3.5rem, 7vw, 6.25rem) clamp(2rem, 3.5vw, 3.25rem);
   background: var(--farbe-pfirsich);
+}
+
+.fuss__inhalt {
+  padding-left: calc(var(--seitenrand) + clamp(0rem, 1.4vw, 1.25rem));
 }
 
 .fuss__gruss {
   display: grid;
   gap: var(--abstand-l);
   align-items: center;
-  margin-bottom: var(--abstand-xl);
 }
 
 .fuss__titel {
   margin: 0;
-  font-size: var(--groesse-h2);
+  font-size: var(--groesse-h2-gross);
+  line-height: 0.95;
   color: var(--farbe-lila);
 }
 
+.fuss__titel :deep(.hervorhebung) {
+  margin-top: 0.06em;
+}
+
 .fuss__unterschrift {
-  margin: var(--abstand-s) 0 0;
+  margin: clamp(0.5rem, 1.2vw, 1rem) 0 0;
+  font-size: clamp(1.625rem, 2.5vw, 2.25rem);
   color: var(--farbe-orange-text);
+  transform: rotate(-1.5deg);
+}
+
+.fuss__linie {
+  margin-block: clamp(2.5rem, 3.9vw, 3.5rem) clamp(1.75rem, 2.5vw, 2.25rem);
 }
 
 .fuss__unten {
   display: grid;
   gap: var(--abstand-l);
-  padding-top: var(--abstand-l);
 }
 
 .fuss__logo img {
-  width: 6rem;
+  width: clamp(6rem, 9.3vw, 8.375rem);
 }
 
 .fuss__nav {
@@ -78,17 +92,18 @@ import { texte } from '~/texte'
 }
 
 .fuss__spaltentitel {
-  margin-bottom: var(--abstand-2xs);
-  font-size: var(--groesse-m);
+  margin-bottom: 0.6rem;
+  font-size: clamp(1.125rem, 1.39vw, 1.25rem);
 }
 
 .fuss__spalte ul {
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: var(--groesse-s);
-  font-weight: var(--gewicht-text-normal);
-  line-height: 1.9;
+  font-family: var(--schrift-display);
+  font-weight: var(--gewicht-display);
+  font-size: var(--groesse-m);
+  line-height: 1.65;
 }
 
 .fuss__spalte a {
@@ -101,12 +116,15 @@ import { texte } from '~/texte'
 
 @media (min-width: 48rem) {
   .fuss__gruss {
-    grid-template-columns: 1.3fr 1fr;
+    grid-template-columns: 1fr auto;
   }
 
   .fuss__unten {
-    grid-template-columns: auto 1fr;
-    gap: var(--abstand-2xl);
+    grid-template-columns: 1fr 3fr;
+  }
+
+  .fuss__nav {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 </style>

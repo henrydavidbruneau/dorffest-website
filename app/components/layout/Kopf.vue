@@ -28,11 +28,13 @@ function aktiv(to: string) {
 </script>
 
 <template>
+  <!-- Platzhalter in Kopfhöhe: Der Kopf ist fixiert und darf beim Schrumpfen nichts verschieben -->
+  <div class="kopf-platz" aria-hidden="true" />
   <header class="kopf" :class="{ 'kopf--gescrollt': gescrollt }">
     <a href="#inhalt" class="kopf__sprunglink">Zum Inhalt springen</a>
-    <div class="kopf__leiste inhalt">
+    <div class="kopf__leiste">
       <NuxtLink to="/" class="kopf__logo">
-        <img src="/logo.svg" alt="Königsdorf rückt zusammen – zur Startseite" width="512" height="339">
+        <img src="/logo-mobil.svg" alt="Königsdorf rückt zusammen – zur Startseite" width="512" height="245">
       </NuxtLink>
 
       <button
@@ -59,16 +61,29 @@ function aktiv(to: string) {
             </NuxtLink>
           </li>
         </ul>
-        <BasisKnopf :to="links.mitmachen" :variante="gescrollt ? 'hell' : 'gefuellt'" groesse="klein" class="kopf__mitmachen">Mitmachen</BasisKnopf>
+        <BasisKnopf
+          :to="links.mitmachen"
+          :variante="gescrollt ? 'hell' : 'gefuellt'"
+          groesse="klein"
+          class="kopf__mitmachen"
+        >
+          Mitmachen
+        </BasisKnopf>
       </nav>
     </div>
   </header>
 </template>
 
 <style scoped>
+.kopf-platz {
+  height: var(--kopf-hoehe);
+}
+
 .kopf {
-  position: sticky;
+  position: fixed;
   top: 0;
+  right: 0;
+  left: 0;
   z-index: 10;
   background: var(--farbe-creme);
   transition:
@@ -98,26 +113,47 @@ function aktiv(to: string) {
   transform: none;
 }
 
+/* Leiste 1160 breit (120–1280 bei 1440) */
 .kopf__leiste {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--abstand-m);
-  padding-block: var(--abstand-s);
-  transition: padding var(--dauer-mittel) ease;
+  max-width: calc(72.5rem + 2 * var(--seitenrand));
+  height: var(--kopf-hoehe);
+  margin-inline: auto;
+  padding-inline: var(--seitenrand);
+  transition: height var(--dauer-mittel) ease;
+}
+
+/* gestrichelte Linie unter der Navigation (nur oben auf der Seite) */
+.kopf__leiste::after {
+  content: '';
+  position: absolute;
+  right: max(0px, calc(var(--seitenrand) - 1.25rem));
+  bottom: 0;
+  left: max(0px, calc(var(--seitenrand) - 1.25rem));
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--farbe-orange) 0 6px, transparent 6px 10px);
+  transition: opacity var(--dauer-mittel) ease;
 }
 
 .kopf--gescrollt .kopf__leiste {
-  padding-block: var(--abstand-2xs);
+  height: 4.25rem;
+}
+
+.kopf--gescrollt .kopf__leiste::after {
+  opacity: 0;
 }
 
 .kopf__logo img {
-  width: clamp(4.5rem, 3.5rem + 3vw, 6rem);
+  width: clamp(4.75rem, 9.3vw, 8.375rem);
   transition: width var(--dauer-mittel) ease;
 }
 
 .kopf--gescrollt .kopf__logo img {
-  width: clamp(3.5rem, 3rem + 1.5vw, 4.25rem);
+  width: clamp(4rem, 5vw, 4.75rem);
 }
 
 .kopf__liste {
@@ -130,8 +166,7 @@ function aktiv(to: string) {
 .kopf__link {
   font-family: var(--schrift-display);
   font-weight: var(--gewicht-display);
-  font-size: var(--groesse-m);
-  letter-spacing: 0.02em;
+  font-size: 1.25rem;
   text-decoration: none;
   color: var(--farbe-orange-text);
 }
@@ -164,7 +199,7 @@ function aktiv(to: string) {
   .kopf__liste {
     flex: 1;
     justify-content: center;
-    gap: var(--abstand-l);
+    gap: clamp(1.5rem, 3vw, 2.5rem);
   }
 }
 
@@ -226,15 +261,15 @@ function aktiv(to: string) {
   .kopf__nav {
     position: absolute;
     top: 100%;
-    left: 0;
     right: 0;
+    left: 0;
     display: none;
     flex-direction: column;
     align-items: flex-start;
     gap: var(--abstand-m);
     padding: var(--abstand-m) var(--seitenrand) var(--abstand-l);
-    border-bottom: 3px dotted var(--farbe-orange);
     background: var(--farbe-creme);
+    box-shadow: 0 8px 14px rgb(0 0 0 / 0.12);
   }
 
   .kopf__nav--offen {
@@ -242,7 +277,6 @@ function aktiv(to: string) {
   }
 
   .kopf--gescrollt .kopf__nav {
-    border-bottom-color: var(--farbe-pfirsich);
     background: var(--farbe-lila);
   }
 
@@ -262,7 +296,7 @@ function aktiv(to: string) {
   }
 
   .kopf__link {
-    font-size: var(--groesse-xl);
+    font-size: var(--groesse-zettel-titel);
   }
 }
 </style>
