@@ -4,8 +4,7 @@ import { KONTAKT_MAIL } from '#shared/utils/kontakt'
 export const links = {
   infochannel: 'https://chat.whatsapp.com/HtfZqwqUXpu6Xu9A4nO7PV?mode=gi_t',
   mitmachen: '/mitmachen',
-  mitgliedWerden: '/ueber-uns#mitglied-werden',
-  mitgliedsantrag: '/mitglied-werden',
+  mitgliedWerden: '/mitglied-werden',
   kontaktMail: KONTAKT_MAIL,
 } as const
 

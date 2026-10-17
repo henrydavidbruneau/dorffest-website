@@ -91,6 +91,20 @@ export const texte = {
     },
   },
 
+  mitgliedWerden: {
+    meta: 'Werde Mitglied bei Königsdorf rückt zusammen e.V. – als Fördermitglied oder reguläres Mitglied.',
+    intro: 'Mit deiner Mitgliedschaft machst du möglich, was wir im Dorf auf die Beine stellen. Mitmachen kannst du übrigens auch ohne Mitgliedschaft – beim offenen Plenum ist jede*r willkommen.',
+    foerder: {
+      titel: 'Fördermitglied',
+      text: 'Du unterstützt den Verein finanziell – dein Beitrag ist steuerlich absetzbar.',
+    },
+    regulaer: {
+      titel: 'Reguläres Mitglied',
+      text: 'Du hast Stimmrecht bei den offiziellen Vereinssitzungen. Das meiste entscheiden wir aber ohnehin gemeinsam im offenen Plenum.',
+      voraussetzung: 'Voraussetzung: Du warst mindestens einmal bei einem Plenum dabei.',
+    },
+  },
+
   dorfanzeiger: {
     beschreibung: 'Der Königsdorfer Dorfanzeiger: Rückblicke, Ideen und Gedanken zum Zusammenleben im Dorf – von Nachbar*innen für Nachbar*innen.',
     newsletterText: 'Neue Termine, Aktionen und Gesucht-Zettel kommen direkt zu dir – per Infochannel oder E-Mail.',
