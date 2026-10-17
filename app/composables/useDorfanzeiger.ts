@@ -2,6 +2,7 @@ export interface DorfanzeigerOptionen {
   ressort?: MaybeRefOrGetter<Ressort | undefined>
   ausgabe?: MaybeRefOrGetter<number | undefined>
   hervorgehoben?: boolean
+  mitInterviews?: boolean
   limit?: number
 }
 
@@ -10,7 +11,7 @@ export function useDorfanzeiger(optionen: DorfanzeigerOptionen = {}) {
 }
 
 export function useArtikel(slug: MaybeRefOrGetter<string>) {
-  return useFetch<Artikel>(() => `/api/dorfanzeiger/${toValue(slug)}`)
+  return useFetch<ArtikelDetail>(() => `/api/dorfanzeiger/${toValue(slug)}`)
 }
 
 export function useAusgaben() {

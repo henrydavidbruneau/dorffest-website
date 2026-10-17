@@ -3,6 +3,8 @@ import { artikel as platzhalter } from '../data/dorfanzeiger'
 
 export interface ArtikelFilter {
   ressort?: Ressort
+  /** Interviews ("Fünf Fragen an …") mit ausgeben */
+  mitInterviews?: boolean
   ausgabe?: number
   hervorgehoben?: boolean
   limit?: number
@@ -16,7 +18,7 @@ function sortierung(a: Artikel, b: Artikel) {
 
 export async function ladeArtikelListe(filter: ArtikelFilter = {}): Promise<Artikel[]> {
   // Interviews ("Fünf Fragen an …") laufen über die Porträts, nicht über die Listen
-  let liste = platzhalter.filter(a => a.status === 'published' && a.art === 'artikel')
+  let liste = platzhalter.filter(a => a.status === 'published' && (filter.mitInterviews || a.art === 'artikel'))
   if (filter.ressort) liste = liste.filter(a => a.ressort === filter.ressort)
   if (filter.ausgabe) liste = liste.filter(a => a.ausgabe === filter.ausgabe)
   if (filter.hervorgehoben) liste = liste.filter(a => a.hervorgehoben)
@@ -24,6 +26,7 @@ export async function ladeArtikelListe(filter: ArtikelFilter = {}): Promise<Arti
   return filter.limit ? liste.slice(0, filter.limit) : liste
 }
 
-export async function ladeArtikel(slug: string): Promise<Artikel | null> {
-  return platzhalter.find(a => a.slug === slug && a.status === 'published') ?? null
+export async function ladeArtikel(slug: string): Promise<ArtikelDetail | null> {
+  const artikel = platzhalter.find(a => a.slug === slug && a.status === 'published')
+  return artikel ? { ...artikel, inhalt_html: markdownZuHtml(artikel.inhalt) } : null
 }

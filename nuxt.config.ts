@@ -45,7 +45,7 @@ export default defineNuxtConfig({
   fonts: {
     families: [
       { name: 'Londrina Solid', provider: 'google', weights: [900], global: true },
-      { name: 'Poppins', provider: 'google', weights: [300, 400, 700], styles: ['normal'], global: true },
+      { name: 'Poppins', provider: 'google', weights: [300, 400, 500, 700], styles: ['normal'], global: true },
       { name: 'Reenie Beanie', provider: 'google', weights: [400], global: true },
     ],
   },

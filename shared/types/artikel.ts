@@ -16,6 +16,8 @@ export interface Artikel extends DirectusEintrag {
   art: 'artikel' | 'interview'
   ressort: Ressort
   autor_in: string | null
+  /** kleines Rundbild neben dem Namen */
+  autor_in_bild: string | null
   /** ISO-Datum. null = Datum folgt */
   veroeffentlicht_am: string | null
   /** Ersetzt die Datumsanzeige, z.B. "November" oder "Datum folgt" */
@@ -25,8 +27,17 @@ export interface Artikel extends DirectusEintrag {
   bild: string | null
   bild_alt: string | null
   bildunterschrift: string | null
-  /** Markdown */
+  /** Markdown. Eigene Konventionen:
+   *  - `![Alt](/pfad.webp "Bildunterschrift")` allein in einer Zeile = Bild mit Unterschrift
+   *  - `> Zitat` + `> — Quelle` = Zitatkasten */
   inhalt: string
+  /** Aufruf-Kasten am Ende (z.B. "Nächstes Jahr wieder?") */
+  aufruf_titel: string | null
+  aufruf_text: string | null
+  aufruf_knopf: string | null
+  aufruf_link: string | null
+  /** Seite in der Ausgabe */
+  seite: number | null
   titelgeschichte: boolean
   /** auf der Startseite unter "Was bisher geschah" zeigen */
   hervorgehoben: boolean
@@ -34,4 +45,9 @@ export interface Artikel extends DirectusEintrag {
   sort: number | null
   /** Fremdschlüssel auf `ausgaben` */
   ausgabe: number | null
+}
+
+/** Artikel-Detail: wie in Directus, plus serverseitig gerendertes HTML */
+export interface ArtikelDetail extends Artikel {
+  inhalt_html: string
 }

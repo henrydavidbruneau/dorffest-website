@@ -7,6 +7,7 @@ export default defineEventHandler(async (event) => {
     ressort,
     ausgabe: zahlAusQuery(query.ausgabe, 9999),
     hervorgehoben: jaAusQuery(query.hervorgehoben),
+    mitInterviews: jaAusQuery(query.mitInterviews),
     limit: zahlAusQuery(query.limit),
   })
 })

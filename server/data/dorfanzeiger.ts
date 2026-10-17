@@ -10,22 +10,45 @@ export const artikel: Artikel[] = [
     art: 'artikel',
     titel: 'Ein Tag, an dem das ganze Dorf zusammenkam',
     teaser_titel: 'So war das erste Dorffest',
-    teaser: 'Bühne, Buffet, Workshops und ein Mini-Jahrmarkt für die Pänz: Rückblick auf das erste Dorffest im JuMa.',
+    teaser: 'Bühne, Buffet, Workshops und ein Mini-Jahrmarkt für die Pänz: Rückblick auf das erste Dorf- und Nachbarschaftsfest im JuMa.',
     teaser_kurz: 'Bühne, Buffet, Workshops und ein Mini-Jahrmarkt für die Pänz.',
     ressort: 'feste',
     autor_in: 'Kathie',
+    autor_in_bild: '/fotos/portraet-kathie.webp',
     veroeffentlicht_am: '2025-09-07',
     datum_text: null,
     lesedauer_minuten: 4,
     bild: '/fotos/dorffest-buffet.webp',
     bild_alt: 'Viele Menschen stehen um ein langes Buffet mit mitgebrachten Gerichten.',
     bildunterschrift: 'Am Dorfbuffet: jede*r hat etwas mitgebracht.',
-    inhalt: `Am 7. September 2025 wurde das JuMa zum Treffpunkt für Königsdorf. Ab 13 Uhr warteten auf die Pänz Dosenwerfen, Torwand und Glücksrad, viele Eltern halfen an den Ständen mit.
+    inhalt: `Am 7. September 2025 haben wir im JuMa zum ersten Mal ein Dorf- und Nachbarschaftsfest gefeiert: offen für alle, generationenübergreifend und gemeinsam gestaltet. Schon am frühen Nachmittag war das Gelände voll.
 
-Für das Dorfsüppchen wurde gemeinsam geschnibbelt, und zum großen Dorfbuffet brachten viele ihr Lieblingsgericht mit: Familienklassiker, Geheimrezepte und neue Entdeckungen.
+Ab 13 Uhr ging es mit dem Programm für die Pänz los. Auf dem Mini-Jahrmarkt warteten Dosenwerfen, Torwand und Glücksrad, viele Eltern haben an den Ständen mitgeholfen.
 
-Am Nachmittag gab es Workshops, vom Improtheater bis zur Siebdruckstation mit dem eigens entworfenen Dorf-Motiv. Abends spielten Falcke, Icecream at the alligator park und 5vor12.`,
+## Gemeinsam gekocht
+
+Für das Dorfsüppchen wurde zusammen geschnibbelt, und zum großen Dorfbuffet haben viele ihr Lieblingsgericht mitgebracht. Am Ende stand ein langer Tisch voller Familienklassiker, Geheimrezepte und neuer Lieblingsgerichte.
+
+## Workshops und Bühne
+
+Am Nachmittag gab es Workshops: Beim Improtheater entstanden spontan Szenen, an der Siebdruckstation bedruckten viele ihre T-Shirts mit dem eigens entworfenen Dorf-Motiv. Abends standen Falcke, Icecream at the alligator park und 5vor12 auf der Bühne.
+
+> „Ein Fest, das nicht nur unterhält, sondern verbindet.“
+>
+> — aus unserer Einladung
+
+![Hände ziehen an der Siebdruckstation einen Druck ab](/fotos/verein-siebdruck.webp "Siebdruck mit Dorf-Motiv")
+
+![Ein Kind beim Dosenwerfen](/fotos/kinder-dosenwerfen.webp "Mini-Jahrmarkt für die Pänz")
+
+Ein großes Danke an alle, die mitgeholfen, gekocht, aufgebaut und mitgefeiert haben. Aus diesem Tag ist die Idee für unseren Verein entstanden, und wir freuen uns schon auf das nächste Mal.
+`,
     titelgeschichte: true,
+    aufruf_titel: 'Nächstes Jahr wieder?',
+    aufruf_text: 'Hilf mit, das nächste Dorffest zu planen.',
+    aufruf_knopf: 'Mitmachen',
+    aufruf_link: '/#mitmachen',
+    seite: 1,
     hervorgehoben: true,
   },
   {
@@ -40,6 +63,7 @@ Am Nachmittag gab es Workshops, vom Improtheater bis zur Siebdruckstation mit de
     teaser_kurz: 'Aus der Festgruppe wird Rückt Zusammen e.V.',
     ressort: 'verein',
     autor_in: null,
+    autor_in_bild: null,
     veroeffentlicht_am: null,
     datum_text: 'Datum folgt',
     lesedauer_minuten: 3,
@@ -48,6 +72,11 @@ Am Nachmittag gab es Workshops, vom Improtheater bis zur Siebdruckstation mit de
     bildunterschrift: null,
     inhalt: 'Aus der Festgruppe wird Rückt Zusammen e.V. Was das für euch bedeutet, erzählen wir hier bald ausführlich.',
     titelgeschichte: false,
+    aufruf_titel: null,
+    aufruf_text: null,
+    aufruf_knopf: null,
+    aufruf_link: null,
+    seite: null,
     hervorgehoben: true,
   },
   {
@@ -62,6 +91,7 @@ Am Nachmittag gab es Workshops, vom Improtheater bis zur Siebdruckstation mit de
     teaser_kurz: 'Bring mit, was du nicht mehr trägst.',
     ressort: 'treffen',
     autor_in: null,
+    autor_in_bild: null,
     veroeffentlicht_am: null,
     datum_text: 'November',
     lesedauer_minuten: 2,
@@ -70,6 +100,11 @@ Am Nachmittag gab es Workshops, vom Improtheater bis zur Siebdruckstation mit de
     bildunterschrift: null,
     inhalt: 'Nach dem Fest geht’s weiter: Bring mit, was du nicht mehr trägst, und nimm mit, was dir gefällt.',
     titelgeschichte: false,
+    aufruf_titel: null,
+    aufruf_text: null,
+    aufruf_knopf: null,
+    aufruf_link: null,
+    seite: null,
     hervorgehoben: true,
   },
   {
@@ -84,6 +119,7 @@ Am Nachmittag gab es Workshops, vom Improtheater bis zur Siebdruckstation mit de
     teaser_kurz: null,
     ressort: 'rezepte',
     autor_in: null,
+    autor_in_bild: null,
     veroeffentlicht_am: '2025-09-20',
     datum_text: null,
     lesedauer_minuten: 3,
@@ -92,6 +128,11 @@ Am Nachmittag gab es Workshops, vom Improtheater bis zur Siebdruckstation mit de
     bildunterschrift: null,
     inhalt: 'Das Rezept folgt.',
     titelgeschichte: false,
+    aufruf_titel: null,
+    aufruf_text: null,
+    aufruf_knopf: null,
+    aufruf_link: null,
+    seite: null,
     hervorgehoben: false,
   },
   {
@@ -106,6 +147,7 @@ Am Nachmittag gab es Workshops, vom Improtheater bis zur Siebdruckstation mit de
     teaser_kurz: null,
     ressort: 'kinder',
     autor_in: null,
+    autor_in_bild: null,
     veroeffentlicht_am: '2025-09-14',
     datum_text: null,
     lesedauer_minuten: 2,
@@ -114,6 +156,11 @@ Am Nachmittag gab es Workshops, vom Improtheater bis zur Siebdruckstation mit de
     bildunterschrift: null,
     inhalt: 'Bilder folgen.',
     titelgeschichte: false,
+    aufruf_titel: null,
+    aufruf_text: null,
+    aufruf_knopf: null,
+    aufruf_link: null,
+    seite: null,
     hervorgehoben: false,
   },
   {
@@ -128,6 +175,7 @@ Am Nachmittag gab es Workshops, vom Improtheater bis zur Siebdruckstation mit de
     teaser_kurz: null,
     ressort: 'feste',
     autor_in: null,
+    autor_in_bild: null,
     veroeffentlicht_am: '2025-09-10',
     datum_text: null,
     lesedauer_minuten: 3,
@@ -136,6 +184,11 @@ Am Nachmittag gab es Workshops, vom Improtheater bis zur Siebdruckstation mit de
     bildunterschrift: null,
     inhalt: 'Falcke, Icecream at the alligator park und 5vor12.',
     titelgeschichte: false,
+    aufruf_titel: null,
+    aufruf_text: null,
+    aufruf_knopf: null,
+    aufruf_link: null,
+    seite: null,
     hervorgehoben: false,
   },
   {
@@ -150,6 +203,7 @@ Am Nachmittag gab es Workshops, vom Improtheater bis zur Siebdruckstation mit de
     teaser_kurz: null,
     ressort: 'verein',
     autor_in: null,
+    autor_in_bild: null,
     veroeffentlicht_am: '2025-10-01',
     datum_text: null,
     lesedauer_minuten: 5,
@@ -158,6 +212,11 @@ Am Nachmittag gab es Workshops, vom Improtheater bis zur Siebdruckstation mit de
     bildunterschrift: null,
     inhalt: 'Das Interview folgt.',
     titelgeschichte: false,
+    aufruf_titel: null,
+    aufruf_text: null,
+    aufruf_knopf: null,
+    aufruf_link: null,
+    seite: null,
     hervorgehoben: false,
   },
 ]
