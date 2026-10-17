@@ -32,7 +32,7 @@ function absenden() {}
     :is="huelle"
     class="newsletter"
     :class="`newsletter--${variante}`"
-    v-bind="variante === 'zettel' ? { farbe: 'pfirsich', tape: 'links', drehung: -1.5 } : {}"
+    v-bind="variante === 'zettel' ? { farbe: 'pfirsich', tape: 'links', tapeBreite: 6.5, drehung: -2.5, radius: 's' } : {}"
   >
     <div v-if="titel || text" class="newsletter__kopf">
       <h2 v-if="titel" class="newsletter__titel">{{ titel }}</h2>
@@ -177,8 +177,25 @@ function absenden() {}
   }
 }
 
-/* ---------- zettel ---------- */
+/* ---------- zettel (Dorfanzeiger, Design: 574×247) ---------- */
+.newsletter--zettel {
+  padding: clamp(1.75rem, 3.5vw, 3rem) clamp(1.25rem, 2.6vw, 2.25rem) clamp(1.25rem, 2.2vw, 2rem);
+}
+
 .newsletter--zettel .newsletter__label {
-  font-size: var(--groesse-hand-m);
+  font-size: clamp(1.625rem, 2.2vw, 2rem);
+  line-height: 1;
+}
+
+.newsletter--zettel .newsletter__eingabe {
+  flex-basis: 21rem;
+  min-height: 3.75rem;
+  font-family: var(--schrift-hand);
+  font-size: 1.5rem;
+}
+
+.newsletter--zettel .newsletter__knopf {
+  min-height: 3.75rem;
+  font-size: var(--groesse-knopf);
 }
 </style>

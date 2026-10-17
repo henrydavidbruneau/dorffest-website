@@ -9,6 +9,8 @@ withDefaults(
     tape?: false | 'links' | 'mitte' | 'rechts'
     tapeFarbe?: 'gelb' | 'flieder' | 'pfirsich'
     tapeDrehung?: number
+    /** Breite des Tapes in rem */
+    tapeBreite?: number
     /** statt Tape: Pinnnadel oder Foldback-Klammer oben */
     befestigung?: false | 'pin' | 'klammer'
     /** Rahmen: dünn schwarz oder orange (Was wir tun) */
@@ -23,6 +25,7 @@ withDefaults(
     tape: false,
     tapeFarbe: 'gelb',
     tapeDrehung: -2,
+    tapeBreite: 4.7,
     befestigung: false,
     rahmen: false,
     radius: 's',
@@ -37,7 +40,7 @@ withDefaults(
     :class="[`notizzettel--${farbe}`, `notizzettel--radius-${radius}`, rahmen && `notizzettel--rahmen-${rahmen}`]"
     :style="{ '--drehung': `${drehung}deg` }"
   >
-    <BasisKlebeband v-if="tape" :position="tape" :farbe="tapeFarbe" :drehung="tapeDrehung" />
+    <BasisKlebeband v-if="tape" :position="tape" :farbe="tapeFarbe" :drehung="tapeDrehung" :breite="tapeBreite" />
     <span v-if="befestigung === 'pin'" class="notizzettel__pin" aria-hidden="true" />
     <svg
       v-if="befestigung === 'klammer'"

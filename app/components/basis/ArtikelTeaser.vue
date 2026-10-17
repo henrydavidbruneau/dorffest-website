@@ -37,12 +37,15 @@ const datum = computed(() => {
     <component :is="`h${ebene}`" class="teaser__titel">
       <NuxtLink :to="link" class="teaser__link">{{ artikel.teaser_titel ?? artikel.titel }}</NuxtLink>
     </component>
-    <p class="teaser__text">{{ artikel.teaser }}</p>
+    <p class="teaser__text">
+      {{ variante === 'karte' ? (artikel.teaser_kurz ?? artikel.teaser) : artikel.teaser }}
+      <span v-if="variante === 'kompakt'" class="teaser__weiter" aria-hidden="true">Weiter →</span>
+    </p>
     <p v-if="variante === 'karte'" class="teaser__datum handschrift">
       <time v-if="!artikel.datum_text && artikel.veroeffentlicht_am" :datetime="artikel.veroeffentlicht_am">{{ datum }}</time>
       <template v-else>{{ datum }}</template>
     </p>
-    <p v-else class="teaser__weiter" aria-hidden="true">Weiterlesen →</p>
+    <p v-if="variante === 'spalte'" class="teaser__weiter" aria-hidden="true">Weiterlesen →</p>
   </article>
 </template>
 
@@ -108,15 +111,43 @@ const datum = computed(() => {
 }
 
 .teaser .teaser__weiter {
-  margin-top: 0.6rem;
   font-family: var(--schrift-display);
   font-weight: var(--gewicht-display);
-  font-size: var(--groesse-xs);
+  font-size: clamp(0.9375rem, 1.15vw, 1.0625rem);
   text-transform: uppercase;
   color: var(--farbe-orange-text);
 }
 
+/* ---------- Dorfanzeiger: 3er-Reihe (Bild 315×180, Titel 28, Text 15) ---------- */
+.teaser--spalte .teaser__bild {
+  aspect-ratio: 7 / 4;
+}
+
+.teaser--spalte .teaser__titel {
+  font-size: clamp(1.375rem, 1.94vw, 1.75rem);
+}
+
+.teaser--spalte .teaser__text,
+.teaser--kompakt .teaser__text {
+  font-size: clamp(0.875rem, 1.04vw, 0.9375rem);
+  font-weight: var(--gewicht-text-normal);
+}
+
+.teaser--spalte .teaser__weiter {
+  margin-top: 1.1rem;
+}
+
+/* ---------- Dorfanzeiger: Seitenspalte (Titel 24, ohne Bild) ---------- */
+.teaser--kompakt .teaser__ressort,
+.teaser--spalte .teaser__ressort {
+  font-size: clamp(0.875rem, 1.04vw, 0.9375rem);
+}
+
 .teaser--kompakt .teaser__titel {
-  font-size: var(--groesse-l);
+  font-size: clamp(1.25rem, 1.67vw, 1.5rem);
+}
+
+.teaser--kompakt .teaser__weiter {
+  white-space: nowrap;
 }
 </style>

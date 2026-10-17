@@ -60,6 +60,12 @@ export const texte = {
     },
   },
 
+  dorfanzeiger: {
+    beschreibung: 'Der Königsdorfer Dorfanzeiger: Rückblicke, Ideen und Gedanken zum Zusammenleben im Dorf – von Nachbar*innen für Nachbar*innen.',
+    newsletterText: 'Neue Termine, Aktionen und Gesucht-Zettel kommen direkt zu dir – per Infochannel oder E-Mail.',
+    newsletterLabel: 'Schick mir die Neuigkeiten an:',
+  },
+
   fuss: {
     gruss: '– eure Nachbar*innen von Rückt Zusammen',
     newsletterLabel: 'Bleib auf dem Laufenden:',

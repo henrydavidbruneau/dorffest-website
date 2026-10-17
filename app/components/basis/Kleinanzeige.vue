@@ -41,7 +41,7 @@ const tag = computed(() => `h${props.ebene ?? 3}`)
 
 .kleinanzeige__text {
   margin: 0;
-  font-size: var(--groesse-s);
+  font-size: var(--groesse-xs);
   line-height: 1.4;
 }
 
