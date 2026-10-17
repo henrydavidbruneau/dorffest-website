@@ -140,7 +140,7 @@ gleichnamige Datei auf dem Desktop ist ein älterer, anderer Stand). Daneben lie
   Positionen gezeichnet (ResizeObserver) und entfällt auf Mobil.
 - Logo: `public/logo-mobil.svg` (Schild ohne Pfosten), gerade, nicht gedreht.
 - Navigation ohne gestrichelte Linie. Dorfanzeiger-Seiten (Layout `zeitung`) zeigen testweise
-  dieselbe Navigation; sie fährt beim Betreten von oben herein.
+  dieselbe Navigation im lila Farbschema (`<LayoutKopf dunkel>`); sie fährt beim Betreten von oben herein.
 - Blatt-Animation (`<ZeitungBlatt>`) nur beim Betreten des Dorfanzeigers von außen, nicht
   beim Wechsel zwischen Dorfanzeiger-Seiten (`useZeitungAnimation`, Plugin
   `vorherige-route`). Auf Mobil ist das Blatt nicht gedreht.

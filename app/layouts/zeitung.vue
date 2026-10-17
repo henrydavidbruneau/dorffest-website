@@ -6,7 +6,7 @@ const einfahren = useZeitungAnimation()
 
 <template>
   <div class="zeitung-layout">
-    <LayoutKopf :einfahren="einfahren" />
+    <LayoutKopf :einfahren="einfahren" dunkel />
     <main id="inhalt" tabindex="-1">
       <slot />
     </main>
@@ -20,11 +20,6 @@ const einfahren = useZeitungAnimation()
   padding-bottom: clamp(3rem, 8vw, 8rem);
   background: var(--farbe-lila);
   overflow-x: clip;
-}
-
-/* Fokus innerhalb der (cremefarbenen) Navigation wieder lila */
-.zeitung-layout :deep(.kopf:not(.kopf--gescrollt)) {
-  --farbe-fokus: var(--farbe-lila);
 }
 
 main:focus {

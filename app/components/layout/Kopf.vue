@@ -4,7 +4,9 @@ import { hauptnavigation, links } from '~/navigation'
 withDefaults(defineProps<{
   /** Leiste fährt beim Laden von oben herein */
   einfahren?: boolean
-}>(), { einfahren: false })
+  /** lila Farbschema von Anfang an (auf lila Seitengrund, z.B. Dorfanzeiger) */
+  dunkel?: boolean
+}>(), { einfahren: false, dunkel: false })
 
 const menueOffen = ref(false)
 const gescrollt = ref(false)
@@ -35,7 +37,7 @@ function aktiv(to: string) {
 <template>
   <!-- Platzhalter in Kopfhöhe: Der Kopf ist fixiert und darf beim Schrumpfen nichts verschieben -->
   <div class="kopf-platz" aria-hidden="true" />
-  <header class="kopf" :class="{ 'kopf--gescrollt': gescrollt, 'kopf--einfahren': einfahren }">
+  <header class="kopf" :class="{ 'kopf--gescrollt': gescrollt, 'kopf--einfahren': einfahren, 'kopf--dunkel': dunkel }">
     <a href="#inhalt" class="kopf__sprunglink">Zum Inhalt springen</a>
     <div class="kopf__leiste">
       <NuxtLink to="/" class="kopf__logo">
@@ -68,7 +70,7 @@ function aktiv(to: string) {
         </ul>
         <BasisKnopf
           :to="links.mitmachen"
-          :variante="gescrollt ? 'hell' : 'gefuellt'"
+          :variante="gescrollt || dunkel ? 'hell' : 'gefuellt'"
           groesse="klein"
           class="kopf__mitmachen"
         >
@@ -118,6 +120,11 @@ function aktiv(to: string) {
 }
 
 /* beim Scrollen: kompakter und lila */
+.kopf--dunkel {
+  --farbe-fokus: var(--farbe-gelb);
+  background: var(--farbe-lila);
+}
+
 .kopf--gescrollt {
   --farbe-fokus: var(--farbe-gelb);
   background: var(--farbe-lila);
@@ -181,7 +188,8 @@ function aktiv(to: string) {
   color: var(--farbe-orange-text);
 }
 
-.kopf--gescrollt .kopf__link {
+.kopf--gescrollt .kopf__link,
+.kopf--dunkel .kopf__link {
   color: var(--farbe-pfirsich);
 }
 
@@ -286,17 +294,22 @@ function aktiv(to: string) {
     display: flex;
   }
 
-  .kopf--gescrollt .kopf__nav {
+  .kopf--gescrollt .kopf__nav,
+  .kopf--dunkel .kopf__nav {
     background: var(--farbe-lila);
   }
 
   .kopf--gescrollt .kopf__burger,
   .kopf--gescrollt .kopf__burger::before,
-  .kopf--gescrollt .kopf__burger::after {
+  .kopf--gescrollt .kopf__burger::after,
+  .kopf--dunkel .kopf__burger,
+  .kopf--dunkel .kopf__burger::before,
+  .kopf--dunkel .kopf__burger::after {
     background: var(--farbe-pfirsich);
   }
 
-  .kopf--gescrollt .kopf__burger--offen {
+  .kopf--gescrollt .kopf__burger--offen,
+  .kopf--dunkel .kopf__burger--offen {
     background: transparent;
   }
 
