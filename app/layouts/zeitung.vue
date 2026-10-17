@@ -1,7 +1,9 @@
 <!-- Layout für den Dorfanzeiger: Zeitungsblatt auf lila Grund.
      Testweise mit der normalen Navigation, die von oben hereinfährt und mitscrollt. -->
 <script setup lang="ts">
-const einfahren = useZeitungAnimation()
+// Navigation fährt nur beim direkten Aufruf herein; bei Navigation innerhalb der Seite bleibt sie stehen
+const nuxtApp = useNuxtApp()
+const einfahren = import.meta.server || nuxtApp.isHydrating
 </script>
 
 <template>
