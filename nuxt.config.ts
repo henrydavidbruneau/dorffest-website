@@ -41,11 +41,13 @@ export default defineNuxtConfig({
     preset: 'netlify',
   },
 
-  // Schriften werden in Phase 2 nach den Figma-Angaben eingetragen
+  // Schriften aus Figma, von @nuxt/fonts heruntergeladen und lokal ausgeliefert
   fonts: {
-    defaults: {
-      weights: [400, 700],
-    },
+    families: [
+      { name: 'Londrina Solid', provider: 'google', weights: [900], global: true },
+      { name: 'Poppins', provider: 'google', weights: [300, 400, 700], styles: ['normal'], global: true },
+      { name: 'Reenie Beanie', provider: 'google', weights: [400], global: true },
+    ],
   },
 
   image: {

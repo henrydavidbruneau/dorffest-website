@@ -1,5 +1,90 @@
 /*
- * Design-Tokens. Werte kommen aus Figma (Phase 2) – nicht schätzen.
+ * Design-Tokens
+ * Farben + Schriften: aus Figma (Bruno, 17.10.2026).
+ * Abstände, Radien, Schatten, Schriftgrößen: VORLÄUFIG abgeleitet, noch nicht aus Figma.
  */
 :root {
+  /* ---------- Farben (Figma) ---------- */
+  --farbe-lila: #7a2a7e;
+  --farbe-orange: #e8820c;
+  --farbe-flieder: #8e6fe0;
+  --farbe-creme: #fffdf7;
+  --farbe-pfirsich: #fce0c5;
+  --farbe-gelb: #fadf84;
+  --farbe-schwarz: #000;
+  --farbe-weiss: #fff;
+
+  /*
+   * Orange als KLEINER Text auf hellem Grund (Creme/Pfirsich/Weiß) erreicht nur 2.7:1.
+   * Für Lesbarkeit (WCAG AA 4.5:1) hier eine dunklere Variante (5.0:1 auf Creme).
+   * Zum Zurückstellen auf das Design-Orange: var(--farbe-orange) eintragen.
+   */
+  --farbe-orange-text: #a45c08;
+
+  /* Semantisch */
+  --farbe-hintergrund: var(--farbe-creme);
+  --farbe-text: var(--farbe-schwarz);
+  --farbe-ueberschrift: var(--farbe-lila);
+  --farbe-akzent: var(--farbe-orange);
+  --farbe-hervorhebung: var(--farbe-flieder);
+  --farbe-papier: var(--farbe-weiss);
+  --farbe-tape: color-mix(in srgb, var(--farbe-gelb) 80%, transparent);
+  /* Fokusrahmen; dunkle Sektionen setzen ihn auf var(--farbe-gelb) */
+  --farbe-fokus: var(--farbe-lila);
+
+  /* ---------- Schriften (Figma) ---------- */
+  --schrift-display: 'Londrina Solid', 'Arial Black', sans-serif; /* 900 Black */
+  --schrift-text: 'Poppins', system-ui, sans-serif; /* 300 Light, 400, 700 */
+  --schrift-hand: 'Reenie Beanie', 'Comic Sans MS', cursive; /* 400 */
+
+  --gewicht-display: 900;
+  --gewicht-text: 300;
+  --gewicht-text-normal: 400;
+  --gewicht-text-fett: 700;
+
+  /* ---------- Schriftgrößen (vorläufig) ---------- */
+  --groesse-xs: 0.75rem;
+  --groesse-s: 0.875rem;
+  --groesse-m: 1rem;
+  --groesse-l: 1.25rem;
+  --groesse-xl: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+  --groesse-h3: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+  --groesse-h2: clamp(2.5rem, 1.6rem + 4vw, 4.5rem);
+  --groesse-h1: clamp(3rem, 1.5rem + 7vw, 7.5rem);
+  /* Reenie Beanie läuft sehr klein, darum eigener Faktor */
+  --groesse-hand: 1.6em;
+
+  --zeilenhoehe-text: 1.6;
+  --zeilenhoehe-display: 0.92;
+
+  /* ---------- Abstände (vorläufig) ---------- */
+  --abstand-3xs: 0.25rem;
+  --abstand-2xs: 0.5rem;
+  --abstand-xs: 0.75rem;
+  --abstand-s: 1rem;
+  --abstand-m: 1.5rem;
+  --abstand-l: 2.5rem;
+  --abstand-xl: 4rem;
+  --abstand-2xl: clamp(4rem, 2rem + 8vw, 8rem);
+
+  --seitenrand: clamp(1rem, 0.5rem + 3vw, 3rem);
+  --inhaltsbreite: 75rem;
+  --textbreite: 40rem;
+
+  /* ---------- Radien (vorläufig) ---------- */
+  --radius-s: 0.25rem;
+  --radius-m: 0.5rem;
+  --radius-l: 1rem;
+  --radius-knopf: 0.5rem;
+
+  /* ---------- Schatten (vorläufig) ---------- */
+  --schatten-zettel: 2px 4px 10px rgb(0 0 0 / 0.15);
+  --schatten-karte: 0 6px 20px rgb(0 0 0 / 0.12);
+
+  /* ---------- Linien ---------- */
+  --linie-dicke: 2px;
+
+  /* ---------- Bewegung ---------- */
+  --dauer-kurz: 150ms;
+  --dauer-mittel: 250ms;
 }
