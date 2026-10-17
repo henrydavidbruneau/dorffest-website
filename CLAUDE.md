@@ -193,7 +193,7 @@ Nach jeder Phase: committen, pushen, Bruno kurz zeigen.
 2. ✅ **Tokens + Basis-Komponenten** (nach Figma-Werten) + Layout (Nav, Footer).
 3. ✅ **Startseite**, Sektion für Sektion.
 4. **Über uns.**
-5. **Dorfanzeiger** (Übersicht), dann Artikelseite (Entwurf vorher zeigen).
+5. **Dorfanzeiger** (Übersicht ✅, Layout `zeitung`, Blatt faltet sich beim Laden auf), dann Artikelseite (Entwurf vorher zeigen).
 6. **Termine** + Termin-Detailseite (Entwurf vorher zeigen).
 7. **Formulare** (UI + POST-Routen mit Validierung, noch ohne Speichern).
 8. Rechtliche Seiten, 404, SEO, Feinschliff Mobile.
