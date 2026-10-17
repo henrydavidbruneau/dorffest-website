@@ -6,6 +6,7 @@ const t = texte.start.hero
 </script>
 
 <template>
+  <!-- Der Pfeil zur nächsten Sektion und das Tanzpaar zeichnet <StartWegweiser> -->
   <section class="hero" aria-labelledby="hero-titel">
     <img
       src="/illustrationen/frau-mit-kind.svg"
@@ -16,50 +17,27 @@ const t = texte.start.hero
     >
 
     <div class="hero__inhalt inhalt">
-      <p class="hero__zusatz handschrift">
-        {{ t.zusatz }}
-        <span class="hero__stern" aria-hidden="true">✶</span>
-      </p>
+      <p class="hero__zusatz handschrift">{{ t.zusatz }}</p>
+      <span class="hero__stern" aria-hidden="true">✶</span>
       <h1 id="hero-titel" class="hero__titel">
-        Königsdorf<br>
-        <BasisHervorhebung :drehung="-1.5">Rückt zusammen</BasisHervorhebung>
+        <span class="hero__zeile1">Königsdorf</span>
+        <BasisHervorhebung :drehung="-1" class="hero__zeile2">Rückt zusammen</BasisHervorhebung>
       </h1>
       <p class="hero__text">{{ t.text }}</p>
       <div class="hero__knoepfe">
         <BasisKnopf :to="links.infochannel" target="_blank">{{ t.knopfInfochannel }}</BasisKnopf>
-        <BasisKnopf to="#was-wir-tun" variante="outline">{{ t.knopfWasWirTun }}</BasisKnopf>
+        <BasisKnopf id="knopf-was-wir-tun" to="#was-wir-tun" variante="outline">{{ t.knopfWasWirTun }}</BasisKnopf>
       </div>
     </div>
-
-    <div class="hero__wegweiser" aria-hidden="true">
-      <span class="hero__hier-entlang handschrift">{{ t.hierEntlang }}</span>
-      <svg class="hero__pfeil" viewBox="0 0 600 220" preserveAspectRatio="none">
-        <path
-          d="M560 10 C 560 120, 420 190, 260 170 S 40 150, 10 210"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-dasharray="7 9"
-          stroke-linecap="round"
-        />
-      </svg>
-    </div>
-
-    <img
-      src="/illustrationen/tanzpaar.svg"
-      alt=""
-      width="700"
-      height="700"
-      class="hero__tanzpaar"
-      loading="lazy"
-    >
   </section>
 </template>
 
 <style scoped>
+/* Maße aus dem Design (1440): Inhalt beginnt 74px unter der Nav-Linie */
 .hero {
   position: relative;
-  padding-block: var(--abstand-xl) var(--abstand-l);
+  min-height: calc(100svh - var(--kopf-hoehe));
+  padding-block: clamp(2.5rem, 5.1vw, 4.625rem) clamp(4rem, 9vw, 8rem);
   text-align: center;
 }
 
@@ -71,94 +49,67 @@ const t = texte.start.hero
   align-items: center;
 }
 
+/* Frau mit Kind: 64px links vom Inhaltsrand, 56px unter der Linie, 117 breit */
 .hero__figur {
   position: absolute;
-  top: 0;
-  left: max(var(--seitenrand), calc(50% - 40rem));
-  width: clamp(4rem, 2rem + 6vw, 8.5rem);
+  top: clamp(1.5rem, 3.9vw, 3.5rem);
+  left: max(0.5rem, calc(50% - min(35rem, 50vw - var(--seitenrand)) - clamp(0rem, 4.4vw, 4rem)));
+  width: clamp(3.5rem, 8.1vw, 7.3rem);
 }
 
 .hero__zusatz {
-  position: relative;
-  margin: 0 0 var(--abstand-2xs);
-  font-size: clamp(1.6rem, 1.2rem + 1.5vw, 2.4rem);
+  margin: 0;
+  font-size: var(--groesse-hand-xl);
+  line-height: 1;
   color: var(--farbe-orange);
-  transform: translateX(15%) rotate(-3deg);
+  transform: rotate(-3deg);
 }
 
 .hero__stern {
-  position: absolute;
-  bottom: -1.1em;
-  left: 50%;
-  font-family: var(--schrift-text);
-  font-size: 0.6em;
+  margin-top: 0.15rem;
+  font-size: clamp(1.25rem, 2.1vw, 1.9rem);
+  line-height: 1;
+  color: var(--farbe-orange);
 }
 
 .hero__titel {
-  font-size: clamp(3.25rem, 1rem + 9vw, 9.5rem);
-  line-height: 0.88;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0.1rem;
 }
 
-.hero__titel :deep(.hervorhebung) {
-  margin-top: 0.06em;
-  padding-inline: 0.12em;
+.hero__zeile1 {
+  font-size: var(--groesse-h1);
+  line-height: 0.8;
+}
+
+.hero__zeile2 {
+  margin-top: clamp(0.15rem, 0.4vw, 0.4rem);
+  padding: 0.2em 0.14em 0.17em;
+  font-size: var(--groesse-h1-gross);
+  line-height: 0.85;
+  white-space: nowrap;
 }
 
 .hero__text {
-  max-width: 34rem;
-  margin: var(--abstand-m) auto var(--abstand-m);
-  font-size: var(--groesse-s);
+  max-width: 39rem;
+  margin: clamp(0.75rem, 1.4vw, 1.25rem) auto 0;
+  font-size: clamp(1.0625rem, 1.354vw, 1.21875rem); /* 19,5 */
+  line-height: 1.6;
 }
 
 .hero__knoepfe {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: var(--abstand-xs);
+  gap: var(--abstand-s);
+  margin-top: clamp(2rem, 4.2vw, 3.75rem);
 }
 
-.hero__wegweiser {
-  display: none;
-}
-
-.hero__tanzpaar {
-  width: clamp(6rem, 4rem + 6vw, 10rem);
-  margin: var(--abstand-l) auto 0;
-}
-
-@media (min-width: 64rem) {
-  .hero {
-    padding-bottom: var(--abstand-2xl);
-  }
-
-  .hero__wegweiser {
-    position: absolute;
-    right: max(var(--seitenrand), calc(50% - 38rem));
-    bottom: 0;
-    display: block;
-    width: min(46vw, 40rem);
-    height: 15rem;
-    color: var(--farbe-orange);
-  }
-
-  .hero__hier-entlang {
-    position: absolute;
-    top: -2.2rem;
-    right: -0.5rem;
-    font-size: 2rem;
-    transform: rotate(-18deg);
-  }
-
-  .hero__pfeil {
-    width: 100%;
-    height: 100%;
-  }
-
-  .hero__tanzpaar {
-    position: absolute;
-    bottom: 1.5rem;
-    left: max(var(--seitenrand), calc(50% - 30rem));
-    margin: 0;
+@media (max-width: 40rem) {
+  .hero__zeile2 {
+    white-space: normal;
   }
 }
 </style>

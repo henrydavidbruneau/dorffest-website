@@ -10,12 +10,19 @@ useSeoMeta({
 </script>
 
 <template>
-  <div>
+  <div class="startseite">
     <StartHero />
     <StartWasWirTun />
+    <StartWegweiser von="#knopf-was-wir-tun" nach="#was-wir-tun-titel" />
     <StartWasKommt />
     <StartWasBisherGeschah />
     <StartNimmDirEinen />
     <StartFragen />
   </div>
 </template>
+
+<style scoped>
+.startseite {
+  position: relative;
+}
+</style>
