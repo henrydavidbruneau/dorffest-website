@@ -1,5 +1,7 @@
 import type { DirectusEintrag } from './directus'
 
+export type MitbringenPosition = 'aus' | 'seite_1' | 'seite_2'
+
 /** Directus-Collection `termine` */
 export interface Termin extends DirectusEintrag {
   slug: string
@@ -33,8 +35,10 @@ export interface Termin extends DirectusEintrag {
   /** Anzahl Plätze; null = unbegrenzt */
   plaetze: number | null
 
-  /** Mitbring-Formular ("Was bringst du mit?") zeigen */
-  mitbringen_aktiv: boolean
+  /** Mitbring-Formular ("Was bringst du mit?"):
+   *  aus = nicht zeigen · seite_1 = auf der ersten Seite (mit der Anmeldung)
+   *  seite_2 = als zweite Seite der Anmeldung (ohne Anmeldung wie seite_1) */
+  mitbringen_position: MitbringenPosition
   /** Einleitung zum Mitbringen, z.B. "Wir stellen einen Tisch mit Getränken und Gebäck auf …" */
   mitbringen_text: string | null
   /** Vorschläge zum Antippen (Directus: Tags/JSON) */

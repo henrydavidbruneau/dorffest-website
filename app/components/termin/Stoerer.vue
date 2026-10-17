@@ -1,8 +1,9 @@
 <script setup lang="ts">
 // Anmeldezettel. Fälle:
-// - Anmeldung (begrenzt / unbegrenzt): Seite 1 Angaben, Seite 2 "Was bringst du mit?" (falls aktiv), dann absenden
-// - keine Anmeldung, aber Mitbringen aktiv: nur das Mitbring-Formular
-// - keine Anmeldung, kein Mitbringen: Hinweis "Einfach vorbeikommen"
+// - Anmeldung (begrenzt / unbegrenzt), "Was bringst du mit?" je nach mitbringen_position
+//   gar nicht, auf derselben Seite oder als zweite Seite vor dem Absenden
+// - keine Anmeldung, aber Mitbringen: nur das Mitbring-Formular
+// - weder noch: kein Zettel
 const props = defineProps<{ termin: TerminDetail }>()
 
 const anmeldung = useFormular(() => `/api/termine/${props.termin.slug}/anmeldung`)
@@ -17,8 +18,12 @@ const begrenzt = computed(() => props.termin.plaetze_frei !== null)
 const ausgebucht = computed(() => props.termin.plaetze_frei === 0)
 const offen = computed(() => !props.termin.vergangen)
 const mitAnmeldung = computed(() => offen.value && props.termin.anmeldung_aktiv && !ausgebucht.value)
-const nurMitbringen = computed(() => offen.value && !props.termin.anmeldung_aktiv && props.termin.mitbringen_aktiv)
-const zweiSeiten = computed(() => mitAnmeldung.value && props.termin.mitbringen_aktiv)
+const mitbringen = computed(() => props.termin.mitbringen_position !== 'aus')
+const nurMitbringen = computed(() => offen.value && !props.termin.anmeldung_aktiv && mitbringen.value)
+const zweiSeiten = computed(() => mitAnmeldung.value && props.termin.mitbringen_position === 'seite_2')
+const mitbringenAufSeite1 = computed(() => mitAnmeldung.value && props.termin.mitbringen_position === 'seite_1')
+// ohne Anmeldung und ohne Mitbringen gibt es keinen Zettel (auch keinen Hinweis)
+const sichtbar = computed(() => props.termin.vergangen || props.termin.anmeldung_aktiv || mitbringen.value)
 const maxPersonen = computed(() => Math.min(10, props.termin.plaetze_frei ?? 10))
 
 const aktiv = computed(() => (nurMitbringen.value ? beitrag : anmeldung))
@@ -29,7 +34,7 @@ const fehler = computed(() => pruefFehler.value || (aktiv.value.status.value ===
 const titel = computed(() => {
   const t = props.termin
   if (t.vergangen) return 'Schon vorbei'
-  if (!t.anmeldung_aktiv) return t.mitbringen_aktiv ? 'Bringst du was mit?' : 'Einfach vorbeikommen!'
+  if (!t.anmeldung_aktiv) return 'Bringst du was mit?'
   if (ausgebucht.value) return 'Leider ausgebucht'
   if (seite.value === 2) return 'Was bringst du mit?'
   return begrenzt.value ? 'Nur begrenzte Plätze!' : 'Sag uns, dass du kommst!'
@@ -38,11 +43,7 @@ const titel = computed(() => {
 const hinweis = computed(() => {
   const t = props.termin
   if (t.vergangen) return 'Dieser Termin liegt schon zurück. Schau bei den anderen Terminen vorbei!'
-  if (!t.anmeldung_aktiv) {
-    return t.mitbringen_aktiv
-      ? 'Du musst dich nicht anmelden – komm einfach vorbei! Wenn du etwas beitragen magst, trag es hier ein.'
-      : 'Für diesen Termin musst du dich nicht anmelden. Wir freuen uns auf dich!'
-  }
+  if (!t.anmeldung_aktiv) return 'Wenn du etwas beitragen magst, trag es hier ein – dann sehen wir, was schon da ist.'
   if (ausgebucht.value) return 'Alle Plätze sind vergeben. Schreib uns trotzdem gern – manchmal wird noch etwas frei.'
   if (seite.value === 2) return 'Ganz freiwillig – wenn nicht, komm einfach so!'
   if (begrenzt.value) return `Es gibt nur ${t.plaetze} Plätze – noch ${t.plaetze_frei} frei. Melde dich an, damit wir für dich planen können.`
@@ -84,7 +85,7 @@ async function absenden() {
 </script>
 
 <template>
-  <section id="anmeldung" ref="zettel" class="stoerer" :class="{ 'stoerer--knapp': begrenzt && !ausgebucht }" aria-labelledby="stoerer-titel">
+  <section v-if="sichtbar" id="anmeldung" ref="zettel" class="stoerer" :class="{ 'stoerer--knapp': begrenzt && !ausgebucht }" aria-labelledby="stoerer-titel">
     <BasisKlebeband position="links" farbe="gelb" :drehung="-4" :breite="6" />
     <BasisKlebeband position="rechts" farbe="flieder" :drehung="3" :breite="6" />
 
@@ -125,6 +126,9 @@ async function absenden() {
             <BasisFeld v-model="form.personen" label="Personen" type="number" name="personen" required :min="1" :max="maxPersonen" />
           </div>
           <BasisFeld v-model="form.nachricht" label="Nachricht an uns" name="nachricht" mehrzeilig :maxlength="500" />
+          <div v-if="mitbringenAufSeite1" class="stoerer__mitbringen">
+            <TerminMitbringFelder v-model="form.mitbringen" :termin="termin" />
+          </div>
         </template>
 
         <!-- Seite 2: Was bringst du mit? -->
@@ -170,6 +174,12 @@ async function absenden() {
 /* begrenzte Plätze: Rand oben in Orange als Hinweis */
 .stoerer--knapp {
   border-top: 6px solid var(--farbe-orange);
+}
+
+.stoerer__mitbringen {
+  margin-top: var(--abstand-xs);
+  padding-top: var(--abstand-m);
+  border-top: 2px dashed var(--farbe-lila);
 }
 
 .stoerer__kopf {

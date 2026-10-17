@@ -5,7 +5,7 @@ const props = defineProps<{ termin: TerminDetail }>()
 const zeilen = computed(() => {
   const t = props.termin
   if (t.vergangen) return ['war', 'schön!']
-  if (!t.anmeldung_aktiv) return ['ohne', 'Anmeldung', 'kommen!']
+  if (!t.anmeldung_aktiv) return t.mitbringen_position !== 'aus' ? ['bring', 'was', 'mit!'] : []
   if (t.plaetze_frei === 0) return ['aus-', 'gebucht']
   if (t.plaetze_frei !== null) return ['nur noch', String(t.plaetze_frei), 'Plätze!']
   return ['jetzt', 'anmelden!']
@@ -15,7 +15,7 @@ const ziel = computed(() => (props.termin.vergangen ? undefined : '#anmeldung'))
 </script>
 
 <template>
-  <component :is="ziel ? 'a' : 'p'" :href="ziel" class="sticker" :class="{ 'sticker--zahl': gross }">
+  <component :is="ziel ? 'a' : 'p'" v-if="zeilen.length" :href="ziel" class="sticker" :class="{ 'sticker--zahl': gross }">
     <span v-for="(z, i) in zeilen" :key="i" class="sticker__zeile">{{ z }}</span>
   </component>
 </template>

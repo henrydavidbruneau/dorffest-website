@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   const personen = Number(body.personen)
   const nachricht = text(body.nachricht, 500) || null
   // optional: "Was bringst du mit?" (zweite Seite der Anmeldung)
-  const mitbringen = termin.mitbringen_aktiv ? (text(body.mitbringen, 200) || null) : null
+  const mitbringen = termin.mitbringen_position !== 'aus' ? (text(body.mitbringen, 200) || null) : null
 
   if (!name) throw fail(400, 'name', 'Bitte gib deinen Namen an.')
   if (!mail) throw fail(400, 'email', 'Das sieht nicht nach einer E-Mail-Adresse aus.')

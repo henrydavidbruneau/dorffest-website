@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
   if (istBot(body)) return { ok: true }
 
   const termin = await ladeTerminDetail(getRouterParam(event, 'slug') ?? '')
-  if (!termin || !termin.mitbringen_aktiv) throw fail(404, 'kein_mitbringen', 'Für diesen Termin wird nichts gesammelt.')
+  if (!termin || termin.mitbringen_position === 'aus') throw fail(404, 'kein_mitbringen', 'Für diesen Termin wird nichts gesammelt.')
   if (termin.vergangen) throw fail(410, 'vergangen', 'Dieser Termin liegt schon zurück.')
 
   const name = text(body.name, 80)
