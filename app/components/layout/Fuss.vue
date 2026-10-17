@@ -27,7 +27,7 @@ import { texte } from '~/texte'
             <h2 class="fuss__spaltentitel">{{ spalte.titel }}</h2>
             <ul>
               <li v-for="link in spalte.links" :key="link.text">
-                <NuxtLink :to="link.to">{{ link.text }}</NuxtLink>
+                <NuxtLink :to="link.to" :target="link.to.startsWith('http') ? '_blank' : undefined">{{ link.text }}</NuxtLink>
               </li>
             </ul>
           </div>

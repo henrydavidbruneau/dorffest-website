@@ -60,7 +60,7 @@ function absenden() {}
           Eintragen
         </BasisKnopf>
       </div>
-      <a :href="links.infochannel" class="newsletter__infochannel handschrift">→ lieber zum Infochannel</a>
+      <a :href="links.infochannel" target="_blank" rel="noopener" class="newsletter__infochannel handschrift">→ lieber zum Infochannel</a>
     </form>
   </component>
 </template>

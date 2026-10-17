@@ -1,11 +1,10 @@
 // Alle Ziele der Seite an einer Stelle.
-// TODO(Bruno): Infochannel-URL, Ziele von "Mitmachen" und "Gesucht-Zettel" bestätigen.
 export const links = {
-  infochannel: '#infochannel',
+  infochannel: 'https://chat.whatsapp.com/HtfZqwqUXpu6Xu9A4nO7PV?mode=gi_t',
+  // TODO: Mitmachen-Seite/-Bereich wird später gebaut
   mitmachen: '/#mitmachen',
   mitgliedWerden: '/ueber-uns#mitglied-werden',
-  gesuchtZettel: '/#mitmachen',
-  kontaktMail: 'kontakt@königsdorf-rückt-zusammen.de',
+  kontaktMail: 'kontakt@koenigsdorf-rückt-zusammen.de',
 } as const
 
 export interface NavLink {
@@ -33,7 +32,6 @@ export const fussnavigation: { titel: string, links: NavLink[] }[] = [
     titel: 'Mitmachen',
     links: [
       { text: 'Termine', to: '/termine' },
-      { text: 'Gesucht-Zettel', to: links.gesuchtZettel },
       { text: 'Infochannel', to: links.infochannel },
     ],
   },

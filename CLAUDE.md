@@ -108,7 +108,7 @@ Nav: Startseite · Termine · Neuigkeiten · Über uns · [Button „Mitmachen"]
 | `/vereinsheim` | – | Admin-Bereich (bei uns „Vereinsheim“, im DPAT-Vorbild `admin`/„Hinterzimmer“), **letzte Phase** (nach Directus). Route ist reserviert. |
 | 404 | – | eigene Fehlerseite im Stil der Seite |
 
-Footer-Links: Über uns · Satzung · Mitglied werden · Termine · Gesucht-Zettel ·
+Footer-Links: Über uns · Satzung · Mitglied werden · Termine ·
 Infochannel · Kontakt · Impressum · Datenschutz.
 
 ## Design-System
