@@ -10,5 +10,5 @@ export function useTermine(optionen: TermineOptionen = {}) {
 }
 
 export function useTermin(slug: MaybeRefOrGetter<string>) {
-  return useFetch<Termin>(() => `/api/termine/${toValue(slug)}`)
+  return useFetch<TerminDetail>(() => `/api/termine/${toValue(slug)}`)
 }

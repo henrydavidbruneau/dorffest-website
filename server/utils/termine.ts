@@ -1,6 +1,7 @@
 // Lesezugriff auf Termine. Heute aus server/data, später aus Directus (`termine`).
 // Nur diese Datei muss dann umgestellt werden – Routen, Composables und Seiten bleiben.
 import { termine as platzhalter } from '../data/termine'
+import { angemeldetePersonen } from '../data/anmeldungen'
 
 export interface TerminFilter {
   zeitraum?: 'kommend' | 'vergangen' | 'alle'
@@ -11,7 +12,7 @@ export interface TerminFilter {
 }
 
 /** Ein Termin gilt bis zu seinem Ende (oder Beginn + 1 Tag) als kommend. Ohne Datum immer. */
-function istKommend(termin: Termin, jetzt: number) {
+export function istKommend(termin: Termin, jetzt: number) {
   if (!termin.beginn) return true
   const ende = termin.ende ? Date.parse(termin.ende) : Date.parse(termin.beginn) + 24 * 60 * 60 * 1000
   return ende >= jetzt
@@ -40,4 +41,21 @@ export async function ladeTermine(filter: TerminFilter = {}): Promise<Termin[]> 
 
 export async function ladeTermin(slug: string): Promise<Termin | null> {
   return platzhalter.find(t => t.slug === slug && t.status === 'published') ?? null
+}
+
+/** bisher angemeldete Personen (später: Summe aus Directus `anmeldungen`) */
+export async function zaehleAnmeldungen(terminId: number): Promise<number> {
+  return angemeldetePersonen[terminId] ?? 0
+}
+
+export async function ladeTerminDetail(slug: string): Promise<TerminDetail | null> {
+  const termin = await ladeTermin(slug)
+  if (!termin) return null
+  const plaetze_frei = termin.plaetze ? Math.max(0, termin.plaetze - await zaehleAnmeldungen(termin.id)) : null
+  return {
+    ...termin,
+    beschreibung_html: termin.beschreibung ? markdownZuHtml(termin.beschreibung) : '',
+    plaetze_frei,
+    vergangen: !istKommend(termin, Date.now()),
+  }
 }

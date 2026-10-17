@@ -16,6 +16,10 @@ export interface Termin extends DirectusEintrag {
   /** null = "Ort folgt" */
   ort: string | null
   adresse: string | null
+  /** Directus: Datei-ID. Bis dahin: Pfad unter public/ */
+  bild: string | null
+  bild_alt: string | null
+  /** kurzer Text für Kacheln (Startseite) */
   kurzbeschreibung: string | null
   /** Markdown */
   beschreibung: string | null
@@ -23,4 +27,25 @@ export interface Termin extends DirectusEintrag {
   aufruf_text: string | null
   /** auf der Startseite unter "Was kommt" zeigen */
   hervorgehoben: boolean
+
+  /** Anmeldung möglich? */
+  anmeldung_aktiv: boolean
+  /** Anzahl Plätze; null = unbegrenzt */
+  plaetze: number | null
+
+  /** Mitbring-Formular ("Was bringst du mit?") zeigen */
+  mitbringen_aktiv: boolean
+  /** Einleitung zum Mitbringen, z.B. "Wir stellen einen Tisch mit Getränken und Gebäck auf …" */
+  mitbringen_text: string | null
+  /** Vorschläge zum Antippen (Directus: Tags/JSON) */
+  mitbringen_vorschlaege: string[] | null
+}
+
+/** Termin-Detail: wie in Directus, plus serverseitig berechnete Felder */
+export interface TerminDetail extends Termin {
+  beschreibung_html: string
+  /** freie Plätze (nur bei begrenzten Plätzen), sonst null */
+  plaetze_frei: number | null
+  /** liegt der Termin schon zurück? */
+  vergangen: boolean
 }
