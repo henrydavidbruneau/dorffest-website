@@ -18,7 +18,8 @@ const wochentag = computed(() => (props.termin.beginn ? wochentagKurz(props.term
 const zeile = computed(() => {
   const { beginn, ort, hinweis } = props.termin
   if (hinweis) return hinweis
-  return [beginn ? uhrzeit(beginn) : null, ort ?? 'Ort folgt'].filter(Boolean).join(' · ')
+  const zeit = beginn && !props.termin.uhrzeit_folgt ? uhrzeit(beginn) : null
+  return [zeit, ort ?? 'Ort folgt'].filter(Boolean).join(' · ')
 })
 </script>
 

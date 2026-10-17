@@ -20,8 +20,10 @@ export default defineEventHandler(async (event) => {
     'BEGIN:VEVENT',
     `UID:termin-${termin.id}@koenigsdorf-rueckt-zusammen.de`,
     `DTSTAMP:${icsZeit(new Date().toISOString())}`,
-    `DTSTART:${icsZeit(termin.beginn)}`,
-    `DTEND:${icsZeit(ende)}`,
+    // Uhrzeit noch offen → ganztägig
+    ...(termin.uhrzeit_folgt
+      ? [`DTSTART;VALUE=DATE:${termin.beginn.slice(0, 10).replace(/-/g, '')}`]
+      : [`DTSTART:${icsZeit(termin.beginn)}`, `DTEND:${icsZeit(ende)}`]),
     `SUMMARY:${icsText(termin.titel)}`,
     termin.ort ? `LOCATION:${icsText([termin.ort, termin.adresse].filter(Boolean).join(', '))}` : '',
     termin.kurzbeschreibung ? `DESCRIPTION:${icsText(`${termin.kurzbeschreibung}\n\n${url}`)}` : `DESCRIPTION:${icsText(url)}`,

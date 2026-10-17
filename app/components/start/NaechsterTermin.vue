@@ -22,7 +22,8 @@ const countdown = computed(() => {
 const zeile = computed(() => {
   const t = props.termin
   if (!t.beginn) return t.hinweis ?? ''
-  return `${wochentagKurz(t.beginn)} ${tagMonat(t.beginn)} · ${uhrzeit(t.beginn)} Uhr · ${t.ort ?? 'Ort folgt'}`
+  const zeit = t.uhrzeit_folgt ? null : `${uhrzeit(t.beginn)} Uhr`
+  return [`${wochentagKurz(t.beginn)} ${tagMonat(t.beginn)}`, zeit, t.ort ?? 'Ort folgt'].filter(Boolean).join(' · ')
 })
 </script>
 

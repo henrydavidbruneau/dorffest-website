@@ -16,6 +16,7 @@ const datum = computed(() => {
 const wann = computed(() => {
   const t = termin.value!
   if (!t.beginn) return t.hinweis ?? 'Datum folgt'
+  if (t.uhrzeit_folgt) return `${new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', year: 'numeric' }).format(new Date(t.beginn))} · Uhrzeit folgt`
   const zeit = t.ende ? `${uhrzeit(t.beginn)}–${uhrzeit(t.ende)} Uhr` : `ab ${uhrzeit(t.beginn)} Uhr`
   const rhythmus = t.rhythmus_kurz ? ' · jeden ersten Montag im Monat' : ''
   // Datum steht schon groß auf dem Zettel – hier Wochentag + Uhrzeit

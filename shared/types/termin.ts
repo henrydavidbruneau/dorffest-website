@@ -9,6 +9,8 @@ export interface Termin extends DirectusEintrag {
   /** ISO-Datum mit Uhrzeit. null = Datum steht noch nicht fest */
   beginn: string | null
   ende: string | null
+  /** Datum steht fest, Uhrzeit noch nicht */
+  uhrzeit_folgt: boolean
   /** Ersetzt die Datumsanzeige, solange `beginn` fehlt, z.B. "2026" */
   datum_text: string | null
   /** Regelmäßiger Termin: Kurzform statt Datum, z.B. "1. Mo" (jeden ersten Montag) */
