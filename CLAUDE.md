@@ -83,15 +83,23 @@ scripts/                  später: directus-setup.mjs
 
 ## Vorbild: DPAT („Don't Post About This")
 
-Gleiche Architektur, fertig an Directus angebunden. Lokaler Pfad: **noch offen –
-bei Bruno erfragen.** Dort **Muster** abschauen, **nicht das Design**. **Am DPAT-Repo
-nichts ändern.**
+Gleiche Architektur, fertig an Directus angebunden. Lokal unter
+`/Users/brunobalscheit/Documents/Projects/WirSindRaus/dont-post-about-this`.
+Dort **Muster** abschauen, **nicht das Design** (und nicht Nuxt Content/i18n, das nutzt
+DPAT, wir nicht). **Am DPAT-Repo nichts ändern, nur lesen.**
 
-- `server/api/*` + `server/utils/*`: Server-Routen, Directus-Zugriff, Fehlerbehandlung
+- `server/api/*` + `server/utils/*`: Server-Routen, Directus-Zugriff, Fehlerbehandlung.
+  Muster: Lesen + Mapping in `server/utils/<typ>.ts`, Route ist dünn;
+  `directusServer()` mit Server-Token aus `useRuntimeConfig()`; selbst auf
+  `status = published` filtern.
+- POST-Routen (z.B. `newsletter.post.ts`): Rate-Limit → Honeypot → Turnstile →
+  Validierung; Fehler als `createError({ statusCode, statusMessage, data: { code } })`;
+  Newsletter antwortet immer `{ ok: true }` (keine Auskunft, wer eingetragen ist).
 - `server/api/admin/*` + `server/utils/adminSession.ts`: Login mit httpOnly-Cookies
-- `app/pages/admin/*`: Admin-Oberfläche (Journal-Editor, Upload)
+- `app/pages/admin/*`: Admin-Oberfläche (bei uns `/vereinsheim`)
 - `scripts/directus-setup.mjs` + `DIRECTUS.md`: Collections/Rechte anlegen
-- Newsletter mit Bestätigungslink, öffentliche Einreichung mit Status `eingereicht`
+- Newsletter mit Bestätigungslink (Double-Opt-in über Brevo), öffentliche Einreichung
+  mit Status `eingereicht`
 
 ## Seiten
 
