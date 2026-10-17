@@ -91,6 +91,37 @@ export const texte = {
     },
   },
 
+  mitmachen: {
+    meta: 'So machst du bei Königsdorf rückt zusammen mit: beim offenen Plenum, beim Dorffest 2027, mit eigenen Ideen – auch ohne Mitgliedschaft.',
+    intro: 'Wir sind eine offene Gruppe und organisieren uns vor allem über unser regelmäßiges Plenum. Dort und in unserer Orga-WhatsApp-Gruppe treffen wir alle Entscheidungen gemeinsam.',
+    intro2: 'Zum Plenum kann jede*r jederzeit dazukommen und mitwirken – auch ohne Mitgliedschaft. In die Orga-Gruppe kommen Vereinsmitglieder.',
+    plenum: {
+      text: 'Einmal im Monat besprechen wir Ideen, planen die nächsten Aktionen und verteilen Aufgaben. Meistens online, manchmal vor Ort. Komm einfach dazu!',
+      formTitel: 'Erinnere mich!',
+      formText: 'Wir schicken dir den Termin und den Link zum Plenum.',
+    },
+    wege: [
+      { titel: 'Zum Plenum kommen', text: 'Einmal im Monat, meistens online. Hier entscheiden wir gemeinsam – sei dabei, auch ohne Mitgliedschaft.', link: '#plenum', linkText: 'Zum Plenum' },
+      { titel: 'Beim Dorffest anpacken', text: 'Aufbau, Buffet, Kinderprogramm, Abbau: Für das Dorffest 2027 brauchen wir viele helfende Hände.', link: '#dorffest', linkText: 'Zum Aufruf' },
+      { titel: 'Eigene Idee einbringen', text: 'Du hast eine Idee für eine Aktion, einen Workshop oder ein Angebot? Schreib sie uns – wir helfen beim Umsetzen.', link: '#idee', linkText: 'Idee einreichen' },
+      { titel: 'Mitglied werden', text: 'Als Mitglied unterstützt du den Verein und kommst in unsere Orga-Gruppe.', link: '/mitglied-werden', linkText: 'Mitglied werden' },
+    ],
+    dorffest: {
+      zusatz: 'am 07.09.2027',
+      text: 'Gerade für das nächste Dorffest freuen wir uns über viele helfende Hände. Ideen und Angebote kannst du schon jetzt einbringen – beim letzten Mal ist zum Beispiel der Kleidertausch erst über unseren Mitmach-Aufruf entstanden.',
+    },
+    idee: {
+      titel: 'Deine Idee',
+      text: 'Beschreib kurz, was du vorhast oder was du anbieten möchtest. Wir melden uns bei dir.',
+    },
+    ideenwand: {
+      zusatz: 'Ideenwand',
+      titel: 'Was fehlt dir in Königsdorf?',
+      text: 'Kleine Wünsche, große Träume – pinn sie an die Wand.',
+    },
+    kontakt: 'Alle anderen Fragen und Anfragen gern an',
+  },
+
   mitgliedWerden: {
     meta: 'Werde Mitglied bei Königsdorf rückt zusammen e.V. – als Fördermitglied oder reguläres Mitglied.',
     intro: 'Mit deiner Mitgliedschaft machst du möglich, was wir im Dorf auf die Beine stellen. Mitmachen kannst du übrigens auch ohne Mitgliedschaft – beim offenen Plenum ist jede*r willkommen.',
