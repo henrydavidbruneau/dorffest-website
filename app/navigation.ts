@@ -17,7 +17,7 @@ export interface NavLink {
 
 export const hauptnavigation: NavLink[] = [
   { text: 'Startseite', to: '/' },
-  { text: 'Termine', to: '/termine' },
+  { text: 'Termine', to: '/#was-kommt' },
   { text: 'Neuigkeiten', to: '/dorfanzeiger' },
   { text: 'Über uns', to: '/ueber-uns' },
 ]
@@ -34,7 +34,7 @@ export const fussnavigation: { titel: string, links: NavLink[] }[] = [
   {
     titel: 'Mitmachen',
     links: [
-      { text: 'Termine', to: '/termine' },
+      { text: 'Termine', to: '/#was-kommt' },
       { text: 'Infochannel', to: links.infochannel },
     ],
   },

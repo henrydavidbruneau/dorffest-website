@@ -2,14 +2,17 @@
 import { texte } from '~/texte'
 
 const t = texte.start.wasKommt
-const { data: termine } = await useTermine({ hervorgehoben: true, limit: 3 })
+const { data: termine } = await useTermine({ hervorgehoben: true, limit: 4 })
+// der nächste Termin als große Kachel, die folgenden als Zettel
+const naechster = computed(() => termine.value[0] ?? null)
+const weitere = computed(() => termine.value.slice(1, 4))
 
 // Drehung der Zettel wie im Design
 const drehungen = [-1.3, 0.8, -0.5]
 </script>
 
 <template>
-  <section class="was-kommt" aria-labelledby="was-kommt-titel">
+  <section id="was-kommt" class="was-kommt" aria-labelledby="was-kommt-titel">
     <img
       src="/illustrationen/disco.svg"
       alt=""
@@ -26,8 +29,10 @@ const drehungen = [-1.3, 0.8, -0.5]
         <p class="was-kommt__zusatz handschrift">{{ t.zusatz }}</p>
       </div>
 
+      <StartNaechsterTermin v-if="naechster" :termin="naechster" class="was-kommt__naechster" />
+
       <ul class="was-kommt__termine">
-        <li v-for="(termin, i) in termine" :key="termin.id">
+        <li v-for="(termin, i) in weitere" :key="termin.id">
           <BasisTerminZettel :termin="termin" :drehung="drehungen[i % 3]" />
         </li>
       </ul>
@@ -89,10 +94,14 @@ const drehungen = [-1.3, 0.8, -0.5]
   width: clamp(5rem, 11.1vw, 10rem);
 }
 
+.was-kommt__naechster {
+  margin-top: clamp(3rem, 7.8vw, 7rem);
+}
+
 .was-kommt__termine {
   display: grid;
   gap: var(--abstand-l);
-  margin: clamp(3rem, 7.8vw, 7rem) 0 0;
+  margin: clamp(2.5rem, 5vw, 4.5rem) 0 0;
   padding: 0;
   list-style: none;
 }

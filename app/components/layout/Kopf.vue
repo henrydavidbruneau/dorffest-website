@@ -30,6 +30,8 @@ watch(() => route.fullPath, () => {
 })
 
 function aktiv(to: string) {
+  // Termine liegen auf der Startseite (#was-kommt) und unter /termine/…
+  if (to === '/#was-kommt') return route.path.startsWith('/termine')
   return to === '/' ? route.path === '/' : route.path.startsWith(to)
 }
 </script>

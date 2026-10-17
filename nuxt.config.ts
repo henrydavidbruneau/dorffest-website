@@ -41,6 +41,11 @@ export default defineNuxtConfig({
     preset: 'netlify',
   },
 
+  // Es gibt keine eigene Terminübersicht – alle Termine stehen auf der Startseite unter "Was kommt"
+  routeRules: {
+    '/termine': { redirect: '/#was-kommt' },
+  },
+
   // Schriften aus Figma, von @nuxt/fonts heruntergeladen und lokal ausgeliefert
   fonts: {
     families: [
