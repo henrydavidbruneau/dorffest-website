@@ -8,7 +8,7 @@ html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
   /* Höhe der mitlaufenden Navigation, damit Sprungziele nicht verdeckt werden */
-  scroll-padding-top: 5.5rem;
+  scroll-padding-top: 6rem;
 }
 
 body {
@@ -17,7 +17,7 @@ body {
   color: var(--farbe-text);
   font-family: var(--schrift-text);
   font-weight: var(--gewicht-text);
-  font-size: var(--groesse-m);
+  font-size: var(--groesse-s);
   line-height: var(--zeilenhoehe-text);
   overflow-x: hidden;
 }
@@ -79,10 +79,53 @@ textarea {
 .handschrift {
   font-family: var(--schrift-hand);
   font-weight: 400;
-  font-size: var(--groesse-hand);
+  font-size: var(--groesse-hand-l);
   line-height: 1.1;
   text-transform: none;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
+}
+
+/* Handschriftlicher Link mit orange gewellter Unterstreichung */
+.handlink {
+  font-family: var(--schrift-hand);
+  font-size: var(--groesse-hand-s);
+  line-height: 1.2;
+  text-decoration: underline wavy var(--farbe-orange);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+}
+
+.handlink:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Gestrichelte Linien wie im Design (Farbe über --strichfarbe) */
+.strich-oben,
+.strich-unten,
+.strich-oben-unten {
+  background-repeat: no-repeat;
+  background-size: 100% var(--strich-dicke);
+}
+
+.strich-oben,
+.strich-unten,
+.strich-oben-unten {
+  --strich-muster: repeating-linear-gradient(90deg, var(--strichfarbe, var(--farbe-orange)) 0 6px, transparent 6px 10px);
+}
+
+.strich-oben {
+  background-image: var(--strich-muster);
+  background-position: top left;
+}
+
+.strich-unten {
+  background-image: var(--strich-muster);
+  background-position: bottom left;
+}
+
+.strich-oben-unten {
+  background-image: var(--strich-muster), var(--strich-muster);
+  background-position: top left, bottom left;
 }
 
 .display {
