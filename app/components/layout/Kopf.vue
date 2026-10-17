@@ -106,7 +106,7 @@ function aktiv(to: string) {
 
 /* von oben hereinfahren (Dorfanzeiger) */
 .kopf--einfahren {
-  animation: einfahren 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  animation: einfahren 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
 }
 
 @keyframes einfahren {

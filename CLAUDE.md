@@ -140,6 +140,9 @@ gleichnamige Datei auf dem Desktop ist ein älterer, anderer Stand). Daneben lie
 - Hero = volle Viewport-Höhe (`100svh` minus Kopf). Der gestrichelte Pfeil vom
   „Was wir tun“-Knopf zur Überschrift (`<StartWegweiser>`) wird per JS aus den echten
   Positionen gezeichnet (ResizeObserver) und entfällt auf Mobil.
+- Aufbau-Animation Startseite: Nav fährt herein (nur erster Aufruf), Hero-Elemente gestaffelt
+  (CSS in `StartHero`), danach zeichnet sich die Linie per JS (Maske), „hier entlang“ und Tanzpaar
+  ploppen auf, wenn die Linie sie erreicht. Alles aus bei `prefers-reduced-motion`.
 - Kontakt-Mail `kontakt@königsdorf-rückt-zusammen.de` (mit ö) und Vereinskonto (IBAN) in `shared/utils/kontakt.ts`.
 - Logo: `public/logo-mobil.svg` (Schild ohne Pfosten), gerade, nicht gedreht.
 - Navigation ohne gestrichelte Linie. Dorfanzeiger-Seiten (Layout `zeitung`) zeigen testweise

@@ -33,6 +33,122 @@ const t = texte.start.hero
 </template>
 
 <style scoped>
+/* ---------- Aufbau-Animation (Zeiten in s nach dem Laden; Navigation 0.1–0.9) ---------- */
+.hero__figur,
+.hero__zusatz,
+.hero__stern,
+.hero__zeile1,
+.hero__zeile2,
+.hero__text,
+.hero__knoepfe > * {
+  animation-duration: 0.8s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+.hero__figur {
+  animation-name: von-links;
+  animation-delay: 0.45s;
+  animation-duration: 1s;
+}
+
+.hero__zusatz {
+  animation-name: handschrift-rein;
+  animation-delay: 0.55s;
+}
+
+.hero__stern {
+  animation-name: ploppen;
+  animation-delay: 0.85s;
+  animation-duration: 0.6s;
+  animation-timing-function: cubic-bezier(0.34, 1.7, 0.5, 1);
+}
+
+.hero__zeile1 {
+  animation-name: aufsteigen;
+  animation-delay: 0.65s;
+}
+
+/* Flieder-Kasten wischt von links auf */
+.hero__zeile2 {
+  animation-name: wischen;
+  animation-delay: 0.95s;
+  animation-duration: 0.9s;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.hero__text {
+  animation-name: aufsteigen;
+  animation-delay: 1.35s;
+}
+
+.hero__knoepfe > :nth-child(1) {
+  animation-name: aufsteigen;
+  animation-delay: 1.55s;
+}
+
+.hero__knoepfe > :nth-child(2) {
+  animation-name: aufsteigen;
+  animation-delay: 1.68s;
+}
+
+@keyframes aufsteigen {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+}
+
+@keyframes von-links {
+  from {
+    opacity: 0;
+    translate: -2.5rem 0.5rem;
+    rotate: -8deg;
+  }
+}
+
+@keyframes handschrift-rein {
+  from {
+    opacity: 0;
+    translate: 0 0.75rem;
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    clip-path: inset(0 -10% 0 0);
+  }
+}
+
+@keyframes ploppen {
+  from {
+    opacity: 0;
+    scale: 0;
+    rotate: -90deg;
+  }
+}
+
+@keyframes wischen {
+  from {
+    clip-path: inset(-10% 100% -10% 0);
+  }
+
+  to {
+    clip-path: inset(-10% -2% -10% 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__figur,
+  .hero__zusatz,
+  .hero__stern,
+  .hero__zeile1,
+  .hero__zeile2,
+  .hero__text,
+  .hero__knoepfe > * {
+    animation: none;
+  }
+}
+
 /* Maße aus dem Design (1440): Inhalt beginnt 74px unter der Nav-Linie */
 .hero {
   position: relative;
@@ -66,6 +182,7 @@ const t = texte.start.hero
 }
 
 .hero__stern {
+  display: inline-block;
   margin-top: 0.15rem;
   font-size: clamp(1.25rem, 2.1vw, 1.9rem);
   line-height: 1;

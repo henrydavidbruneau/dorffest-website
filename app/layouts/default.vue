@@ -2,11 +2,14 @@
 // Seiten mit lila Kopfbereich bekommen die Navigation im lila Farbschema
 const route = useRoute()
 const dunkel = computed(() => route.path.startsWith('/termine/'))
+// Startseite: Navigation fährt beim ersten Laden von oben herein (Teil der Aufbau-Animation)
+const nuxtApp = useNuxtApp()
+const einfahren = route.path === '/' && (import.meta.server || nuxtApp.isHydrating)
 </script>
 
 <template>
   <div class="seite">
-    <LayoutKopf :dunkel="dunkel" />
+    <LayoutKopf :dunkel="dunkel" :einfahren="einfahren" />
     <main id="inhalt" tabindex="-1">
       <slot />
     </main>
