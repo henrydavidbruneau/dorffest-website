@@ -29,9 +29,9 @@ const drehungen = [-1.3, 0.8, -0.5]
         <p class="was-kommt__zusatz handschrift">{{ t.zusatz }}</p>
       </div>
 
-      <StartNaechsterTermin v-if="naechster" :termin="naechster" class="was-kommt__naechster" />
+      <StartNaechsterTermin v-if="naechster" v-einblenden :termin="naechster" class="was-kommt__naechster" />
 
-      <ul class="was-kommt__termine">
+      <ul v-einblenden class="was-kommt__termine">
         <li v-for="(termin, i) in weitere" :key="termin.id">
           <BasisTerminZettel :termin="termin" :drehung="drehungen[i % 3]" />
         </li>
@@ -133,6 +133,47 @@ const drehungen = [-1.3, 0.8, -0.5]
 
 .was-kommt__newsletter {
   margin-top: clamp(2.5rem, 5.8vw, 5.25rem);
+}
+
+/* Band blendet ein, Termin-Zettel fallen nacheinander auf die Pinnwand */
+:root.js .was-kommt__naechster:not(.ist-sichtbar),
+:root.js .was-kommt__termine:not(.ist-sichtbar) > li {
+  opacity: 0;
+}
+
+.was-kommt__naechster.ist-sichtbar {
+  animation: band-rein 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.was-kommt__termine.ist-sichtbar > li {
+  animation: anheften 0.75s cubic-bezier(0.34, 1.45, 0.55, 1) both;
+}
+
+.was-kommt__termine.ist-sichtbar > li:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.was-kommt__termine.ist-sichtbar > li:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+@keyframes band-rein {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+}
+
+@keyframes anheften {
+  from {
+    opacity: 0;
+    translate: 0 -2.5rem;
+    rotate: -4deg;
+  }
+
+  60% {
+    opacity: 1;
+  }
 }
 
 @media (min-width: 40rem) {

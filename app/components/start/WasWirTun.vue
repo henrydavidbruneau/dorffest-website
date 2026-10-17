@@ -28,6 +28,7 @@ const drehungen = [-1.5, 1, -1.5, 1]
           <span class="was-wir-tun__nummer" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
           <h3 class="was-wir-tun__punkttitel">{{ punkt.titel }}</h3>
           <BasisNotizzettel
+            v-einblenden
             farbe="creme"
             rahmen="orange"
             tape="mitte"
@@ -136,6 +137,34 @@ const drehungen = [-1.5, 1, -1.5, 1]
 .was-wir-tun__knopf {
   margin-top: clamp(2rem, 3.7vw, 3.3rem);
   text-align: center;
+}
+
+/* Zettel werden beim Hereinscrollen angeklebt, Tape kommt zuletzt */
+:root.js .was-wir-tun__zettel:not(.ist-sichtbar),
+:root.js .was-wir-tun__zettel:not(.ist-sichtbar) :deep(.klebeband) {
+  opacity: 0;
+}
+
+.was-wir-tun__zettel.ist-sichtbar {
+  animation: ankleben 0.7s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+
+.was-wir-tun__zettel.ist-sichtbar :deep(.klebeband) {
+  animation: tape 0.35s ease-out 0.45s both;
+}
+
+@keyframes ankleben {
+  from {
+    opacity: 0;
+    transform: rotate(calc(var(--drehung) + 7deg)) scale(1.12) translateY(-12px);
+  }
+}
+
+@keyframes tape {
+  from {
+    opacity: 0;
+    scale: 1.4;
+  }
 }
 
 @media (min-width: 48rem) {

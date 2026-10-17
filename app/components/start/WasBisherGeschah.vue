@@ -13,7 +13,7 @@ const { data: artikel } = await useDorfanzeiger({ hervorgehoben: true, limit: 3 
       </h2>
       <p class="geschah__text">{{ t.text }}</p>
 
-      <div class="geschah__zeitung">
+      <div v-einblenden class="geschah__zeitung">
         <div class="geschah__masthead">
           <div>
             <p class="geschah__zusatz handschrift">{{ t.zusatz }}</p>
@@ -90,6 +90,22 @@ const { data: artikel } = await useDorfanzeiger({ hervorgehoben: true, limit: 3 
   display: grid;
   gap: var(--abstand-l);
   margin-top: clamp(1.25rem, 2.2vw, 2rem);
+}
+
+/* Zeitung wird schräg auf den Tisch gelegt */
+:root.js .geschah__zeitung:not(.ist-sichtbar) {
+  opacity: 0;
+}
+
+.geschah__zeitung.ist-sichtbar {
+  animation: hinlegen 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes hinlegen {
+  from {
+    opacity: 0;
+    transform: translate(3rem, 2.5rem) rotate(3deg);
+  }
 }
 
 @media (min-width: 48rem) {

@@ -17,7 +17,7 @@ const ABREISSER = 6
         <p>{{ t.text }}</p>
       </div>
 
-      <BasisNotizzettel farbe="creme" radius="xl" befestigung="pin" :drehung="1.2" class="nimm__zettel">
+      <BasisNotizzettel v-einblenden farbe="creme" radius="xl" befestigung="pin" :drehung="1.2" class="nimm__zettel">
         <div class="nimm__zettel-kopf">
           <p class="nimm__zettel-zusatz handschrift">{{ t.zettelZusatz }}</p>
           <p class="nimm__zettel-titel display">{{ t.zettelTitel }}</p>
@@ -142,6 +142,41 @@ const ABREISSER = 6
 .nimm__abreisser-link:hover,
 .nimm__abreisser-link:focus-visible {
   transform: rotate(186deg) translateY(-4px);
+}
+
+/* schwingt einmal an der Pinnnadel aus */
+.nimm__zettel {
+  transform-origin: 50% 1.6rem;
+}
+
+.nimm__zettel.ist-sichtbar {
+  animation: auspendeln 1.6s ease-out both;
+}
+
+@keyframes auspendeln {
+  0% {
+    transform: rotate(9deg);
+  }
+
+  25% {
+    transform: rotate(-5deg);
+  }
+
+  45% {
+    transform: rotate(3.5deg);
+  }
+
+  65% {
+    transform: rotate(-0.5deg);
+  }
+
+  82% {
+    transform: rotate(1.8deg);
+  }
+
+  100% {
+    transform: rotate(var(--drehung));
+  }
 }
 
 @media (min-width: 56rem) {
