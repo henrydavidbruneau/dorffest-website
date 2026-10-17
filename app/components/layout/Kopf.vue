@@ -191,7 +191,7 @@ function aktiv(to: string) {
   font-weight: var(--gewicht-display);
   font-size: 1.25rem;
   text-decoration: none;
-  color: var(--farbe-orange-text);
+  color: var(--farbe-orange);
 }
 
 .kopf--gescrollt .kopf__link,

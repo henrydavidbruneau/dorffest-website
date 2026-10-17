@@ -5,7 +5,7 @@ import { texte } from '~/texte'
 
 <template>
   <footer class="fuss">
-    <div class="fuss__inhalt inhalt">
+    <div class="fuss__inhalt inhalt-breit">
       <div class="fuss__gruss">
         <div>
           <p class="fuss__titel display">
@@ -44,9 +44,7 @@ import { texte } from '~/texte'
   background: var(--farbe-pfirsich);
 }
 
-.fuss__inhalt {
-  padding-left: calc(var(--seitenrand) + clamp(0rem, 1.4vw, 1.25rem));
-}
+
 
 .fuss__gruss {
   display: grid;
@@ -101,7 +99,7 @@ import { texte } from '~/texte'
   padding: 0;
   list-style: none;
   font-family: var(--schrift-display);
-  font-weight: var(--gewicht-display);
+  font-weight: 400;
   font-size: var(--groesse-m);
   line-height: 1.65;
 }

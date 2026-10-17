@@ -47,7 +47,7 @@ Ein großes Danke an alle, die mitgeholfen, gekocht, aufgebaut und mitgefeiert h
     aufruf_titel: 'Nächstes Jahr wieder?',
     aufruf_text: 'Hilf mit, das nächste Dorffest zu planen.',
     aufruf_knopf: 'Mitmachen',
-    aufruf_link: '/#mitmachen',
+    aufruf_link: '/mitmachen',
     seite: 1,
     hervorgehoben: true,
   },

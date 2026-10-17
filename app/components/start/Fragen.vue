@@ -201,8 +201,9 @@ const { data: fragen } = await useFaq()
     gap: var(--abstand-l);
   }
 
+  /* obere Strichlinie auf Höhe der Unterkante von "Fragen?" */
   .fragen__rechts {
-    padding-top: clamp(0rem, 0.1vw, 0.1rem);
+    padding-top: calc(var(--groesse-h2-klein) * 0.86);
   }
 }
 </style>

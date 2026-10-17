@@ -3,10 +3,10 @@ import { links } from '~/navigation'
 </script>
 
 <template>
-  <aside class="mitglied" aria-label="Mitglied werden">
-    <p class="mitglied__titel">Werde Mitglied!</p>
-    <p class="mitglied__text">Entscheide mit, was im Dorf passiert.</p>
-    <NuxtLink :to="links.mitgliedWerden" class="mitglied__link handlink">→ zum Antrag</NuxtLink>
+  <aside class="mitglied" aria-label="Mitmachen">
+    <p class="mitglied__titel">Mach mit!</p>
+    <p class="mitglied__text">Bring deine eigenen Ideen ein!</p>
+    <NuxtLink :to="links.mitmachen" class="mitglied__link handlink">→ Mehr erfahren</NuxtLink>
   </aside>
 </template>
 

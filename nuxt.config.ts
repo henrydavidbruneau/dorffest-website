@@ -49,7 +49,7 @@ export default defineNuxtConfig({
   // Schriften aus Figma, von @nuxt/fonts heruntergeladen und lokal ausgeliefert
   fonts: {
     families: [
-      { name: 'Londrina Solid', provider: 'google', weights: [900], global: true },
+      { name: 'Londrina Solid', provider: 'google', weights: [400, 900], global: true },
       { name: 'Poppins', provider: 'google', weights: [300, 400, 500, 700], styles: ['normal'], global: true },
       { name: 'Reenie Beanie', provider: 'google', weights: [400], global: true },
     ],
