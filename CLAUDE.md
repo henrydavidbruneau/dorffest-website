@@ -112,7 +112,7 @@ Nav: Startseite · Termine · Neuigkeiten · Über uns · [Button „Mitmachen"]
 | `/ueber-uns` | Design S. 2 | Hero „Königsdorf gemeinsam gestalten", Bildreihe, Text, Leitbild-Block, „Stimmen aus dem Verein" (Polaroid + Zitat + Avatar-Auswahl), „Deine Ideen. Neue Begegnungen.", „Hier fehlt noch dein Name" (Mitgliedsausweis, Name live tippen, „Antrag starten") |
 | `/dorfanzeiger` | Design S. 3 | „Neuigkeiten": Zeitungslayout auf lila Grund: Masthead, Ressort-Filter (Alle · Feste · Verein · Treffen · Kinder · Rezepte), Titelgeschichte, Terminkalender-Kasten, Seitenspalte, 3er-Reihe, „Fünf Fragen an …", Kleinanzeigen, „Werde Mitglied"-Box, „Frühere Ausgaben", Newsletter-Zettel |
 | `/dorfanzeiger/[slug]` | `Dorfanzeiger Beitrag.pdf` (von Bruno, 17.10.2026) | Kopfzeile, Titelei, Autor*in/Datum/Lesezeit, Bild, Markdown-Text mit Initialen, Zitatkasten, Aufruf-Kasten, Weitersagen, Mehr aus dieser Ausgabe |
-| `/termine`, `/termine/[slug]` | **nicht im Design** | Aus den Termin-Zetteln ableiten: kommende + vergangene Termine; Detail mit Datum, Uhrzeit, Ort, Beschreibung, `.ics`-Download, ggf. Formular („Was bringst du mit?"). **Entwurf vorher zeigen.** |
+| `/termine/[slug]` | Aufbau angelehnt an DPAT-Eventseite | Bild/Datumszettel + „In den Kalender“ (`.ics`), Titel, Wann/Wo, **Störer** mit Anmeldung (begrenzte Plätze mit Restplätzen / unbegrenzt „wir halten dich auf dem Laufenden“ / keine Anmeldung), Beschreibung (Markdown), optional **„Was bringst du mit?“**. `/termine` leitet auf `/#was-kommt` um; Nav „Termine“ → `/#was-kommt`. Startseite: nächster Termin als große Kachel. |
 | `/satzung`, `/kontakt`, `/impressum`, `/datenschutz` | – | einfache Textseiten, Platzhaltertext |
 | `/vereinsheim` | – | Admin-Bereich (bei uns „Vereinsheim“, im DPAT-Vorbild `admin`/„Hinterzimmer“), **letzte Phase** (nach Directus). Route ist reserviert. |
 | 404 | – | eigene Fehlerseite im Stil der Seite |
@@ -199,7 +199,7 @@ Nach jeder Phase: committen, pushen, Bruno kurz zeigen.
 3. ✅ **Startseite**, Sektion für Sektion.
 4. ✅ **Über uns** (Stimmen-Zitate außer Thomas sind Platzhalter; „Antrag starten“ führt vorerst auf die Platzhalterseite `/mitglied-werden?name=…`).
 5. ✅ **Dorfanzeiger**: Übersicht (Layout `zeitung`, Blatt gleitet von unten rechts in einer Kurve herein) und Artikelseite nach `Dorfanzeiger Beitrag.pdf` (Bereich um das Blatt dort veraltet). Artikeltext ist Markdown, wird in `server/utils/markdown.ts` gerendert (Bild allein in Zeile + Titel = Bild mit Unterschrift; `> — Quelle` = Zitatquelle).
-6. **Termine** + Termin-Detailseite (Entwurf vorher zeigen).
+6. ✅ **Termine**: Eventseiten mit Anmeldung (`anmeldung_aktiv`, `plaetze`) und Mitbringen (`mitbringen_aktiv`, `mitbringen_text`, `mitbringen_vorschlaege`); POST-Routen prüfen + loggen (Rate-Limit, Honeypot, Validierung in `server/utils/formular.ts`).
 7. **Formulare** (UI + POST-Routen mit Validierung, noch ohne Speichern).
 8. Rechtliche Seiten, 404, SEO, Feinschliff Mobile.
 
