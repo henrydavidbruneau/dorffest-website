@@ -8,7 +8,7 @@ const props = withDefaults(
     /** Überschriftenebene des Titels */
     ebene?: 2 | 3 | 4
   }>(),
-  { drehung: 0, tape: 'mitte', tapeFarbe: 'gelb', ebene: 3 },
+  { drehung: 0, tape: false, tapeFarbe: 'gelb', ebene: 3 },
 )
 
 const datum = computed(() =>
@@ -27,6 +27,7 @@ const zeile = computed(() => {
     as="article"
     class="termin-zettel"
     farbe="pfirsich"
+    radius="l"
     :drehung="drehung"
     :tape="tape"
     :tape-farbe="tapeFarbe"
@@ -40,7 +41,7 @@ const zeile = computed(() => {
     </p>
     <component :is="`h${ebene}`" class="termin-zettel__titel">{{ termin.titel }}</component>
     <p class="termin-zettel__zeile">{{ zeile }}</p>
-    <BasisTrennlinie art="gestrichelt" farbe="lila" />
+    <BasisTrennlinie class="termin-zettel__linie" />
     <NuxtLink :to="`/termine/${termin.slug}`" class="termin-zettel__link">
       {{ termin.aufruf_text ?? 'Details' }} <span aria-hidden="true">→</span>
       <span class="nur-screenreader">: {{ termin.titel }}</span>
@@ -52,8 +53,7 @@ const zeile = computed(() => {
 .termin-zettel {
   display: flex;
   flex-direction: column;
-  gap: var(--abstand-2xs);
-  padding: var(--abstand-m) var(--abstand-m) var(--abstand-s);
+  padding: clamp(1.25rem, 2.2vw, 2rem) clamp(1.25rem, 1.9vw, 1.75rem) clamp(1rem, 1.7vw, 1.5rem);
 }
 
 .termin-zettel p {
@@ -63,38 +63,46 @@ const zeile = computed(() => {
 .termin-zettel__datum time {
   display: flex;
   align-items: baseline;
-  gap: 0.35rem;
+  gap: 0.3rem;
 }
 
 .termin-zettel__tag {
   font-family: var(--schrift-display);
   font-weight: var(--gewicht-display);
-  font-size: clamp(2.5rem, 2rem + 2vw, 3.25rem);
-  line-height: 1;
+  font-size: var(--groesse-datum);
+  line-height: 0.95;
   color: var(--farbe-orange);
 }
 
 .termin-zettel__wochentag {
   font-family: var(--schrift-display);
   font-weight: var(--gewicht-display);
-  font-size: var(--groesse-l);
+  font-size: clamp(1.25rem, 1.74vw, 1.5625rem);
   color: var(--farbe-lila);
 }
 
 .termin-zettel__titel {
-  font-size: var(--groesse-xl);
-  line-height: 1;
+  margin-top: clamp(0.4rem, 0.8vw, 0.75rem);
+  font-size: var(--groesse-h3);
+  line-height: 1.05;
 }
 
 .termin-zettel__zeile {
-  font-size: var(--groesse-xs);
+  margin-top: 0.35rem !important;
+  font-size: clamp(0.875rem, 1.04vw, 0.9375rem);
+  font-weight: var(--gewicht-text-normal);
+}
+
+.termin-zettel__linie {
+  margin-block: clamp(0.6rem, 1vw, 0.9rem) clamp(0.9rem, 1.5vw, 1.35rem);
 }
 
 .termin-zettel__link {
   align-self: flex-start;
   font-family: var(--schrift-display);
   font-weight: var(--gewicht-display);
-  font-size: var(--groesse-s);
+  font-size: var(--groesse-knopf);
+  line-height: 1;
   text-transform: uppercase;
   text-decoration: none;
   color: var(--farbe-orange-text);

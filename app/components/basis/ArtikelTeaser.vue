@@ -28,9 +28,9 @@ const datum = computed(() => {
       v-if="mitBild"
       :src="artikel.bild!"
       :alt="artikel.bild_alt ?? ''"
-      width="480"
-      height="320"
-      sizes="100vw sm:50vw md:400px"
+      width="740"
+      height="490"
+      sizes="100vw md:33vw lg:370px"
       class="teaser__bild"
     />
     <p class="teaser__ressort">{{ RESSORTS[artikel.ressort] }}</p>
@@ -51,7 +51,6 @@ const datum = computed(() => {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--abstand-2xs);
 }
 
 .teaser p {
@@ -60,22 +59,24 @@ const datum = computed(() => {
 
 .teaser__bild {
   width: 100%;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 370 / 245;
   object-fit: cover;
-  margin-bottom: var(--abstand-2xs);
+  object-position: top;
+  margin-bottom: clamp(0.75rem, 1.1vw, 1rem);
 }
 
 .teaser__ressort {
   font-family: var(--schrift-display);
   font-weight: var(--gewicht-display);
-  font-size: var(--groesse-xs);
-  letter-spacing: 0.05em;
+  font-size: var(--groesse-m);
+  line-height: 1.1;
   text-transform: uppercase;
   color: var(--farbe-orange-text);
 }
 
 .teaser__titel {
-  font-size: var(--groesse-xl);
+  margin-top: 0.4rem;
+  font-size: var(--groesse-h3);
   line-height: 1;
 }
 
@@ -94,15 +95,20 @@ const datum = computed(() => {
   text-decoration: underline;
 }
 
-.teaser__text {
-  font-size: var(--groesse-s);
+.teaser .teaser__text {
+  margin-top: 0.6rem;
+  font-size: var(--groesse-m);
+  line-height: 1.55;
 }
 
 .teaser .teaser__datum {
   margin-top: auto;
+  padding-top: var(--abstand-l);
+  font-size: var(--groesse-hand-m);
 }
 
-.teaser__weiter {
+.teaser .teaser__weiter {
+  margin-top: 0.6rem;
   font-family: var(--schrift-display);
   font-weight: var(--gewicht-display);
   font-size: var(--groesse-xs);

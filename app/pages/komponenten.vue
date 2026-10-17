@@ -57,7 +57,7 @@ const anzeigen: Kleinanzeige[] = [
     <section>
       <h2 class="vorschau__titel">Notizzettel</h2>
       <div class="vorschau__raster">
-        <BasisNotizzettel rahmen :drehung="1.5">Dorffeste, Konzerte und Kultur – gemeinsam organisieren.</BasisNotizzettel>
+        <BasisNotizzettel rahmen="orange" farbe="creme" tape="mitte" tape-farbe="flieder" :drehung="1.5">Dorffeste, Konzerte und Kultur – gemeinsam organisieren.</BasisNotizzettel>
         <BasisNotizzettel farbe="pfirsich" tape="links" :drehung="-2">Mit Tape links</BasisNotizzettel>
         <BasisNotizzettel farbe="gelb" tape="rechts" tape-farbe="flieder" :drehung="2.5">Gelb, Tape rechts</BasisNotizzettel>
       </div>
@@ -98,7 +98,7 @@ const anzeigen: Kleinanzeige[] = [
       <h2 class="vorschau__titel">Trennlinien</h2>
       <BasisTrennlinie />
       <br>
-      <BasisTrennlinie art="gestrichelt" farbe="schwarz" />
+      <BasisTrennlinie farbe="lila" :dicke="2" />
     </section>
 
     <section>

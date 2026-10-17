@@ -1,12 +1,13 @@
 <script setup lang="ts">
-// Farbiger Kasten hinter einzelnen Wörtern, z.B. "RÜCKT ZUSAMMEN", "DORF!"
+// Farbiger Kasten hinter einzelnen Wörtern, z.B. "RÜCKT ZUSAMMEN", "DORF!".
+// Ecken wie im Design: klein gerundet, unten rechts stark gerundet.
 withDefaults(
   defineProps<{
-    /** Drehung in Grad, z.B. -2 */
+    /** Drehung in Grad, z.B. -1 */
     drehung?: number
     farbe?: 'flieder' | 'lila' | 'orange'
   }>(),
-  { drehung: -1.5, farbe: 'flieder' },
+  { drehung: 0, farbe: 'flieder' },
 )
 </script>
 
@@ -21,8 +22,9 @@ withDefaults(
 <style scoped>
 .hervorhebung {
   display: inline-block;
-  padding: 0.04em 0.16em 0;
-  border-radius: var(--radius-m);
+  padding: 0.14em 0.2em 0.12em;
+  border-radius: 0.12em 0.12em 0.42em 0.12em;
+  line-height: var(--zeilenhoehe-display);
   color: var(--farbe-weiss);
   transform: rotate(var(--drehung));
 }

@@ -8,7 +8,7 @@ withDefaults(
     /** Breite in rem */
     breite?: number
   }>(),
-  { position: 'mitte', farbe: 'gelb', drehung: -3, breite: 5 },
+  { position: 'mitte', farbe: 'gelb', drehung: -2, breite: 4.7 },
 )
 </script>
 
@@ -24,11 +24,11 @@ withDefaults(
 <style scoped>
 .klebeband {
   position: absolute;
-  top: -0.7rem;
+  top: -0.85rem;
   z-index: 1;
   width: var(--breite);
-  height: 1.4rem;
-  opacity: 0.85;
+  height: 1.6rem;
+  opacity: 0.9;
   transform: translateX(var(--versatz, 0)) rotate(var(--drehung));
   pointer-events: none;
 }
@@ -51,7 +51,7 @@ withDefaults(
 }
 
 .klebeband--flieder {
-  background: color-mix(in srgb, var(--farbe-flieder) 75%, var(--farbe-weiss));
+  background: var(--farbe-tape-flieder);
 }
 
 .klebeband--pfirsich {

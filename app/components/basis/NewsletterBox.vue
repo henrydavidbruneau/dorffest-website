@@ -56,11 +56,15 @@ function absenden() {}
           placeholder="deine@mail.de"
           class="newsletter__eingabe"
         >
-        <BasisKnopf type="submit" :variante="variante === 'lila' ? 'hell' : 'gefuellt'" groesse="klein">
+        <BasisKnopf
+          type="submit"
+          :variante="variante === 'lila' ? 'hell' : 'gefuellt'"
+          class="newsletter__knopf"
+        >
           Eintragen
         </BasisKnopf>
       </div>
-      <a :href="links.infochannel" target="_blank" rel="noopener" class="newsletter__infochannel handschrift">→ lieber zum Infochannel</a>
+      <a :href="links.infochannel" target="_blank" rel="noopener" class="newsletter__infochannel handlink">→ lieber zum Infochannel</a>
     </form>
   </component>
 </template>
@@ -76,37 +80,41 @@ function absenden() {}
 }
 
 .newsletter__titel {
-  font-size: var(--groesse-h3);
+  font-size: var(--groesse-zettel-titel);
+  line-height: 1.15;
 }
 
-.newsletter__text {
-  margin-top: var(--abstand-2xs) !important;
+.newsletter .newsletter__text {
+  margin-top: var(--abstand-xs);
   font-size: var(--groesse-xs);
+  line-height: 1.45;
 }
 
 .newsletter__formular {
   display: grid;
-  gap: var(--abstand-2xs);
+  gap: var(--abstand-xs);
+  align-content: center;
 }
 
 .newsletter__label {
-  font-size: var(--groesse-s);
+  font-size: var(--groesse-l);
 }
 
 .newsletter__zeile {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--abstand-2xs);
+  gap: var(--abstand-2xs) 0.9rem;
 }
 
 .newsletter__eingabe {
-  flex: 1 1 12rem;
+  flex: 0 1 19.2rem;
   min-width: 0;
-  padding: 0.5em 0.8em;
-  border: 1.5px solid var(--farbe-lila);
+  min-height: clamp(2.75rem, 3.68vw, 3.3125rem);
+  padding: 0.5em 1.1em;
+  border: 2px dashed var(--farbe-orange);
   border-radius: var(--radius-m);
-  background: var(--farbe-weiss);
-  font-size: var(--groesse-s);
+  background: var(--farbe-creme);
+  font-size: var(--groesse-xs);
   color: var(--farbe-schwarz);
 }
 
@@ -114,32 +122,43 @@ function absenden() {}
   color: #6b6b6b;
 }
 
-.newsletter__infochannel {
-  justify-self: start;
-  font-size: 1.4em;
-  text-decoration: none;
-  color: var(--farbe-lila);
+.newsletter__knopf {
+  padding-inline: 1.15em;
 }
 
-.newsletter__infochannel:hover {
-  text-decoration: underline;
+.newsletter__knopf.knopf--gefuellt {
+  color: var(--farbe-pfirsich);
+}
+
+.newsletter__infochannel {
+  justify-self: start;
+  color: var(--farbe-lila);
 }
 
 /* ---------- lila ---------- */
 .newsletter--lila {
   --farbe-fokus: var(--farbe-gelb);
-  padding: var(--abstand-m) var(--abstand-l);
-  border: 2px dashed var(--farbe-pfirsich);
-  border-radius: var(--radius-l);
-  color: var(--farbe-pfirsich);
+  padding: clamp(1.5rem, 2.8vw, 2.5rem) clamp(1.5rem, 4.4vw, 4rem);
+  border: 3px dashed var(--farbe-pfirsich);
+  border-radius: var(--radius-xl);
+  color: var(--farbe-creme);
 }
 
 .newsletter--lila .newsletter__titel {
+  max-width: 6.2em;
   color: var(--farbe-pfirsich);
 }
 
 .newsletter--lila .newsletter__eingabe {
-  border-color: var(--farbe-pfirsich);
+  flex-basis: 15.6rem;
+  min-height: clamp(2.75rem, 3.26vw, 2.9375rem);
+  border: 0;
+}
+
+.newsletter--lila .newsletter__knopf {
+  min-height: clamp(2.75rem, 3.26vw, 2.9375rem);
+  border-color: var(--farbe-lila);
+  box-shadow: 0 0 0 2px var(--farbe-pfirsich);
 }
 
 .newsletter--lila .newsletter__infochannel {
@@ -148,17 +167,18 @@ function absenden() {}
 
 @media (min-width: 48rem) {
   .newsletter--lila {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr auto;
     align-items: center;
+    gap: var(--abstand-l);
+  }
+
+  .newsletter__zeile {
+    flex-wrap: nowrap;
   }
 }
 
 /* ---------- zettel ---------- */
 .newsletter--zettel .newsletter__label {
-  font-size: 1.6rem;
-}
-
-.newsletter--zettel .newsletter__eingabe {
-  border: 2px dashed var(--farbe-orange);
+  font-size: var(--groesse-hand-m);
 }
 </style>
