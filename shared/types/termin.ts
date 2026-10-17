@@ -9,6 +9,8 @@ export interface Termin extends DirectusEintrag {
   ende: string | null
   /** Ersetzt die Datumsanzeige, solange `beginn` fehlt, z.B. "2026" */
   datum_text: string | null
+  /** Regelmäßiger Termin: Kurzform statt Datum, z.B. "1. Mo" (jeden ersten Montag) */
+  rhythmus_kurz: string | null
   /** Text statt Uhrzeit/Ort, z.B. "Termin folgt – hilf mit planen" */
   hinweis: string | null
   /** null = "Ort folgt" */

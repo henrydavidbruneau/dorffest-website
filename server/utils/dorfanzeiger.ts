@@ -3,24 +3,24 @@ import { artikel as platzhalter } from '../data/dorfanzeiger'
 
 export interface ArtikelFilter {
   ressort?: Ressort
+  ausgabe?: number
   hervorgehoben?: boolean
   limit?: number
 }
 
-/** Titelgeschichte zuerst, dann neueste zuerst; ohne Datum ans Ende */
+/** Titelgeschichte zuerst, dann nach manueller Sortierung der Redaktion */
 function sortierung(a: Artikel, b: Artikel) {
   if (a.titelgeschichte !== b.titelgeschichte) return a.titelgeschichte ? -1 : 1
-  if (!a.veroeffentlicht_am) return 1
-  if (!b.veroeffentlicht_am) return -1
-  return Date.parse(b.veroeffentlicht_am) - Date.parse(a.veroeffentlicht_am)
+  return (a.sort ?? 999) - (b.sort ?? 999)
 }
 
 export async function ladeArtikelListe(filter: ArtikelFilter = {}): Promise<Artikel[]> {
-  let liste = platzhalter.filter(a => a.status === 'published')
+  // Interviews ("Fünf Fragen an …") laufen über die Porträts, nicht über die Listen
+  let liste = platzhalter.filter(a => a.status === 'published' && a.art === 'artikel')
   if (filter.ressort) liste = liste.filter(a => a.ressort === filter.ressort)
+  if (filter.ausgabe) liste = liste.filter(a => a.ausgabe === filter.ausgabe)
   if (filter.hervorgehoben) liste = liste.filter(a => a.hervorgehoben)
-  // Hervorgehobene in der Reihenfolge der Daten (= Reihenfolge im Design)
-  if (!filter.hervorgehoben) liste = [...liste].sort(sortierung)
+  liste = [...liste].sort(sortierung)
   return filter.limit ? liste.slice(0, filter.limit) : liste
 }
 

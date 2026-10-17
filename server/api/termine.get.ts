@@ -8,6 +8,7 @@ export default defineEventHandler(async (event) => {
   return ladeTermine({
     zeitraum,
     hervorgehoben: jaAusQuery(query.hervorgehoben),
+    mitDatum: jaAusQuery(query.mitDatum),
     limit: zahlAusQuery(query.limit),
   })
 })

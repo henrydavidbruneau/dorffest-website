@@ -1,10 +1,12 @@
+import { KONTAKT_MAIL } from '#shared/utils/kontakt'
+
 // Alle Ziele der Seite an einer Stelle.
 export const links = {
   infochannel: 'https://chat.whatsapp.com/HtfZqwqUXpu6Xu9A4nO7PV?mode=gi_t',
   // TODO: Mitmachen-Seite/-Bereich wird später gebaut
   mitmachen: '/#mitmachen',
   mitgliedWerden: '/ueber-uns#mitglied-werden',
-  kontaktMail: 'kontakt@koenigsdorf-rückt-zusammen.de',
+  kontaktMail: KONTAKT_MAIL,
 } as const
 
 export interface NavLink {

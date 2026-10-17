@@ -1,6 +1,7 @@
 export interface TermineOptionen {
   zeitraum?: 'kommend' | 'vergangen' | 'alle'
   hervorgehoben?: boolean
+  mitDatum?: boolean
   limit?: number
 }
 
