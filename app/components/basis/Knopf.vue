@@ -7,6 +7,7 @@ const props = withDefaults(
     /** klein = Navigation (42px), normal = Hero (53px), gross = "Mehr erfahren" (72px) */
     groesse?: 'klein' | 'normal' | 'gross'
     type?: 'button' | 'submit'
+    disabled?: boolean
   }>(),
   { to: undefined, variante: 'gefuellt', groesse: 'normal', type: 'button' },
 )
@@ -18,7 +19,7 @@ const klassen = computed(() => ['knopf', `knopf--${props.variante}`, `knopf--${p
   <NuxtLink v-if="to" :to="to" :class="klassen">
     <slot />
   </NuxtLink>
-  <button v-else :type="type" :class="klassen">
+  <button v-else :type="type" :class="klassen" :disabled="disabled">
     <slot />
   </button>
 </template>
@@ -48,6 +49,12 @@ const klassen = computed(() => ['knopf', `knopf--${props.variante}`, `knopf--${p
 .knopf:hover {
   transform: translateY(-2px);
   box-shadow: 0 3px 0 rgb(0 0 0 / 0.2);
+}
+
+.knopf:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
 }
 
 .knopf:active {
