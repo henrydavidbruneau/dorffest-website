@@ -25,7 +25,8 @@ const [{ data: artikel }, { data: termine }, { data: portraets }, { data: anzeig
 const titel = computed(() => artikel.value[0] ?? null)
 const seitenspalte = computed(() => artikel.value.slice(1, 3))
 const reihe = computed(() => artikel.value.slice(3))
-const absaetze = computed(() => titel.value?.inhalt.split(/\n\s*\n/) ?? [])
+// Vorschau: die ersten drei reinen Textabsätze
+const absaetze = computed(() => (titel.value ? textAbsaetze(titel.value.inhalt).slice(0, 3) : []))
 // erschienene zuerst (neueste vorn), angekündigte hinten
 const fruehere = computed(() => [
   ...ausgaben.value.filter(a => a.erschienen_am && a.id !== aktuelle.value?.id),
