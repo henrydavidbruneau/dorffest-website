@@ -124,7 +124,21 @@ Infochannel · Kontakt · Impressum · Datenschutz.
 
 Das **Figma-PDF (3 Seiten: Startseite, Über uns, Dorfanzeiger) ist der maßgebliche
 Zielzustand.** Abnahme Sektion für Sektion gegen das PDF. Im Konflikt gewinnt die Treue
-zum Design.
+zum Design. Datei: `~/Downloads/RücktZusammen.pdf` (3 Seiten, 1440pt breit; die
+gleichnamige Datei auf dem Desktop ist ein älterer, anderer Stand). Daneben liegt
+`~/Downloads/RücktZusammen.fig`.
+
+- **Maße aus dem PDF messen, nicht schätzen:** Seite mit `pdftoppm -r 72` rendern
+  (1pt = 1 CSS-px), Größen über Pixel-/Tintenmessung bestimmen (Versalhöhe Londrina =
+  0.72em, Poppins = 0.70em; Reenie Beanie über die Textbreite kalibrieren). Danach
+  Umsetzung bei 1440px screenshotten und Sektion für Sektion daneben legen.
+- **Maße sind Referenz, Layout bleibt fluid:** Größen als
+  `clamp(Minimum, Designwert/1440·100vw, Designwert)` – bei 1440px exakt das Design,
+  darunter proportional kleiner, nie unter ein lesbares Minimum. Inhaltsbreite 1120px.
+- Hero = volle Viewport-Höhe (`100svh` minus Kopf). Der gestrichelte Pfeil vom
+  „Was wir tun“-Knopf zur Überschrift (`<StartWegweiser>`) wird per JS aus den echten
+  Positionen gezeichnet (ResizeObserver) und entfällt auf Mobil.
+- Logo: `public/logo-mobil.svg` (Schild ohne Pfosten), gerade, nicht gedreht.
 
 - **Tokens** in `app/assets/css/tokens.css`. Neue Werte kommen von Bruno aus Figma,
   **nicht aus dem PDF schätzen.** Stand Figma:
