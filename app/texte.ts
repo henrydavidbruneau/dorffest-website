@@ -60,6 +60,37 @@ export const texte = {
     },
   },
 
+  ueberUns: {
+    meta: 'Wer wir sind: Nachbar*innen, die Königsdorf gemeinsam gestalten – mit Festen, Kultur und Begegnung. Offen, solidarisch, demokratisch.',
+    zusatz: 'über uns',
+    intro: 'Wir möchten in einem Königsdorf leben, in dem Menschen einander kennen, sich zugehörig fühlen und das Leben vor Ort mitgestalten können.',
+    absaetze: [
+      'Deshalb organisieren wir Feste, Kulturveranstaltungen und gemeinsame Aktionen. Wir schaffen Gelegenheiten, miteinander ins Gespräch zu kommen, etwas auszuprobieren und eigene Ideen einzubringen. Dabei möchten wir auch Menschen erreichen, die bisher wenig Kontakt zum Vereinsleben haben.',
+      'Wir knüpfen an das vielfältige Engagement in Königsdorf an und tragen mit unseren Ideen dazu bei. Zusammenarbeit mit anderen Vereinen und Initiativen gehört für uns dazu.',
+    ],
+    // Leitbild: Abschnitte, hervorgehobene Wörter in Orange
+    leitbild: [
+      { text: 'Uns verbindet die Überzeugung, dass ein gutes Zusammenleben von ' },
+      { text: 'Respekt, Solidarität und Beteiligung', hervor: true },
+      { text: ' lebt. Wir stehen für Demokratie und die gleiche Würde aller Menschen. Rassismus und Diskriminierung haben bei uns keinen Platz.' },
+    ] as { text: string, hervor?: boolean }[],
+    schluss: 'Unser Verein bietet einen Rahmen, um gemeinsam etwas auf die Beine zu stellen: mit Menschen, die Lust auf Königsdorf haben, unterschiedlichen Fähigkeiten und der Freude daran, zusammen etwas zu bewegen.',
+    ideen: {
+      absaetze: [
+        'Du hast Lust, Menschen kennenzulernen und in Königsdorf etwas auf die Beine zu stellen? Bei „Königsdorf rückt zusammen“ gestalten wir gemeinsam Feste, Kulturveranstaltungen und Aktionen, die Menschen zusammenbringen.',
+        'Ob du eigene Ideen mitbringst, gerne organisierst oder bei einer Veranstaltung mit anpackst: Du kannst deine Fähigkeiten einbringen und gemeinsam mit anderen Neues ausprobieren.',
+        'Uns verbindet der Wunsch nach einem offenen, solidarischen und demokratischen Zusammenleben. Dafür möchten wir Königsdorf gemeinsam gestalten.',
+      ],
+      aufruf: 'Werde Mitglied und gestalte mit uns, was als Nächstes entsteht.',
+      knopf: 'Mehr erfahren',
+    },
+    ausweis: {
+      zusatz: 'Lass uns gemeinsam was bewegen!',
+      label: 'Wie heißt du?',
+      knopf: 'Antrag starten',
+    },
+  },
+
   dorfanzeiger: {
     beschreibung: 'Der Königsdorfer Dorfanzeiger: Rückblicke, Ideen und Gedanken zum Zusammenleben im Dorf – von Nachbar*innen für Nachbar*innen.',
     newsletterText: 'Neue Termine, Aktionen und Gesucht-Zettel kommen direkt zu dir – per Infochannel oder E-Mail.',
