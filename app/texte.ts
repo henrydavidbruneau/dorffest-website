@@ -27,11 +27,18 @@ export const texte = {
     },
     wasKommt: {
       zusatz: 'Terminkalender',
+      // Absätze als Abschnitte, damit einzelne Passagen fett sein können (wie im Design)
       absaetze: [
-        'Letztes Jahr haben wir zum ersten Mal das Dorffest „Königsdorf rückt zusammen“ veranstaltet, um gemeinsam mit vielen Einzelpersonen und Vereinen aus dem Dorf einen wunderbaren Tag voller Freude, Austausch und neuer Begegnungen zu erleben. Das hat uns allen so viel Spaß gemacht, dass schnell klar war: Das müssen wir wiederholen! Und nicht nur das, wir wollen noch mehr solcher Veranstaltungen in Königsdorf auf die Beine stellen, bei denen alle herzlich eingeladen sind, sich einzubringen und ihren ganz eigenen Beitrag zu leisten.',
-        'Wir glauben fest an die Kraft der Gemeinschaft und sind uns sicher, dass wir zusammen noch viele schöne Momente erleben und selbst in schwierigen Zeiten hier in unserem Ort eine Oase der Zuversicht finden werden.',
-      ],
-      schluss: 'Wir freuen uns darauf – und vor allem freuen wir uns auf euch!',
+        [
+          { text: 'Letztes Jahr haben wir zum ersten Mal das Dorffest „Königsdorf rückt zusammen“ veranstaltet, um gemeinsam mit vielen Einzelpersonen und Vereinen aus dem Dorf einen wunderbaren Tag voller Freude, Austausch und neuer Begegnungen zu erleben. Das hat uns allen so viel Spaß gemacht, dass schnell klar war: ' },
+          { text: 'Das müssen wir wiederholen!', fett: true },
+          { text: ' Und nicht nur das, wir wollen noch mehr solcher Veranstaltungen in Königsdorf auf die Beine stellen, bei denen alle herzlich eingeladen sind, sich einzubringen und ihren ganz eigenen Beitrag zu leisten.' },
+        ],
+        [
+          { text: 'Wir glauben fest an die Kraft der Gemeinschaft und sind uns sicher, dass wir zusammen noch viele schöne Momente erleben und selbst in schwierigen Zeiten hier in unserem Ort eine Oase der Zuversicht finden werden. Wir freuen uns darauf ' },
+          { text: '– und vor allem freuen wir uns auf euch!', fett: true },
+        ],
+      ] as { text: string, fett?: boolean }[][],
       newsletterTitel: 'Neue Termine ins Postfach',
       newsletterText: 'Verpass keine unserer Veranstaltungen und meld dich für unser Rundschreiben an! Abmelden geht jederzeit.',
     },
