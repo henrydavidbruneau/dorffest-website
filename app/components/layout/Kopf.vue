@@ -2,7 +2,21 @@
 import { hauptnavigation, links } from '~/navigation'
 
 const menueOffen = ref(false)
+const gescrollt = ref(false)
 const route = useRoute()
+
+function scrollPruefen() {
+  gescrollt.value = window.scrollY > 40
+}
+
+onMounted(() => {
+  scrollPruefen()
+  window.addEventListener('scroll', scrollPruefen, { passive: true })
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', scrollPruefen)
+})
 
 watch(() => route.fullPath, () => {
   menueOffen.value = false
@@ -14,7 +28,7 @@ function aktiv(to: string) {
 </script>
 
 <template>
-  <header class="kopf">
+  <header class="kopf" :class="{ 'kopf--gescrollt': gescrollt }">
     <a href="#inhalt" class="kopf__sprunglink">Zum Inhalt springen</a>
     <div class="kopf__leiste inhalt">
       <NuxtLink to="/" class="kopf__logo">
@@ -45,7 +59,7 @@ function aktiv(to: string) {
             </NuxtLink>
           </li>
         </ul>
-        <BasisKnopf :to="links.mitmachen" groesse="klein" class="kopf__mitmachen">Mitmachen</BasisKnopf>
+        <BasisKnopf :to="links.mitmachen" :variante="gescrollt ? 'hell' : 'gefuellt'" groesse="klein" class="kopf__mitmachen">Mitmachen</BasisKnopf>
       </nav>
     </div>
   </header>
@@ -53,9 +67,20 @@ function aktiv(to: string) {
 
 <style scoped>
 .kopf {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 10;
   background: var(--farbe-creme);
+  transition:
+    background-color var(--dauer-mittel) ease,
+    box-shadow var(--dauer-mittel) ease;
+}
+
+/* beim Scrollen: kompakter und lila */
+.kopf--gescrollt {
+  --farbe-fokus: var(--farbe-gelb);
+  background: var(--farbe-lila);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.15);
 }
 
 .kopf__sprunglink {
@@ -79,10 +104,20 @@ function aktiv(to: string) {
   justify-content: space-between;
   gap: var(--abstand-m);
   padding-block: var(--abstand-s);
+  transition: padding var(--dauer-mittel) ease;
+}
+
+.kopf--gescrollt .kopf__leiste {
+  padding-block: var(--abstand-2xs);
 }
 
 .kopf__logo img {
   width: clamp(4.5rem, 3.5rem + 3vw, 6rem);
+  transition: width var(--dauer-mittel) ease;
+}
+
+.kopf--gescrollt .kopf__logo img {
+  width: clamp(3.5rem, 3rem + 1.5vw, 4.25rem);
 }
 
 .kopf__liste {
@@ -99,6 +134,10 @@ function aktiv(to: string) {
   letter-spacing: 0.02em;
   text-decoration: none;
   color: var(--farbe-orange-text);
+}
+
+.kopf--gescrollt .kopf__link {
+  color: var(--farbe-pfirsich);
 }
 
 .kopf__link:hover,
@@ -200,6 +239,21 @@ function aktiv(to: string) {
 
   .kopf__nav--offen {
     display: flex;
+  }
+
+  .kopf--gescrollt .kopf__nav {
+    border-bottom-color: var(--farbe-pfirsich);
+    background: var(--farbe-lila);
+  }
+
+  .kopf--gescrollt .kopf__burger,
+  .kopf--gescrollt .kopf__burger::before,
+  .kopf--gescrollt .kopf__burger::after {
+    background: var(--farbe-pfirsich);
+  }
+
+  .kopf--gescrollt .kopf__burger--offen {
+    background: transparent;
   }
 
   .kopf__liste {
