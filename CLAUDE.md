@@ -197,7 +197,7 @@ Nach jeder Phase: committen, pushen, Bruno kurz zeigen.
    Ordnerstruktur, `CLAUDE.md`.
 2. ✅ **Tokens + Basis-Komponenten** (nach Figma-Werten) + Layout (Nav, Footer).
 3. ✅ **Startseite**, Sektion für Sektion.
-4. **Über uns.**
+4. ✅ **Über uns** (Stimmen-Zitate außer Thomas sind Platzhalter; „Antrag starten“ führt vorerst auf die Platzhalterseite `/mitglied-werden?name=…`).
 5. ✅ **Dorfanzeiger**: Übersicht (Layout `zeitung`, Blatt gleitet von unten rechts in einer Kurve herein) und Artikelseite nach `Dorfanzeiger Beitrag.pdf` (Bereich um das Blatt dort veraltet). Artikeltext ist Markdown, wird in `server/utils/markdown.ts` gerendert (Bild allein in Zeile + Titel = Bild mit Unterschrift; `> — Quelle` = Zitatquelle).
 6. **Termine** + Termin-Detailseite (Entwurf vorher zeigen).
 7. **Formulare** (UI + POST-Routen mit Validierung, noch ohne Speichern).

@@ -6,6 +6,7 @@ export const links = {
   // TODO: Mitmachen-Seite/-Bereich wird später gebaut
   mitmachen: '/#mitmachen',
   mitgliedWerden: '/ueber-uns#mitglied-werden',
+  mitgliedsantrag: '/mitglied-werden',
   kontaktMail: KONTAKT_MAIL,
 } as const
 
