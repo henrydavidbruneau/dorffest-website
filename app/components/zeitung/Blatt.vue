@@ -9,10 +9,12 @@ withDefaults(
   }>(),
   { breite: 'voll' },
 )
+
+const animieren = useZeitungAnimation()
 </script>
 
 <template>
-  <div class="blatt-buehne" :class="`blatt-buehne--${breite}`">
+  <div class="blatt-buehne" :class="[`blatt-buehne--${breite}`, { 'blatt-buehne--still': !animieren }]">
     <!-- zwei Ebenen: x und y laufen mit unterschiedlichem Easing → gebogene Flugbahn -->
     <div class="blatt-flug-x">
       <div class="blatt-flug-y">
@@ -95,6 +97,38 @@ withDefaults(
   to {
     opacity: 1;
     transform: translateY(0) rotate(0);
+  }
+}
+
+.blatt-buehne--still .blatt-flug-x,
+.blatt-buehne--still .blatt-flug-y {
+  animation: none;
+}
+
+/* Mobil: Blatt gerade, Flug ohne Drehung */
+@media (max-width: 47.99rem) {
+  .blatt {
+    transform: none;
+  }
+
+  .blatt-flug-y {
+    animation-name: flug-y-gerade;
+  }
+}
+
+@keyframes flug-y-gerade {
+  from {
+    opacity: 0;
+    transform: translateY(70vh);
+  }
+
+  25% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
