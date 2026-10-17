@@ -27,11 +27,6 @@ const seitenspalte = computed(() => artikel.value.slice(1, 3))
 const reihe = computed(() => artikel.value.slice(3))
 // Vorschau: die ersten drei reinen Textabsätze
 const absaetze = computed(() => (titel.value ? textAbsaetze(titel.value.inhalt).slice(0, 3) : []))
-// erschienene zuerst (neueste vorn), angekündigte hinten
-const fruehere = computed(() => [
-  ...ausgaben.value.filter(a => a.erschienen_am && a.id !== aktuelle.value?.id),
-  ...ausgaben.value.filter(a => !a.erschienen_am),
-])
 
 useSeoMeta({
   title: 'Neuigkeiten – Der Königsdorfer Dorfanzeiger',
@@ -116,13 +111,7 @@ useSeoMeta({
         </section>
       </div>
 
-      <!-- Frühere Ausgaben -->
-      <section v-if="fruehere.length" class="anzeiger__ausgaben" aria-labelledby="rubrik-ausgaben">
-        <ZeitungRubrik id="rubrik-ausgaben" titel="Frühere Ausgaben" zusatz="zum Stöbern" />
-        <div class="anzeiger__ausgabenliste">
-          <ZeitungAusgabeKarte v-for="a in fruehere" :key="a.id" :ausgabe="a" />
-        </div>
-      </section>
+      <ZeitungLeserbriefe />
     </ZeitungBlatt>
 
     <!-- Newsletter unter dem Blatt -->
@@ -286,26 +275,13 @@ useSeoMeta({
   margin-top: 0.9rem;
 }
 
-/* ---------- Frühere Ausgaben ---------- */
-.anzeiger__ausgaben {
-  margin-top: clamp(2.5rem, 3.4vw, 3rem);
-}
-
-.anzeiger__ausgabenliste {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(8.5rem, 40%), 11.25rem));
-  gap: var(--abstand-m);
-  margin-top: var(--abstand-l);
-  padding-bottom: var(--abstand-xl);
-}
-
 /* ---------- Newsletter unter dem Blatt ---------- */
 .anzeiger__newsletter {
   display: grid;
   gap: var(--abstand-xl);
-  align-items: end;
+  align-items: center;
   max-width: calc(75rem + 2 * var(--seitenrand));
-  margin: clamp(4rem, 13vw, 12rem) auto 0;
+  margin: clamp(3rem, 6vw, 5.5rem) auto 0;
   padding-inline: var(--seitenrand);
 }
 
