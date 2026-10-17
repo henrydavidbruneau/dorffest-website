@@ -1,5 +1,6 @@
 // POST /api/termine/:slug/anmeldung – Anmeldung zu einem Termin.
-// Vorerst nur Prüfung + Log. Später: in Directus `anmeldungen` speichern, Bestätigungsmail über Brevo.
+// Enthält optional auch "Was bringst du mit?".
+// Vorerst nur Prüfung + Log. Später: in Directus `anmeldungen` (+ `beitraege`) speichern, Bestätigungsmail über Brevo.
 export default defineEventHandler(async (event) => {
   rateLimit(event, 'anmeldung')
   const body = await leseBody(event)
@@ -13,6 +14,8 @@ export default defineEventHandler(async (event) => {
   const mail = email(body.email)
   const personen = Number(body.personen)
   const nachricht = text(body.nachricht, 500) || null
+  // optional: "Was bringst du mit?" (zweite Seite der Anmeldung)
+  const mitbringen = termin.mitbringen_aktiv ? (text(body.mitbringen, 200) || null) : null
 
   if (!name) throw fail(400, 'name', 'Bitte gib deinen Namen an.')
   if (!mail) throw fail(400, 'email', 'Das sieht nicht nach einer E-Mail-Adresse aus.')
@@ -22,6 +25,6 @@ export default defineEventHandler(async (event) => {
     throw fail(409, 'ausgebucht', termin.plaetze_frei === 0 ? 'Leider sind schon alle Plätze vergeben.' : `Es sind nur noch ${termin.plaetze_frei} Plätze frei.`)
   }
 
-  console.info('[anmeldung]', { termin: termin.slug, name, email: mail, personen, nachricht })
+  console.info('[anmeldung]', { termin: termin.slug, name, email: mail, personen, nachricht, mitbringen })
   return { ok: true }
 })

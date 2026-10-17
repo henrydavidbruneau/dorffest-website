@@ -114,7 +114,6 @@ useHead(() => ({
       <TerminStoerer :termin="termin" class="termin__anmeldung" />
     </div>
 
-    <TerminMitbringen v-if="termin.mitbringen_aktiv && !termin.vergangen" :termin="termin" />
   </div>
 </template>
 

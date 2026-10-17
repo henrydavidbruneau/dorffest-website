@@ -38,7 +38,7 @@ function aktiv(to: string) {
 
 <template>
   <!-- Platzhalter in Kopfhöhe: Der Kopf ist fixiert und darf beim Schrumpfen nichts verschieben -->
-  <div class="kopf-platz" aria-hidden="true" />
+  <div class="kopf-platz" :class="{ 'kopf-platz--dunkel': dunkel }" aria-hidden="true" />
   <header class="kopf" :class="{ 'kopf--gescrollt': gescrollt, 'kopf--einfahren': einfahren, 'kopf--dunkel': dunkel }">
     <a href="#inhalt" class="kopf__sprunglink">Zum Inhalt springen</a>
     <div class="kopf__leiste">
@@ -86,6 +86,10 @@ function aktiv(to: string) {
 <style scoped>
 .kopf-platz {
   height: var(--kopf-hoehe);
+}
+
+.kopf-platz--dunkel {
+  background: var(--farbe-lila);
 }
 
 .kopf {

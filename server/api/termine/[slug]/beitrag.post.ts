@@ -1,4 +1,4 @@
-// POST /api/termine/:slug/beitrag – "Was bringst du mit?".
+// POST /api/termine/:slug/beitrag – "Was bringst du mit?" bei Terminen ohne Anmeldung.
 // Vorerst nur Prüfung + Log. Später: in Directus `beitraege` speichern.
 export default defineEventHandler(async (event) => {
   rateLimit(event, 'beitrag')

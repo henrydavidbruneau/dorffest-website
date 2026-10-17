@@ -8,9 +8,11 @@ export interface Anmeldung extends DirectusEintrag {
   email: string
   personen: number
   nachricht: string | null
+  /** "Was bringst du mit?" (optional, zweite Seite der Anmeldung) */
+  mitbringen: string | null
 }
 
-/** Directus-Collection `beitraege` ("Was bringst du mit?") */
+/** Directus-Collection `beitraege` ("Was bringst du mit?" bei Terminen ohne Anmeldung) */
 export interface Beitrag extends DirectusEintrag {
   termin: number
   name: string
