@@ -140,6 +140,7 @@ gleichnamige Datei auf dem Desktop ist ein älterer, anderer Stand). Daneben lie
 - Hero = volle Viewport-Höhe (`100svh` minus Kopf). Der gestrichelte Pfeil vom
   „Was wir tun“-Knopf zur Überschrift (`<StartWegweiser>`) wird per JS aus den echten
   Positionen gezeichnet (ResizeObserver) und entfällt auf Mobil.
+- Kontakt-Mail `kontakt@königsdorf-rückt-zusammen.de` (mit ö) und Vereinskonto (IBAN) in `shared/utils/kontakt.ts`.
 - Logo: `public/logo-mobil.svg` (Schild ohne Pfosten), gerade, nicht gedreht.
 - Navigation ohne gestrichelte Linie. Dorfanzeiger-Seiten (Layout `zeitung`) zeigen testweise
   dieselbe Navigation im lila Farbschema (`<LayoutKopf dunkel>`); sie fährt beim Betreten von oben herein.
@@ -202,7 +203,7 @@ Nach jeder Phase: committen, pushen, Bruno kurz zeigen.
 4. ✅ **Über uns** (Stimmen-Zitate außer Thomas sind Platzhalter; „Antrag starten“ führt vorerst auf die Platzhalterseite `/mitglied-werden?name=…`).
 5. ✅ **Dorfanzeiger**: Übersicht (Layout `zeitung`, Blatt gleitet von unten rechts in einer Kurve herein) und Artikelseite nach `Dorfanzeiger Beitrag.pdf` (Bereich um das Blatt dort veraltet). Artikeltext ist Markdown, wird in `server/utils/markdown.ts` gerendert (Bild allein in Zeile + Titel = Bild mit Unterschrift; `> — Quelle` = Zitatquelle).
 6. ✅ **Termine**: Eventseiten mit Anmeldung (`anmeldung_aktiv`, `plaetze`) und Mitbringen (`mitbringen_aktiv`, `mitbringen_text`, `mitbringen_vorschlaege`); POST-Routen prüfen + loggen (Rate-Limit, Honeypot, Validierung in `server/utils/formular.ts`).
-7. **Formulare** (UI + POST-Routen mit Validierung, noch ohne Speichern).
+7. ✅ **Formulare**: Anmeldung/Mitbringen, Mitgliedsantrag, Plenum-Erinnerung, Ideen, Leserbriefe, Ideenwand (POST-Routen prüfen + loggen). Newsletter-Anmeldung und „Kleinanzeige aufgeben“ entfallen vorerst (Newsletter-Box ist nur Oberfläche).
 8. Rechtliche Seiten, 404, SEO, Feinschliff Mobile.
 
 → Danach: Directus aufsetzen (separat), Server-Routen umstellen, Vereinsheim (Admin) bauen.

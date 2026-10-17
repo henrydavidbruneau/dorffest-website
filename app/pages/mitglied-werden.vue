@@ -62,6 +62,11 @@ function euro(n: number) {
       <BasisNotizzettel v-if="status === 'fertig'" farbe="pfirsich" tape="mitte" :drehung="-1" class="danke" role="status">
         <p class="handschrift danke__gruss">Willkommen im Verein, {{ form.vorname }}!</p>
         <p>Dein Antrag ist bei uns angekommen. Wir melden uns per Mail bei dir.</p>
+        <p class="danke__konto">
+          Deinen Beitrag ({{ euro(Number(form.beitrag_jahr) || (gewaehlt?.monat ?? 0) * 12) }} im Jahr) überweist du bitte an:<br>
+          <strong>{{ KONTO.inhaber }}</strong> · IBAN <strong>{{ KONTO.iban }}</strong><br>
+          Verwendungszweck: Mitgliedsbeitrag {{ form.vorname }} {{ form.nachname }}
+        </p>
       </BasisNotizzettel>
 
       <form v-else class="antrag" novalidate @submit.prevent="absenden">
@@ -151,6 +156,13 @@ function euro(n: number) {
             <input v-model="form.einwilligung" type="checkbox" required>
             <span>Ich bin einverstanden, dass der Verein meine Angaben für die Mitgliederverwaltung speichert. Mehr in der <NuxtLink to="/datenschutz" target="_blank">Datenschutzerklärung</NuxtLink>.</span>
           </label>
+
+          <div class="konto">
+            <p class="konto__titel">So zahlst du</p>
+            <p>Bitte überweis deinen Beitrag auf unser Vereinskonto:</p>
+            <p><strong>{{ KONTO.inhaber }}</strong><br>IBAN <strong class="konto__iban">{{ KONTO.iban }}</strong></p>
+            <p>Verwendungszweck: Mitgliedsbeitrag + dein Name. Du kannst auch einen Dauerauftrag einrichten.</p>
+          </div>
 
           <p v-if="status === 'fehler'" class="fehler" role="alert">{{ fehler }}</p>
 
@@ -417,6 +429,36 @@ function euro(n: number) {
 
 .schritt :deep(.knopf) {
   justify-self: start;
+}
+
+.konto {
+  padding: 1.1rem 1.4rem;
+  border: 2px dashed var(--farbe-lila);
+  border-radius: var(--radius-l);
+  font-size: var(--groesse-s);
+  line-height: 1.6;
+}
+
+.konto p {
+  margin: 0 0 0.4rem;
+}
+
+.konto__titel {
+  font-family: var(--schrift-display);
+  font-weight: var(--gewicht-display);
+  font-size: var(--groesse-l);
+  text-transform: uppercase;
+  color: var(--farbe-lila);
+}
+
+.konto__iban {
+  white-space: nowrap;
+}
+
+.danke__konto {
+  margin-top: 0.8rem !important;
+  font-size: var(--groesse-s);
+  line-height: 1.6;
 }
 
 .danke {

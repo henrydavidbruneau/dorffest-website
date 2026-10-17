@@ -114,7 +114,7 @@ import { texte } from '~/texte'
 
 @media (min-width: 48rem) {
   .fuss__gruss {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr minmax(0, 28rem);
   }
 
   .fuss__unten {

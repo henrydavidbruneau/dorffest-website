@@ -107,7 +107,7 @@ function absenden() {}
 }
 
 .newsletter__eingabe {
-  flex: 0 1 19.2rem;
+  flex: 1 1 12rem;
   min-width: 0;
   min-height: clamp(2.75rem, 3.68vw, 3.3125rem);
   padding: 0.5em 1.1em;
