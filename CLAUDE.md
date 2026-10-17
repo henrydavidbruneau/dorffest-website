@@ -105,7 +105,7 @@ Nav: Startseite · Termine · Neuigkeiten · Über uns · [Button „Mitmachen"]
 | `/dorfanzeiger/[slug]` | **nicht im Design** | Aus dem Zeitungs-Look ableiten: Masthead klein, Ressort, Titel, Autor*in, Datum, Lesedauer, Bild + Bildunterschrift, Fließtext aus Markdown. **Entwurf vorher zeigen.** |
 | `/termine`, `/termine/[slug]` | **nicht im Design** | Aus den Termin-Zetteln ableiten: kommende + vergangene Termine; Detail mit Datum, Uhrzeit, Ort, Beschreibung, `.ics`-Download, ggf. Formular („Was bringst du mit?"). **Entwurf vorher zeigen.** |
 | `/satzung`, `/kontakt`, `/impressum`, `/datenschutz` | – | einfache Textseiten, Platzhaltertext |
-| `/hinterzimmer` | – | Admin, **letzte Phase** (nach Directus). Route ist reserviert. |
+| `/vereinsheim` | – | Admin-Bereich (bei uns „Vereinsheim“, im DPAT-Vorbild `admin`/„Hinterzimmer“), **letzte Phase** (nach Directus). Route ist reserviert. |
 | 404 | – | eigene Fehlerseite im Stil der Seite |
 
 Footer-Links: Über uns · Satzung · Mitglied werden · Termine · Gesucht-Zettel ·
@@ -117,13 +117,27 @@ Das **Figma-PDF (3 Seiten: Startseite, Über uns, Dorfanzeiger) ist der maßgebl
 Zielzustand.** Abnahme Sektion für Sektion gegen das PDF. Im Konflikt gewinnt die Treue
 zum Design.
 
-- **Tokens zuerst** in `app/assets/css/tokens.css`: Farben (Lila, Orange, Flieder für
-  Hervorhebungs-Kästen, Creme-Hintergrund, Pfirsich, Gelb im Terminkalender), Schriften,
-  Abstände, Radien, Schatten. **Exakte Werte kommen von Bruno aus Figma. Nicht aus dem
-  PDF schätzen.**
-- **Schriften:** fette Display-Schrift (Headlines, Versalien), Body-Schrift, Handschrift
-  (Akzente wie „Verein für Zusammenhalt", „Terminkalender"). Namen aus Figma, lokal per
-  `@nuxt/fonts`.
+- **Tokens** in `app/assets/css/tokens.css`. Neue Werte kommen von Bruno aus Figma,
+  **nicht aus dem PDF schätzen.** Stand Figma:
+  - Lila `#7A2A7E` · Orange `#E8820C` · Flieder `#8E6FE0` · Creme `#FFFDF7` ·
+    Pfirsich `#FCE0C5` · Gelb `#FADF84`. Textfarbe je nach Grund: Schwarz, Weiß,
+    Pfirsich, Orange oder Lila.
+  - `--farbe-orange-text` (`#A45C08`): dunkleres Orange für **kleinen** Text auf hellem
+    Grund, weil Orange auf Creme nur 2.7:1 Kontrast hat.
+  - Abstände, Radien, Schatten, Schriftgrößen sind **vorläufig** abgeleitet.
+- **Schriften** (lokal per `@nuxt/fonts`, `global: true`, weil sie nur über
+  CSS-Variablen genutzt werden): Display **Londrina Solid Black (900)**, Headlines in
+  Versalien · Body **Poppins Light (300)**, auch Regular (400), einzelne Wörter fett
+  (700) · Handschrift **Reenie Beanie** (Klasse `.handschrift`).
+- **Basis-Komponenten** liegen in `app/components/basis/` und heißen im Template
+  `<BasisKnopf>`, `<BasisHervorhebung>`, `<BasisNotizzettel>`, `<BasisKlebeband>`,
+  `<BasisTerminZettel>`, `<BasisArtikelTeaser>`, `<BasisKleinanzeige>`,
+  `<BasisNewsletterBox>`, `<BasisTrennlinie>`, `<BasisPolaroid>`. Kopf/Fuß:
+  `app/components/layout/`. Alle Link-Ziele zentral in `app/navigation.ts`.
+- **Vorschau** aller Basis-Komponenten: `/komponenten` (noindex). **Vor dem Livegang
+  löschen.**
+- Datumsformatierung nur über `shared/utils/datum.ts` (immer Europe/Berlin, Netlify
+  läuft auf UTC).
 - **Wiederkehrende Elemente als Komponenten mit Varianten** (Props statt Kopien):
   Button (lila gefüllt / Outline / klein), Hervorhebungs-Kasten (Flieder hinter Wörtern
   wie „RÜCKT ZUSAMMEN", „DORF!"), Notizzettel (Tape, leicht gedreht), Termin-Zettel,
@@ -150,7 +164,7 @@ Nach jeder Phase: committen, pushen, Bruno kurz zeigen.
 
 1. ✅ **Scaffold:** Nuxt 4, Netlify-Preset, `@nuxt/fonts`, `@nuxt/image`, ESLint,
    Ordnerstruktur, `CLAUDE.md`.
-2. **Tokens + Basis-Komponenten** (nach Figma-Werten) + Layout (Nav, Footer).
+2. ✅ **Tokens + Basis-Komponenten** (nach Figma-Werten) + Layout (Nav, Footer).
 3. **Startseite**, Sektion für Sektion.
 4. **Über uns.**
 5. **Dorfanzeiger** (Übersicht), dann Artikelseite (Entwurf vorher zeigen).
@@ -158,7 +172,7 @@ Nach jeder Phase: committen, pushen, Bruno kurz zeigen.
 7. **Formulare** (UI + POST-Routen mit Validierung, noch ohne Speichern).
 8. Rechtliche Seiten, 404, SEO, Feinschliff Mobile.
 
-→ Danach: Directus aufsetzen (separat), Server-Routen umstellen, Hinterzimmer bauen.
+→ Danach: Directus aufsetzen (separat), Server-Routen umstellen, Vereinsheim (Admin) bauen.
 
 ## Regeln
 
