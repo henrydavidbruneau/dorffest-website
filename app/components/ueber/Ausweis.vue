@@ -6,6 +6,19 @@ const name = ref('')
 const feldId = useId()
 const jahr = new Date().getFullYear()
 
+// Gimmick: eigenes Foto in den Ausweis legen. Bleibt im Browser, wird nirgends hochgeladen.
+const foto = ref<string | null>(null)
+const fotoFeldId = useId()
+function fotoGewaehlt(e: Event) {
+  const datei = (e.target as HTMLInputElement).files?.[0]
+  if (!datei || !datei.type.startsWith('image/')) return
+  if (foto.value) URL.revokeObjectURL(foto.value)
+  foto.value = URL.createObjectURL(datei)
+}
+onBeforeUnmount(() => {
+  if (foto.value) URL.revokeObjectURL(foto.value)
+})
+
 // Antrag selbst folgt in Phase 7; bis dahin wird der Name mitgegeben
 async function antragStarten() {
   await navigateTo({ path: '/mitglied-werden', query: name.value.trim() ? { name: name.value.trim() } : {} })
@@ -21,7 +34,7 @@ async function antragStarten() {
       </h2>
       <p class="ausweis__zusatz handschrift">{{ t.zusatz }}</p>
 
-      <div class="ausweis__karte" aria-hidden="true">
+      <div class="ausweis__karte">
         <div class="ausweis__kopf">
           <img src="/logo-mobil.svg" alt="" width="512" height="245" class="ausweis__logo">
           <p class="ausweis__art">Mitgliedsausweis</p>
@@ -29,11 +42,16 @@ async function antragStarten() {
         <div class="ausweis__mitte">
           <div class="ausweis__namensfeld">
             <p class="ausweis__label">Name</p>
-            <p class="ausweis__name handschrift" :class="{ 'ausweis__name--leer': !name.trim() }">
+            <p class="ausweis__name handschrift" :class="{ 'ausweis__name--leer': !name.trim() }" aria-hidden="true">
               {{ name.trim() || 'dein Name' }}
             </p>
           </div>
-          <div class="ausweis__foto handschrift">dein<br>Foto</div>
+          <label :for="fotoFeldId" class="ausweis__foto handschrift" :class="{ 'ausweis__foto--voll': foto }">
+            <img v-if="foto" :src="foto" alt="Dein Foto im Ausweis">
+            <template v-else>dein<br>Foto</template>
+            <span class="nur-screenreader">Foto für den Ausweis auswählen (bleibt auf deinem Gerät)</span>
+          </label>
+          <input :id="fotoFeldId" type="file" accept="image/*" class="nur-screenreader" @change="fotoGewaehlt">
         </div>
         <p class="ausweis__fuss strich-oben">Königsdorf rückt zusammen e.V. · Mitglied seit {{ jahr }}</p>
       </div>
@@ -163,6 +181,30 @@ async function antragStarten() {
   line-height: 1.1;
   text-align: center;
   color: var(--farbe-lila);
+  cursor: pointer;
+  overflow: hidden;
+  transition: background-color var(--dauer-kurz) ease;
+}
+
+.ausweis__foto:hover {
+  background: rgb(255 255 255 / 0.4);
+}
+
+/* Fokus des versteckten Dateifelds am Fotofeld zeigen */
+input:focus-visible + .ausweis__foto,
+.ausweis__foto:has(+ input:focus-visible) {
+  outline: 3px solid var(--farbe-fokus);
+  outline-offset: 3px;
+}
+
+.ausweis__foto--voll {
+  border-style: solid;
+}
+
+.ausweis__foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .ausweis__fuss {
