@@ -6,6 +6,8 @@ export type Ressort = 'feste' | 'verein' | 'treffen' | 'kinder' | 'rezepte'
 export interface Artikel extends DirectusEintrag {
   slug: string
   titel: string
+  /** Kürzerer Titel für Teaser, z.B. "So war das erste Dorffest". Sonst `titel` */
+  teaser_titel: string | null
   /** Kurztext für Teaser */
   teaser: string
   ressort: Ressort
@@ -22,6 +24,8 @@ export interface Artikel extends DirectusEintrag {
   /** Markdown */
   inhalt: string
   titelgeschichte: boolean
+  /** auf der Startseite unter "Was bisher geschah" zeigen */
+  hervorgehoben: boolean
   /** Fremdschlüssel auf `ausgaben` */
   ausgabe: number | null
 }

@@ -19,4 +19,6 @@ export interface Termin extends DirectusEintrag {
   beschreibung: string | null
   /** Beschriftung des Links auf dem Zettel. Standard: "Details" */
   aufruf_text: string | null
+  /** auf der Startseite unter "Was kommt" zeigen */
+  hervorgehoben: boolean
 }

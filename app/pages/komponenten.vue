@@ -2,25 +2,11 @@
 // Interne Vorschau der Basis-Komponenten. Vor dem Livegang entfernen.
 useSeoMeta({ title: 'Komponenten', robots: 'noindex, nofollow' })
 
+const { data: termine } = await useTermine({ hervorgehoben: true })
+const { data: alleArtikel } = await useDorfanzeiger({ hervorgehoben: true })
+const artikel = computed(() => alleArtikel.value[0]!)
+
 const basis = { status: 'published', date_created: '2025-10-01T10:00:00Z', date_updated: null } as const
-
-const termine: Termin[] = [
-  {
-    ...basis, id: 1, slug: 'kleidertausch', titel: 'Kleidertausch', beginn: '2025-11-15T14:00:00+01:00', ende: null,
-    datum_text: null, hinweis: null, ort: 'JuMa Königsdorf', adresse: null, kurzbeschreibung: null, beschreibung: null, aufruf_text: null,
-  },
-  {
-    ...basis, id: 2, slug: 'dorffest-2026', titel: 'Dorffest', beginn: null, ende: null, datum_text: '2026',
-    hinweis: 'Termin folgt – hilf mit planen', ort: null, adresse: null, kurzbeschreibung: null, beschreibung: null, aufruf_text: 'Mithelfen',
-  },
-]
-
-const artikel: Artikel = {
-  ...basis, id: 1, slug: 'so-war-das-erste-dorffest', titel: 'So war das erste Dorffest',
-  teaser: 'Bühne, Buffet, Workshops und ein Mini-Jahrmarkt für die Pänz.', ressort: 'feste', autor_in: 'Kathie',
-  veroeffentlicht_am: '2025-09-07', datum_text: null, lesedauer_minuten: 4, bild: '/platzhalter/foto-3x2.svg',
-  bild_alt: 'Platzhalter', bildunterschrift: null, inhalt: '', titelgeschichte: true, ausgabe: 3,
-}
 
 const anzeigen: Kleinanzeige[] = [
   { ...basis, id: 1, art: 'gesucht', titel: 'Kuchen', text: 'Für das Adventscafé, ein Blech reicht.', link_text: 'melde dich!', link: '#' },
@@ -81,7 +67,7 @@ const anzeigen: Kleinanzeige[] = [
       <h2 class="vorschau__titel">Termin-Zettel</h2>
       <div class="vorschau__raster">
         <BasisTerminZettel :termin="termine[0]!" :drehung="-1.5" />
-        <BasisTerminZettel :termin="termine[1]!" :drehung="1" tape="rechts" tape-farbe="flieder" />
+        <BasisTerminZettel :termin="termine[2]!" :drehung="1" tape="rechts" tape-farbe="flieder" />
       </div>
     </section>
 
