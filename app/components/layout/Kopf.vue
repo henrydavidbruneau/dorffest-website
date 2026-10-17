@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { hauptnavigation, links } from '~/navigation'
 
+withDefaults(defineProps<{
+  /** Leiste fährt beim Laden von oben herein */
+  einfahren?: boolean
+}>(), { einfahren: false })
+
 const menueOffen = ref(false)
 const gescrollt = ref(false)
 const route = useRoute()
@@ -30,7 +35,7 @@ function aktiv(to: string) {
 <template>
   <!-- Platzhalter in Kopfhöhe: Der Kopf ist fixiert und darf beim Schrumpfen nichts verschieben -->
   <div class="kopf-platz" aria-hidden="true" />
-  <header class="kopf" :class="{ 'kopf--gescrollt': gescrollt }">
+  <header class="kopf" :class="{ 'kopf--gescrollt': gescrollt, 'kopf--einfahren': einfahren }">
     <a href="#inhalt" class="kopf__sprunglink">Zum Inhalt springen</a>
     <div class="kopf__leiste">
       <NuxtLink to="/" class="kopf__logo">
@@ -91,6 +96,27 @@ function aktiv(to: string) {
     box-shadow var(--dauer-mittel) ease;
 }
 
+/* von oben hereinfahren (Dorfanzeiger) */
+.kopf--einfahren {
+  animation: einfahren 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+@keyframes einfahren {
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kopf--einfahren {
+    animation: none;
+  }
+}
+
 /* beim Scrollen: kompakter und lila */
 .kopf--gescrollt {
   --farbe-fokus: var(--farbe-gelb);
@@ -127,24 +153,8 @@ function aktiv(to: string) {
   transition: height var(--dauer-mittel) ease;
 }
 
-/* gestrichelte Linie unter der Navigation (nur oben auf der Seite) */
-.kopf__leiste::after {
-  content: '';
-  position: absolute;
-  right: max(0px, calc(var(--seitenrand) - 1.25rem));
-  bottom: 0;
-  left: max(0px, calc(var(--seitenrand) - 1.25rem));
-  height: 2px;
-  background: repeating-linear-gradient(90deg, var(--farbe-orange) 0 6px, transparent 6px 10px);
-  transition: opacity var(--dauer-mittel) ease;
-}
-
 .kopf--gescrollt .kopf__leiste {
   height: 4.25rem;
-}
-
-.kopf--gescrollt .kopf__leiste::after {
-  opacity: 0;
 }
 
 .kopf__logo img {
