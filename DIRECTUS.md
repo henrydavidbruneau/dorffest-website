@@ -340,7 +340,7 @@ Sichtbar nur für die Policy `Vorstand`. Der Server-Token darf nur **anlegen**, 
 | `NUXT_DIRECTUS_TOKEN` | statischer Token des Server-Users |
 | `NUXT_BREVO_API_KEY` | Mails (Anmeldebestätigung, Rundmails, Anträge) |
 | `NUXT_TURNSTILE_SECRET_KEY` / `NUXT_PUBLIC_TURNSTILE_SITE_KEY` | Bot-Schutz für Formulare |
-| `NUXT_SESSION_SECRET` | Vereinsheim-Session (wie DPAT) |
+| `NUXT_LINK_SECRET` | Schlüssel für signierte Bestätigungslinks (Newsletter, Plenum-Erinnerung; bei DPAT `NUXT_NEWSLETTER_SECRET`). Kommt mit dem Double-Opt-in. Das Vereinsheim braucht keinen eigenen Session-Schlüssel (Directus-Tokens im httpOnly-Cookie, wie DPAT). |
 
 ## Startinhalte
 

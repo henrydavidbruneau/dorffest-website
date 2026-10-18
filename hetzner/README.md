@@ -116,7 +116,9 @@ chmod 600 .env
 Die beiden `openssl`-Zeilen erzeugen je einen Zufallswert: einen für `DIRECTUS_SECRET`, einen
 für `DB_PASSWORD`. In `nano` eintragen, mit Strg+O speichern (Enter), mit Strg+X beenden.
 
-`ADMIN_EMAIL`/`ADMIN_PASSWORD` = dein Login. Alle Werte zusätzlich in den Passwortmanager.
+`ADMIN_EMAIL`/`ADMIN_PASSWORD` = dein Login. `EMAIL_SMTP_USER`/`EMAIL_SMTP_PASSWORD` = SMTP-Login
+und SMTP-Key aus Brevo (*SMTP & API → SMTP*); leer lassen geht auch, dann verschickt Directus
+keine Mails. Alle Werte zusätzlich in den Passwortmanager.
 
 ## 7. Starten
 

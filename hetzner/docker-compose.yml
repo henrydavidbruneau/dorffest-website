@@ -55,13 +55,13 @@ services:
       # Lizenz (Open Innovation Grant), sobald vorhanden – siehe README.
       LICENSE_KEY: ${LICENSE_KEY:-}
 
-      # Mails (Passwort vergessen, Einladungen) – später über Brevo-SMTP:
-      # EMAIL_FROM: ${EMAIL_FROM}
-      # EMAIL_TRANSPORT: smtp
-      # EMAIL_SMTP_HOST: smtp-relay.brevo.com
-      # EMAIL_SMTP_PORT: 587
-      # EMAIL_SMTP_USER: ${EMAIL_SMTP_USER}
-      # EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD}
+      # Mails aus dem Studio (Passwort vergessen, Einladungen) über Brevo-SMTP
+      EMAIL_FROM: ${EMAIL_FROM}
+      EMAIL_TRANSPORT: smtp
+      EMAIL_SMTP_HOST: smtp-relay.brevo.com
+      EMAIL_SMTP_PORT: 587
+      EMAIL_SMTP_USER: ${EMAIL_SMTP_USER:-}
+      EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD:-}
 
   caddy:
     # Reverse-Proxy mit automatischem HTTPS (Let's Encrypt).
