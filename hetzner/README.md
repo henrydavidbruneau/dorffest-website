@@ -14,11 +14,21 @@ Dauer: ca. 45 Minuten. Kosten: ca. 6,60 €/Monat (CX23 5,49 € + Backups 20 %)
 
 ## 1. SSH-Schlüssel (auf dem Mac, einmalig)
 
-Gibt es `~/.ssh/id_ed25519.pub` schon (z.B. vom DPAT-Server), den nehmen. Sonst:
+Die Befehle in dieser Anleitung ohne Kommentare kopieren – das Mac-Terminal (zsh) versteht
+`# …` hinter einem Befehl nicht.
+
+Schon einen Schlüssel? `ls ~/.ssh` zeigt z.B. `id_ed25519.pub` oder `id_rsa.pub` – dann den
+nehmen. Sonst neu erzeugen (Fragen mit Enter bestätigen, Passphrase optional):
 
 ```bash
 ssh-keygen -t ed25519 -C "bruno@koenigsdorf"
-cat ~/.ssh/id_ed25519.pub     # diese Zeile kommt gleich zu Hetzner
+```
+
+Den öffentlichen Schlüssel anzeigen – diese eine Zeile (`ssh-ed25519 AAAA… bruno@koenigsdorf`)
+kommt gleich zu Hetzner:
+
+```bash
+cat ~/.ssh/id_ed25519.pub
 ```
 
 ## 2. Server bei Hetzner anlegen
@@ -30,7 +40,7 @@ vom DPAT-Server) → **Ressource erstellen ▾ → Server**:
 | Einstellung | Wert |
 |---|---|
 | Standort | Nürnberg oder Falkenstein |
-| Image | **Ubuntu 24.04** |
+| Image | **Ubuntu 26.04** |
 | Typ | **CX23** (Shared vCPU, x86, 2 vCPU, 4 GB RAM, wie `dpat-core`) |
 | Netzwerk | öffentliche IPv4 + IPv6 an |
 | SSH-Key | den aus Schritt 1 einfügen |
@@ -52,10 +62,10 @@ Beim Anbieter der Domain `königsdorf-rückt-zusammen.de` einen Eintrag anlegen:
 | AAAA | `cms` | IPv6 des Servers (optional) |
 
 In Punycode heißt die Domain `cms.xn--knigsdorf-rckt-zusammen-7kc4n.de` – so steht sie
-überall in Konfigurationen. Prüfen (kann ein paar Minuten dauern):
+überall in Konfigurationen. Prüfen (kann ein paar Minuten dauern), muss die Server-IP zeigen:
 
 ```bash
-dig +short cms.xn--knigsdorf-rckt-zusammen-7kc4n.de    # muss die Server-IP zeigen
+dig +short cms.xn--knigsdorf-rckt-zusammen-7kc4n.de
 ```
 
 ## 4. Server vorbereiten
@@ -64,12 +74,13 @@ dig +short cms.xn--knigsdorf-rckt-zusammen-7kc4n.de    # muss die Server-IP zeig
 ssh root@<SERVER-IP>
 
 apt update && apt upgrade -y
-curl -fsSL https://get.docker.com | sh       # Docker + Compose
+curl -fsSL https://get.docker.com | sh
 timedatectl set-timezone Europe/Berlin
-reboot                                        # falls ein neuer Kernel kam; danach wieder einloggen
+reboot
 ```
 
-Sicherheitsupdates spielt Ubuntu 24.04 von selbst ein (`unattended-upgrades`).
+Die zweite Zeile installiert Docker samt Compose. Nach dem `reboot` ein paar Sekunden warten und
+wieder mit `ssh root@<SERVER-IP>` einloggen. Sicherheitsupdates spielt Ubuntu von selbst ein (`unattended-upgrades`).
 
 ## 5. Dateien hochladen
 
@@ -88,11 +99,14 @@ Auf dem **Server**:
 ```bash
 cd /opt/directus
 cp .env.example .env
-openssl rand -hex 32     # einmal für DIRECTUS_SECRET
-openssl rand -hex 32     # einmal für DB_PASSWORD
-nano .env                # Werte eintragen, Strg+O speichern, Strg+X beenden
+openssl rand -hex 32
+openssl rand -hex 32
+nano .env
 chmod 600 .env
 ```
+
+Die beiden `openssl`-Zeilen erzeugen je einen Zufallswert: einen für `DIRECTUS_SECRET`, einen
+für `DB_PASSWORD`. In `nano` eintragen, mit Strg+O speichern (Enter), mit Strg+X beenden.
 
 `ADMIN_EMAIL`/`ADMIN_PASSWORD` = dein Login. Alle Werte zusätzlich in den Passwortmanager.
 
@@ -101,10 +115,13 @@ chmod 600 .env
 ```bash
 cd /opt/directus
 mkdir -p data/uploads data/extensions
-chown -R 1000:1000 data/uploads data/extensions   # Directus läuft im Container nicht als root
+chown -R 1000:1000 data/uploads data/extensions
 docker compose up -d
-docker compose logs -f directus                   # warten bis „Server started at …“, dann Strg+C
+docker compose logs -f directus
 ```
+
+`chown` ist nötig, weil Directus im Container nicht als root läuft. Im Log warten bis
+„Server started at …“, dann mit Strg+C raus (Directus läuft weiter).
 
 Test: `https://cms.königsdorf-rückt-zusammen.de` im Browser → Directus-Login. Klappt das
 HTTPS nicht: `docker compose logs caddy` (meist DNS noch nicht da oder Port 80 zu).
@@ -118,7 +135,11 @@ Zusätzlich zu den Hetzner-Abbildern ein Datenbank-Dump pro Nacht:
 ```bash
 mkdir -p /opt/directus/backups
 crontab -e
-# Zeile einfügen:
+```
+
+Im Editor (beim ersten Mal `nano` wählen) diese Zeile ans Ende setzen und speichern:
+
+```
 30 3 * * * /opt/directus/backup.sh >> /opt/directus/backups/backup.log 2>&1
 ```
 
@@ -172,10 +193,11 @@ Im Directus-Studio als Admin:
 
 ## Nützliche Befehle
 
-```bash
-cd /opt/directus
-docker compose ps                 # läuft alles?
-docker compose logs -f directus   # Log ansehen
-docker compose restart directus   # neu starten
-df -h                             # Platz auf der Platte
-```
+Auf dem Server in `/opt/directus`:
+
+| Befehl | Wofür |
+|---|---|
+| `docker compose ps` | läuft alles? |
+| `docker compose logs -f directus` | Log ansehen (Strg+C beendet) |
+| `docker compose restart directus` | neu starten |
+| `df -h` | Platz auf der Platte |
