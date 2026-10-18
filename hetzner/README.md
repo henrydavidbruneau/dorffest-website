@@ -23,8 +23,9 @@ cat ~/.ssh/id_ed25519.pub     # diese Zeile kommt gleich zu Hetzner
 
 ## 2. Server bei Hetzner anlegen
 
-[console.hetzner.cloud](https://console.hetzner.cloud) → **Neues Projekt** „Königsdorf“ →
-**Server hinzufügen**:
+[console.hetzner.com](https://console.hetzner.com) → oben links das Projekt-Menü (z.B.
+„Default ▾“) → neues Projekt „Königsdorf“ anlegen und auswählen (optional, hält es nur getrennt
+vom DPAT-Server) → **Ressource erstellen ▾ → Server**:
 
 | Einstellung | Wert |
 |---|---|
