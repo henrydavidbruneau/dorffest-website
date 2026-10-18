@@ -48,7 +48,8 @@ vom DPAT-Server) → **Ressource erstellen ▾ → Server**:
 | Backups | **an** (+20 %, tägliche Abbilder, 7 Tage) |
 | Name | `directus-koenigsdorf` |
 
-IPv4-Adresse des Servers notieren.
+Der Server `directus-koenigsdorf` hat die IPv4 **`89.167.24.190`** und das IPv6-Netz
+`2a01:4f9:c012:219d::/64` (der Server selbst ist darin `…::1`).
 
 > Die Hetzner-Firewall ist wichtig, weil Docker die Ubuntu-Firewall (`ufw`) umgeht.
 
@@ -56,13 +57,13 @@ IPv4-Adresse des Servers notieren.
 
 Beim Anbieter der Domain `königsdorf-rückt-zusammen.de` einen Eintrag anlegen:
 
-| Typ | Name | Wert |
-|---|---|---|
-| A | `api` | IPv4 des Servers |
-| AAAA | `api` | IPv6 des Servers (optional) |
+| Typ | Name | Wert | TTL |
+|---|---|---|---|
+| A | `api` | `89.167.24.190` | 5 Minuten |
+| AAAA | `api` | `2a01:4f9:c012:219d::1` (ohne `/64`) | 5 Minuten |
 
 In Punycode heißt die Domain `api.xn--knigsdorf-rckt-zusammen-7kc4n.de` – so steht sie
-überall in Konfigurationen. Prüfen (kann ein paar Minuten dauern), muss die Server-IP zeigen:
+überall in Konfigurationen. Prüfen (kann ein paar Minuten dauern), muss `89.167.24.190` zeigen:
 
 ```bash
 dig +short api.xn--knigsdorf-rckt-zusammen-7kc4n.de
@@ -70,9 +71,16 @@ dig +short api.xn--knigsdorf-rckt-zusammen-7kc4n.de
 
 ## 4. Server vorbereiten
 
-```bash
-ssh root@<SERVER-IP>
+Einloggen. Beim ersten Mal fragt der Mac „Are you sure you want to continue connecting?“ –
+`yes` tippen und Enter:
 
+```bash
+ssh root@89.167.24.190
+```
+
+Dann auf dem Server:
+
+```bash
 apt update && apt upgrade -y
 curl -fsSL https://get.docker.com | sh
 timedatectl set-timezone Europe/Berlin
@@ -80,16 +88,16 @@ reboot
 ```
 
 Die zweite Zeile installiert Docker samt Compose. Nach dem `reboot` ein paar Sekunden warten und
-wieder mit `ssh root@<SERVER-IP>` einloggen. Sicherheitsupdates spielt Ubuntu von selbst ein (`unattended-upgrades`).
+wieder mit `ssh root@89.167.24.190` einloggen. Sicherheitsupdates spielt Ubuntu von selbst ein (`unattended-upgrades`).
 
 ## 5. Dateien hochladen
 
 Auf dem **Mac**, im Projektordner:
 
 ```bash
-ssh root@<SERVER-IP> mkdir -p /opt/directus
+ssh root@89.167.24.190 mkdir -p /opt/directus
 scp hetzner/docker-compose.yml hetzner/Caddyfile hetzner/.env.example hetzner/backup.sh \
-    root@<SERVER-IP>:/opt/directus/
+    root@89.167.24.190:/opt/directus/
 ```
 
 ## 6. `.env` ausfüllen
