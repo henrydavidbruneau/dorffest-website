@@ -4,8 +4,12 @@ Bauplan für das Directus der Königsdorf-Seite und das **Vereinsheim** (Admin-B
 `/vereinsheim`). Vorbild ist DPAT (`~/Documents/Projects/WirSindRaus/dont-post-about-this`,
 dort `DIRECTUS.md`, `scripts/directus-setup.mjs`, `server/utils/adminSession.ts`).
 
-Stand: 18.10.2026. Die Website läuft bis zur Umstellung mit Platzhalterdaten aus
-`server/data/*.ts`; die Typen in `shared/types/*.ts` entsprechen den Collections unten.
+Stand: 18.10.2026. **Directus ist eingerichtet** (Collections, Rechte, Startinhalte – siehe
+„Einrichtung“ unten), die Website läuft aber noch mit Platzhalterdaten aus `server/data/*.ts`,
+bis `server/utils/*` umgestellt sind. Die Typen in `shared/types/*.ts` entsprechen den Collections unten.
+
+Server: `https://api.xn--knigsdorf-rckt-zusammen-7kc4n.de` (= `api.königsdorf-rückt-zusammen.de`,
+in Konfigurationen immer Punycode), Directus 12.5.0, Lizenz: Open Innovation Grant.
 
 ## Grundsätze
 
@@ -14,7 +18,8 @@ Stand: 18.10.2026. Die Website läuft bis zur Umstellung mit Platzhalterdaten au
 - **Lizenz-Seats:** Ohne Lizenz (Core-Tier) zählen nur Nutzer*innen mit *App Access*/*Admin Access*
   (Directus-Studio), nach heutigem Stand max. 3. Deshalb haben `Mitglied` und `Vorstand`
   **kein App Access** – sie arbeiten nur im Vereinsheim (Login über die API). Studio nur für
-  Admins. Flows sparsam (Core-Tier: wenige); Open Innovation Grant beantragen.
+  Admins. Flows sparsam. Der Open Innovation Grant ist eingetragen (`LICENSE_KEY` in der
+  Server-`.env`) – eigene Filter in Rechten brauchen eine Lizenz.
 - Die Website spricht Directus **nur serverseitig** an (`server/utils/*`), nie aus dem Browser.
   Dafür gibt es einen **Server-User** mit statischem Token (`NUXT_DIRECTUS_TOKEN`).
   → **Keine öffentlichen Rechte** in Directus nötig.
@@ -56,7 +61,7 @@ Stand: 18.10.2026. Die Website läuft bis zur Umstellung mit Platzhalterdaten au
 | `plenum_erinnerungen` | Erinnerungen ans Plenum | create | read, delete | alles |
 | `mitgliedsantraege` | Anträge von `/mitglied-werden` | create | – | alles |
 | `mitglieder` | Mitgliederliste | – | – | alles |
-| `auslagen` | Finanzen: Auslagen einreichen | – | create, read/update **eigene** | alles |
+| `auslagen` (+ `auslagen_belege`) | Finanzen: Auslagen einreichen | – | create, read/update **eigene** | alles |
 | `verein` (Singleton) | Kontakt, Konto, Infochannel-Link | read | read | alles |
 
 Dateien (`directus_files`): Ordner `termine`, `artikel`, `gastbeitraege`, `stimmen`, `belege` (Belege nur
@@ -296,7 +301,7 @@ Stammdaten wie oben, `mitglied_seit`, `austritt_zum`, `beitrag_jahr`,
 | `betrag` | Dezimal (€) | |
 | `datum` | Datum | Datum der Ausgabe |
 | `termin` | M2O → `termine`, optional | Zuordnung zu einer Veranstaltung |
-| `beleg` | Datei(en) | Foto/PDF des Kassenbons |
+| `belege` | Dateien (M2M über `auslagen_belege`, Ordner `belege`) | Foto/PDF des Kassenbons, mehrere möglich |
 | `kontoinhaber_in`, `iban` | Text | für die Erstattung |
 | `notiz` | Text | |
 | `user_created` | Systemfeld | Mitglieder sehen nur ihre eigenen |
@@ -342,7 +347,93 @@ Sichtbar nur für die Policy `Vorstand`. Der Server-Token darf nur **anlegen**, 
 | `NUXT_TURNSTILE_SECRET_KEY` / `NUXT_PUBLIC_TURNSTILE_SITE_KEY` | Bot-Schutz für Formulare |
 | `NUXT_LINK_SECRET` | Schlüssel für signierte Bestätigungslinks (Newsletter, Plenum-Erinnerung; bei DPAT `NUXT_NEWSLETTER_SECRET`). Kommt mit dem Double-Opt-in. Das Vereinsheim braucht keinen eigenen Session-Schlüssel (Directus-Tokens im httpOnly-Cookie, wie DPAT). |
 
+## Einrichtung (Skripte)
+
+Beide Skripte legen nur an, was fehlt, ändern und löschen nichts und sind beliebig oft
+ausführbar. Admin-Token als `DIRECTUS_ADMIN_TOKEN` setzen (nie committen), Node 22+.
+
+```bash
+node scripts/directus-setup.mjs --dry-run   # Probelauf
+node scripts/directus-setup.mjs             # Collections, Felder, Relationen, Ordner, Policies, Rechte
+node scripts/directus-setup.mjs --list      # Policies, Zuordnungen, Rechte je Policy
+node scripts/directus-seed.mjs --dry-run    # Startinhalte (Probelauf)
+node scripts/directus-seed.mjs              # Startinhalte
+```
+
+`directus-setup.mjs` ist der Bauplan in Code: Neue Felder/Rechte dort ergänzen und erneut
+ausführen. An vorhandene Rechte werden neue Felder angehängt; sonstige Abweichungen meldet das
+Skript nur. Stand 18.10.2026: 21 Collections, 5 Ordner, 3 Policies, alles angelegt.
+
+### Was angelegt ist
+
+- **Systemfelder** an jeder Collection: `date_created`, `date_updated`, `user_created`,
+  `user_updated`. IDs sind Ganzzahlen (Dateien/User: UUID). `verein` ist ein Singleton.
+- **Löschen:** Termin löschen löscht seine `anmeldungen`, `beitraege` und `termin_rundmails`
+  mit. Ein Ressort mit Artikeln lässt sich nicht löschen. Sonst wird die Verknüpfung geleert.
+- `termine.anmeldungen` ist das O2M-Gegenstück zu `anmeldungen.termin`.
+- `status`-Felder legen wir selbst an (Directus 12 schlägt für neue Collections sonst
+  `archived` vor). `termine` und `artikel` archivieren über `status = archived`.
+- **Ordner:** `termine`, `artikel` (auch Ausgaben), `gastbeitraege`, `stimmen`, `belege`. Die
+  Datei-Felder schlagen ihren Ordner vor.
+- **Dezimalzahlen** (`betrag`, `beitrag_jahr`) liefert Directus als String.
+
+### Rechte im Detail
+
+- **Öffentlich:** keine Rechte (`/items/…`, `/assets/…`, `/files` → 403).
+- **`Server`** (User `website-server`):
+  - liest `published` bei `termine`, `artikel`, `kleinanzeigen`, `stimmen`, `faq`, `leserbriefe`,
+    `ideen`; alles bei `ressorts`, `ausgaben`, `verein`
+  - `anmeldungen`: liest nur `termin`, `personen`, `status` (Plätze zählen); `personen` muss 1–10 sein
+  - `gastbeitrag_einladungen`: liest ohne `notiz`; `status` nur von `offen` auf `eingereicht`
+  - `gastbeitraege`: Anlegen nur mit `rechte_bestaetigt = true`
+  - legt an: `anmeldungen`, `beitraege`, `leserbriefe`, `gastbeitraege`, `ideen`, `vorschlaege`,
+    `plenum_erinnerungen`, `mitgliedsantraege` (nur die Formularfelder, Status = Standard)
+  - **Dateien:** liest nur Ordner `termine`, `artikel`, `stimmen`; lädt nur in `gastbeitraege`
+    hoch. Beim Annehmen eines Gastbeitrags verschiebt das Vereinsheim das Foto nach `artikel`.
+  - `directus_users`: nur `email` + `benutzername` aktiver User mit Benutzernamen (Login, s.u.)
+- **`Mitglied`:** wie in der Tabelle. Auslagen: eigene lesen, bearbeiten nur solange
+  `eingereicht`. Dateien: alles außer fremden Belegen lesen/bearbeiten, hochladen (nicht
+  löschen). Ordner lesen. User: `id`, Name, `email`, `avatar`, `benutzername` aller lesen; eigenes
+  Konto (Name, E-Mail, Passwort, Avatar) bearbeiten.
+- **`Vorstand`:** alles auf allen Collections und Dateien, User lesen. Vorstandsleute bekommen
+  **beide** Policies (`Mitglied` + `Vorstand`). User anlegen/Policies vergeben bleibt beim Admin
+  im Studio (sonst könnte man sich selbst Admin-Rechte geben).
+
+### Bilder auf der Website
+
+Ohne öffentliche Rechte kann der Browser `/assets/<id>` nicht direkt laden. Die Website braucht
+deshalb eine Bild-Route (z.B. `server/routes/bilder/[id].ts`), die mit dem Server-Token von
+Directus holt (mit Transformationen wie `?width=…&format=webp`) und mit Cache-Headern ausliefert.
+Bilder im Markdown (`inhalt`) zeigen auf `https://api.xn--knigsdorf-rckt-zusammen-7kc4n.de/assets/<id>`
+– `server/utils/markdown.ts` schreibt diese Adressen beim Umstellen auf die Bild-Route um.
+
+### Vereinsheim-Zugang (User anlegen)
+
+1. Studio → **User Directory** → **+**: Vorname, Nachname, E-Mail, **Benutzername**,
+   Startpasswort (privat weitergeben; keine Einladungs-Mail – die führt ins Studio).
+2. **Role leer lassen**, unter **Policies** `Mitglied` hinzufügen (Vorstand zusätzlich `Vorstand`).
+   Ohne App Access → kein Lizenz-Seat.
+3. Optional mit `mitglieder.user` verknüpfen.
+
+**Login mit Benutzernamen:** Directus meldet nur per E-Mail an. Das Feld
+`directus_users.benutzername` (eindeutig, 3–30 Zeichen a–z 0–9 . _ -) erlaubt im Vereinsheim
+trotzdem den Benutzernamen: Die Login-Route (`server/api/vereinsheim/login.post.ts`) nimmt
+Benutzername **oder** E-Mail; enthält die Eingabe kein `@`, sucht sie mit dem Server-Token die
+E-Mail zum Benutzernamen und meldet dann mit E-Mail + Passwort bei `/auth/login` an. Gleiche
+Fehlermeldung für „unbekannt“ und „falsches Passwort“; Rate-Limit wie bei den Formularen.
+Jede*r braucht trotzdem eine E-Mail (Directus-Pflicht, Passwort vergessen).
+
+### Noch offen
+
+- **Flows:** Kleinanzeigen auf 4 veröffentlichte begrenzen (Filter-Hook), abgelehnte
+  Gastbeiträge/Anträge nach 6 Monaten löschen.
+- **Double-Opt-in** (Plenum-Erinnerung, Newsletter): Rechte zum Bestätigen/Abmelden ergänzen.
+- Optional Rollen `Mitglied`/`Vorstand`, die die Policies bündeln (bequemer beim Anlegen).
+
 ## Startinhalte
+
+**Importiert am 18.10.2026** mit `scripts/directus-seed.mjs` (12 Bilder, 6 Ressorts, 4 Ausgaben,
+6 Termine, 7 Artikel, 4 Kleinanzeigen, 4 FAQ, 4 Stimmen, `verein`).
 
 `scripts/directus-seed/inhalte.json` enthält alle Inhalte, die die Website heute als
 Platzhalter zeigt – schon im Schema oben (Ressorts, Ausgaben, Termine, Artikel inkl.
@@ -358,8 +449,8 @@ Porträt-Feldern, Kleinanzeigen, FAQ, Stimmen, Singleton `verein`).
 
 ## Umstellung der Website (Reihenfolge)
 
-1. Collections + Policies anlegen (`scripts/directus-setup.mjs`, nach DPAT-Muster).
-2. Startinhalte aus `scripts/directus-seed/inhalte.json` importieren (siehe oben).
+1. ✅ Collections + Policies anlegen (`scripts/directus-setup.mjs`, nach DPAT-Muster).
+2. ✅ Startinhalte aus `scripts/directus-seed/inhalte.json` importieren (siehe oben).
 3. `server/utils/*.ts` von `server/data` auf Directus umstellen – Routen, Composables und
    Seiten bleiben unverändert (außer den beiden markierten Code-Anpassungen).
 4. POST-Routen speichern statt loggen, Turnstile + Brevo anbinden.

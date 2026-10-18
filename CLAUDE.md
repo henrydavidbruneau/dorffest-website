@@ -21,7 +21,7 @@ Treffpunkte und Hilfe im Dorf organisieren.
 
 - **Nuxt 4** (`app/`-Verzeichnis), **SSR auf Netlify** (`nitro.preset: 'netlify'`).
 - Module: `@nuxt/fonts` (Schriften lokal), `@nuxt/image` (Fotos als WebP), `@nuxt/eslint`.
-- **Directus** (self-hosted) kommt **später** für alles Dynamische.
+- **Directus** (self-hosted, eingerichtet – siehe `DIRECTUS.md`) für alles Dynamische; die Website ist noch nicht umgestellt.
 - **Kein** Nuxt Content, **kein** Nuxt Studio, **kein** i18n.
 - Später: **Brevo** (Mails/Newsletter), **Cloudflare Turnstile** (Bot-Schutz).
 - `.env` ist gitignored (`.env.example` zeigt die Variablen). Tokens nur serverseitig
@@ -48,7 +48,7 @@ server/data/              Platzhalterdaten, bis Directus angebunden ist
 server/utils/             Hilfsfunktionen (später Directus-Client)
 public/illustrationen/    Illustrationen (SVG)
 public/fotos/             Fotos (WebP, über <NuxtImg>)
-scripts/                  später: directus-setup.mjs
+scripts/                  directus-setup.mjs (Schema/Rechte), directus-seed.mjs (Startinhalte)
 ```
 
 ### Inhalte: wo was liegt

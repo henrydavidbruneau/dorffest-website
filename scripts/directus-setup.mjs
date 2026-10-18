@@ -8,8 +8,8 @@
 //     mit ihren Rechten
 //   • hängt `Server` an den User `website-server` (dessen Token liegt auf Netlify)
 //
-// Bestehendes wird nie geändert oder gelöscht. Weicht ein vorhandenes Recht vom Bauplan ab,
-// meldet das Skript es nur. Beliebig oft ausführbar. Die öffentliche Rolle bekommt keine Rechte.
+// Bestehendes wird nie geändert oder gelöscht – Ausnahme: an vorhandene Rechte werden neue
+// Felder aus dem Bauplan angehängt. Weicht ein Recht sonst ab, meldet das Skript es nur. Beliebig oft ausführbar. Die öffentliche Rolle bekommt keine Rechte.
 //
 // Aufruf (Node 22+, im Projektordner):
 //
@@ -583,6 +583,18 @@ for (const c of COLLECTIONS) {
   if (c.fields.some((f) => f.field === 'user_created')) c.relations.push(...systemRelations())
 }
 
+// Zusätzliche Felder an System-Collections
+const SYSTEM_FIELDS = {
+  // Login im Vereinsheim auch mit Benutzernamen: die Login-Route sucht damit die E-Mail
+  // (Directus selbst meldet nur per E-Mail an)
+  directus_users: [
+    {
+      ...str('benutzername', { unique: true, width: 'half', max: 30 }),
+      meta: { interface: 'input', width: 'half', note: 'Login im Vereinsheim (statt E-Mail). Nur a–z, 0–9, . _ -', options: { trim: true }, validation: { benutzername: { _regex: '^[a-z0-9._-]{3,30}$' } }, validation_message: '3–30 Zeichen: a–z, 0–9, . _ -' },
+    },
+  ],
+}
+
 /* ── Policies & Rechte ─────────────────────────────────── */
 
 const POLICIES = {
@@ -620,6 +632,8 @@ const PERMISSIONS = {
     { collection: 'plenum_erinnerungen', action: 'create', fields: ['name', 'email', 'wie'] },
     { collection: 'mitgliedsantraege', action: 'create', fields: ['art', 'beitrag_stufe', 'beitrag_jahr', 'vorname', 'nachname', 'strasse', 'plz', 'ort', 'email', 'telefon', 'plenum_besucht', 'nachricht', 'satzung_anerkannt_am'] },
     { collection: 'verein', action: 'read', fields: ['*'] },
+    // Vereinsheim-Login: Benutzername → E-Mail (nur aktive User mit Benutzernamen)
+    { collection: 'directus_users', action: 'read', fields: ['email', 'benutzername'], permissions: { _and: [{ benutzername: { _nnull: true } }, { status: { _eq: 'active' } }] } },
     // Dateien: Bilder veröffentlichter Inhalte lesen (Ordner termine/artikel/stimmen),
     // Fotos von Gastbeiträgen hochladen (nur in den Ordner gastbeitraege)
     { collection: 'directus_files', action: 'read', fields: ['*'], permissions: { folder: { name: { _in: ['termine', 'artikel', 'stimmen'] } } } },
@@ -655,14 +669,14 @@ const PERMISSIONS = {
     { collection: 'directus_files', action: 'update', fields: ['*'], permissions: { _or: [{ folder: { _null: true } }, { folder: { name: { _neq: 'belege' } } }, { uploaded_by: { _eq: '$CURRENT_USER' } }] } },
     { collection: 'directus_folders', action: 'read', fields: ['*'] },
     // Namen anderer (wer hat angelegt/geprüft), eigenes Konto bearbeiten (Name, Passwort)
-    { collection: 'directus_users', action: 'read', fields: ['id', 'first_name', 'last_name', 'email', 'avatar'] },
+    { collection: 'directus_users', action: 'read', fields: ['id', 'first_name', 'last_name', 'email', 'avatar', 'benutzername'] },
     { collection: 'directus_users', action: 'update', fields: ['first_name', 'last_name', 'email', 'password', 'avatar'], permissions: { id: { _eq: '$CURRENT_USER' } } },
   ],
   // Vorstand bekommt zusätzlich zu Mitglied alles (Policies addieren sich)
   Vorstand: [
     ...COLLECTIONS.flatMap((c) => all(c.collection)),
     ...all('directus_files'),
-    { collection: 'directus_users', action: 'read', fields: ['id', 'first_name', 'last_name', 'email', 'avatar', 'status', 'last_access'] },
+    { collection: 'directus_users', action: 'read', fields: ['id', 'first_name', 'last_name', 'email', 'avatar', 'benutzername', 'status', 'last_access'] },
   ],
 }
 
@@ -733,6 +747,14 @@ async function main() {
     skipped.push(`Collection ${c.collection} – schon vorhanden${missing ? ` (${missing} fehlende Felder)` : ''}`)
   }
 
+  for (const [collection, list] of Object.entries(SYSTEM_FIELDS)) {
+    const have = new Set((await api('GET', `/fields/${collection}`)).map((f) => f.field))
+    for (const f of list) {
+      if (have.has(f.field)) { skipped.push(`Feld ${collection}.${f.field} – schon vorhanden`); continue }
+      await step(`Feld ${collection}.${f.field} anlegen`, () => api('POST', `/fields/${collection}`, f))
+    }
+  }
+
   // 3. Relationen (erst, wenn alle Collections da sind)
   const relations = await api('GET', '/relations')
   for (const c of COLLECTIONS) {
@@ -773,9 +795,16 @@ async function main() {
       const label = `${name}: ${want.action} auf ${want.collection}`
       const have = perms.find((p) => p.policy === policy && p.collection === want.collection && p.action === want.action)
       if (have) {
-        const differs = !sameJson([...(have.fields || [])].sort(), [...want.fields].sort()) || !sameJson(filterOrNull(have.permissions), filterOrNull(want.permissions))
-        skipped.push(`${label} – schon vorhanden`)
-        if (differs) warnings.push(`${label} weicht vom Bauplan ab (nicht geändert)`)
+        // Neue Felder aus dem Bauplan werden angehängt (nur hinzufügen, nie entfernen)
+        const hf = have.fields || []
+        const missing = hf.includes('*') ? [] : want.fields.filter((f) => !hf.includes(f))
+        if (missing.length) {
+          await step(`${label} – Felder ergänzt: ${missing.join(', ')}`, () =>
+            api('PATCH', `/permissions/${have.id}`, { fields: missing.includes('*') ? ['*'] : [...hf, ...missing] }))
+        }
+        else skipped.push(`${label} – schon vorhanden`)
+        const differs = !sameJson([...new Set([...hf, ...missing])].sort(), [...want.fields].sort()) || !sameJson(filterOrNull(have.permissions), filterOrNull(want.permissions))
+        if (differs && !missing.includes('*')) warnings.push(`${label} weicht vom Bauplan ab (nicht geändert)`)
         continue
       }
       await step(label, () => api('POST', '/permissions', {
