@@ -336,7 +336,7 @@ Sichtbar nur für die Policy `Vorstand`. Der Server-Token darf nur **anlegen**, 
 
 | Variable | Wofür |
 |---|---|
-| `NUXT_DIRECTUS_URL` | z.B. `https://cms.königsdorf-rückt-zusammen.de` (Punycode-Domain) |
+| `NUXT_DIRECTUS_URL` | z.B. `https://api.königsdorf-rückt-zusammen.de` (Punycode-Domain) |
 | `NUXT_DIRECTUS_TOKEN` | statischer Token des Server-Users |
 | `NUXT_BREVO_API_KEY` | Mails (Anmeldebestätigung, Rundmails, Anträge) |
 | `NUXT_TURNSTILE_SECRET_KEY` / `NUXT_PUBLIC_TURNSTILE_SITE_KEY` | Bot-Schutz für Formulare |

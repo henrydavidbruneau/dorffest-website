@@ -1,7 +1,7 @@
 # Directus auf Hetzner einrichten
 
 Schritt für Schritt vom leeren Hetzner-Konto bis zu
-`https://cms.königsdorf-rückt-zusammen.de` mit laufendem Directus. Was danach in Directus
+`https://api.königsdorf-rückt-zusammen.de` mit laufendem Directus. Was danach in Directus
 angelegt wird (Collections, Policies), steht in `../DIRECTUS.md`.
 
 **Aufbau:** ein kleiner Hetzner-Cloud-Server mit Docker. Darauf drei Container
@@ -58,14 +58,14 @@ Beim Anbieter der Domain `königsdorf-rückt-zusammen.de` einen Eintrag anlegen:
 
 | Typ | Name | Wert |
 |---|---|---|
-| A | `cms` | IPv4 des Servers |
-| AAAA | `cms` | IPv6 des Servers (optional) |
+| A | `api` | IPv4 des Servers |
+| AAAA | `api` | IPv6 des Servers (optional) |
 
-In Punycode heißt die Domain `cms.xn--knigsdorf-rckt-zusammen-7kc4n.de` – so steht sie
+In Punycode heißt die Domain `api.xn--knigsdorf-rckt-zusammen-7kc4n.de` – so steht sie
 überall in Konfigurationen. Prüfen (kann ein paar Minuten dauern), muss die Server-IP zeigen:
 
 ```bash
-dig +short cms.xn--knigsdorf-rckt-zusammen-7kc4n.de
+dig +short api.xn--knigsdorf-rckt-zusammen-7kc4n.de
 ```
 
 ## 4. Server vorbereiten
@@ -123,7 +123,7 @@ docker compose logs -f directus
 `chown` ist nötig, weil Directus im Container nicht als root läuft. Im Log warten bis
 „Server started at …“, dann mit Strg+C raus (Directus läuft weiter).
 
-Test: `https://cms.königsdorf-rückt-zusammen.de` im Browser → Directus-Login. Klappt das
+Test: `https://api.königsdorf-rückt-zusammen.de` im Browser → Directus-Login. Klappt das
 HTTPS nicht: `docker compose logs caddy` (meist DNS noch nicht da oder Port 80 zu).
 
 Danach in `.env` die Zeile `ADMIN_PASSWORD=` leeren (wird nur beim ersten Start gebraucht).
@@ -183,11 +183,11 @@ Im Directus-Studio als Admin:
 1. **Server-User** (für Netlify): *User Directory* → neuer User `website-server`, ohne Passwort,
    Feld **Token** → generieren, speichern. Policy `Server` bekommt er, sobald das Setup-Skript
    sie angelegt hat. Token auf Netlify als `NUXT_DIRECTUS_TOKEN`, URL als
-   `NUXT_DIRECTUS_URL=https://cms.xn--knigsdorf-rckt-zusammen-7kc4n.de`.
+   `NUXT_DIRECTUS_URL=https://api.xn--knigsdorf-rckt-zusammen-7kc4n.de`.
 2. **Setup-Zugang für Claude** (wie bei DPAT, `docs/session-directus-setup.md` dort):
    User `claude-setup` mit Admin-Rolle, Token erzeugen. In der Claude-Cloud-Umgebung
    - als Umgebungsvariable `DIRECTUS_ADMIN_TOKEN` eintragen (**nicht in den Chat**),
-   - unter Network access die Domain `cms.xn--knigsdorf-rckt-zusammen-7kc4n.de` erlauben,
+   - unter Network access die Domain `api.xn--knigsdorf-rckt-zusammen-7kc4n.de` erlauben,
    - neue Session starten.
    Nach dem Setup den User deaktivieren (er belegt einen Seat).
 
