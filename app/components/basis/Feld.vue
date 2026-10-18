@@ -12,23 +12,42 @@ withDefaults(defineProps<{
   max?: number
   maxlength?: number
   mehrzeilig?: boolean
-}>(), { type: 'text', required: false, autocomplete: undefined, placeholder: undefined, min: undefined, max: undefined, maxlength: undefined, mehrzeilig: false })
+  /** Höhe des mehrzeiligen Felds */
+  zeilen?: number
+  /** Auswahlliste statt Eingabe: Wert → Beschriftung */
+  optionen?: Record<string, string>
+  /** kleiner Hinweis unter dem Feld */
+  hinweis?: string
+}>(), { type: 'text', required: false, autocomplete: undefined, placeholder: undefined, min: undefined, max: undefined, maxlength: undefined, mehrzeilig: false, zeilen: 3, optionen: undefined, hinweis: undefined })
 
 const id = useId()
+const hinweisId = `${id}-hinweis`
 </script>
 
 <template>
   <div class="feld">
     <label :for="id" class="feld__label">{{ label }}<span v-if="!required" class="feld__optional"> (optional)</span></label>
+    <select
+      v-if="optionen"
+      :id="id"
+      v-model="wert"
+      :name="name"
+      :required="required"
+      :aria-describedby="hinweis ? hinweisId : undefined"
+      class="feld__eingabe feld__auswahl"
+    >
+      <option v-for="(beschriftung, schluessel) in optionen" :key="schluessel" :value="schluessel">{{ beschriftung }}</option>
+    </select>
     <textarea
-      v-if="mehrzeilig"
+      v-else-if="mehrzeilig"
       :id="id"
       v-model="wert"
       :name="name"
       :required="required"
       :placeholder="placeholder"
       :maxlength="maxlength"
-      rows="3"
+      :rows="zeilen"
+      :aria-describedby="hinweis ? hinweisId : undefined"
       class="feld__eingabe"
     />
     <input
@@ -43,8 +62,10 @@ const id = useId()
       :min="min"
       :max="max"
       :maxlength="maxlength"
+      :aria-describedby="hinweis ? hinweisId : undefined"
       class="feld__eingabe"
     >
+    <p v-if="hinweis" :id="hinweisId" class="feld__hinweis">{{ hinweis }}</p>
   </div>
 </template>
 
@@ -81,5 +102,22 @@ const id = useId()
 
 textarea.feld__eingabe {
   resize: vertical;
+  line-height: 1.6;
+}
+
+.feld__auswahl {
+  appearance: none;
+  padding-right: 2.5em;
+  background-image: linear-gradient(45deg, transparent 50%, var(--farbe-orange) 50%), linear-gradient(-45deg, transparent 50%, var(--farbe-orange) 50%);
+  background-position: right 1.25em center, right 0.85em center;
+  background-size: 0.4em 0.4em;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.feld__hinweis {
+  margin: 0;
+  font-size: var(--groesse-xs);
+  line-height: 1.45;
 }
 </style>

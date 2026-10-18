@@ -42,6 +42,8 @@ Stand: 18.10.2026. Die Website läuft bis zur Umstellung mit Platzhalterdaten au
 | `artikel` | Dorfanzeiger-Artikel | read (published) | alles | alles |
 | `kleinanzeigen` | max. 4 Kleinanzeigen im Dorfanzeiger | read (published) | alles | alles |
 | `leserbriefe` | Leserbriefe (sofort sichtbar, moderierbar) | create, read (published) | read, update, delete | alles |
+| `gastbeitrag_einladungen` | private Links für Gastbeiträge | read, update (`status`) | alles | alles |
+| `gastbeitraege` | eingereichte Gastbeiträge (warten aufs Okay) | create | read, update | alles |
 | `stimmen` | „Stimmen aus dem Verein“ (Über uns) | read (published) | alles | alles |
 | `faq` | Fragen auf der Startseite | read (published) | alles | alles |
 | `ideen` | Ideenwand „Was fehlt dir in Königsdorf?“ | create, read (published) | read, update, delete | alles |
@@ -52,7 +54,7 @@ Stand: 18.10.2026. Die Website läuft bis zur Umstellung mit Platzhalterdaten au
 | `auslagen` | Finanzen: Auslagen einreichen | – | create, read/update **eigene** | alles |
 | `verein` (Singleton) | Kontakt, Konto, Infochannel-Link | read | read | alles |
 
-Dateien (`directus_files`): Ordner `termine`, `artikel`, `stimmen`, `belege` (Belege nur
+Dateien (`directus_files`): Ordner `termine`, `artikel`, `gastbeitraege`, `stimmen`, `belege` (Belege nur
 Vorstand + Ersteller*in lesbar). Server darf Dateien lesen, die an veröffentlichten Inhalten hängen.
 
 ---
@@ -184,11 +186,54 @@ und als Absicherung per Directus-Flow (Filter-Hook auf create/update → Fehler,
 `status` (`published` · `hidden`, Standard `published` – erscheint sofort), `name`, `text`
 (≤ 600 Zeichen), optional `artikel` (M2O, „zu welchem Beitrag“). Bot-Schutz über Turnstile.
 
-### Vereinsheim: Dorfanzeiger (ein Tab mit drei Reitern)
+### Gastbeiträge
+
+Externe schreiben über einen **privaten Link** `/gastbeitrag/:schluessel` (ohne Navigation, nur
+„zur Startseite“, `noindex`, `no-referrer`). Ein Mitglied erzeugt den Link im Vereinsheim und
+gibt ihn privat weiter.
+
+**`gastbeitrag_einladungen`**
+
+| Feld | Typ | Hinweis |
+|---|---|---|
+| `schluessel` | Text, eindeutig | zufällig (≥ 24 Zeichen, `crypto.randomBytes(18).toString('base64url')`), vom Vereinsheim erzeugt |
+| `name` | Text | für wen („Hallo Marta!“) |
+| `ressort` | M2O → `ressorts`, optional | Vorauswahl |
+| `gueltig_bis` | Datum, optional | leer = unbegrenzt |
+| `mehrfach` | Boolean | mehrere Beiträge über denselben Link (z.B. Kita-Gruppe) |
+| `status` | `offen` · `eingereicht` · `widerrufen` | nach dem ersten Beitrag `eingereicht` (außer `mehrfach`) |
+| `notiz` | Text, optional | intern: worum es gehen soll |
+
+**`gastbeitraege`**
+
+| Feld | Typ | Hinweis |
+|---|---|---|
+| `status` | `eingereicht` · `angenommen` · `abgelehnt` | |
+| `einladung` | M2O → `gastbeitrag_einladungen` | |
+| `titel`, `teaser`, `inhalt` | Text / Text / Markdown | Leerzeile = Absatz |
+| `ressort` | M2O → `ressorts` | |
+| `bild`, `bildunterschrift`, `foto_von` | Datei (Ordner `gastbeitraege`) / Text / Text | Foto kommt verkleinert (≤ 2000 px, JPEG, ≤ 4 MB) |
+| `autor_in` | Text | Name unter dem Beitrag |
+| `email` | E-Mail | nur für Rückfragen, nie öffentlich |
+| `rechte_bestaetigt` | Boolean | Pflicht |
+| `geprueft_von` | M2O → `directus_users` | wer angenommen/abgelehnt hat |
+| `artikel` | M2O → `artikel` | nach dem Annehmen |
+
+**Ablauf:** Einreichung → `gastbeitraege` (`eingereicht`) + Hinweis-Mail an den Verein →
+im Vereinsheim liest **ein Mitglied** und klickt **Annehmen** (legt einen `artikel`-Entwurf mit
+Text, Bild und `autor_in` an, verknüpft ihn, `geprueft_von` = Mitglied) oder **Ablehnen**
+(optional kurze Mail). Der Artikel-Entwurf wird wie jeder Artikel einer Ausgabe zugeordnet und
+veröffentlicht; dann geht eine „Dein Beitrag ist erschienen“-Mail an `email`. Abgelehnte
+Gastbeiträge nach 6 Monaten löschen (Flow).
+
+### Vereinsheim: Dorfanzeiger (ein Tab mit vier Reitern)
 1. **Artikel** – Liste je Ausgabe (sortierbar), Bearbeiten/Duplizieren/Löschen, Ressort
    zuweisen, Markdown-Editor mit Bild-Upload und Vorschau im Zeitungslook.
 2. **Kleinanzeigen** – vier Kärtchen, bearbeiten/löschen/neu (max. 4).
 3. **Leserbriefe** – neueste zuerst, „Ausblenden“ / „Löschen“ (wie DPAT-Freundebuch).
+4. **Gastbeiträge** – oben „Link erstellen“ (Name, Rubrik, gültig bis → Link kopieren) und die
+   Liste der Links (widerrufen); darunter eingereichte Beiträge mit Vorschau im Zeitungslook,
+   **Annehmen** / **Ablehnen**.
 
 Ausgaben verwalten als kleiner Bereich im Reiter „Artikel“.
 
@@ -257,7 +302,7 @@ Ersetzt `shared/utils/kontakt.ts` und `app/navigation.ts` (`links.infochannel`).
 
 ### Vereinsheim: Übersicht
 Startseite des Vereinsheims als gemütliches „Schwarzes Brett“ im Look der Seite: Kacheln für
-**Termine** (nächster Termin + neue Anmeldungen), **Dorfanzeiger** (Entwürfe, neue Leserbriefe),
+**Termine** (nächster Termin + neue Anmeldungen), **Dorfanzeiger** (Entwürfe, neue Leserbriefe, eingereichte Gastbeiträge),
 **Mitmachen** (neue Vorschläge, Ideenwand), **Über uns** (Stimmen), **Finanzen**
 („Auslage einreichen“, offene Auslagen) und – nur für den Vorstand – **Mitglieder**
 (offene Anträge).

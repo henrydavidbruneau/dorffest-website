@@ -37,6 +37,10 @@ Um Missbrauch zu verhindern, merken wir uns die IP-Adresse beim Absenden eines F
 
 Leserbriefe im Dorfanzeiger und Zettel auf der Ideenwand werden **öffentlich auf dieser Website angezeigt** – zusammen mit dem Namen, den du dazu angibst. Du kannst auch nur einen Vornamen oder ein Kürzel verwenden. Wir behalten uns vor, Beiträge zu kürzen oder zu entfernen. Wenn du möchtest, dass dein Beitrag gelöscht wird, schreib uns. Rechtsgrundlage ist deine Einwilligung durch das Absenden (Art. 6 Abs. 1 lit. a DSGVO).
 
+### Gastbeiträge für den Dorfanzeiger
+
+Über einen persönlichen Link kannst du uns einen Gastbeitrag schicken. Wir speichern Text, Rubrik, ein optionales Foto mit Bildunterschrift, den Namen, mit dem der Beitrag erscheinen soll, und deine E-Mail-Adresse. Die E-Mail-Adresse nutzen wir nur für Rückfragen und um dir Bescheid zu sagen, wenn der Beitrag erscheint; sie wird nicht veröffentlicht. Erscheint der Beitrag, sind Text, Foto und Name öffentlich im Dorfanzeiger zu sehen. Nicht veröffentlichte Beiträge löschen wir spätestens nach sechs Monaten. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du jederzeit per Mail widerrufen kannst.
+
 ## 6. Foto im Mitgliedsausweis
 
 Auf der Seite „Über uns“ kannst du zum Spaß ein Foto in den Mitgliedsausweis legen. Dieses Foto bleibt ausschließlich in deinem Browser und wird **nicht** an uns übertragen oder gespeichert.

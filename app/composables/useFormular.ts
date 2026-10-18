@@ -3,7 +3,8 @@ export function useFormular(url: MaybeRefOrGetter<string>) {
   const status = ref<'bereit' | 'sendet' | 'fertig' | 'fehler'>('bereit')
   const fehler = ref('')
 
-  async function senden(daten: Record<string, unknown>) {
+  // FormData für Formulare mit Datei (multipart), sonst JSON
+  async function senden(daten: Record<string, unknown> | FormData) {
     status.value = 'sendet'
     fehler.value = ''
     try {
