@@ -9,7 +9,12 @@ Stand: 18.10.2026. Die Website läuft bis zur Umstellung mit Platzhalterdaten au
 
 ## Grundsätze
 
-- **Directus 11** (Policies statt Rollen), self-hosted.
+- **Directus 12** (Policies statt Rollen), self-hosted auf Hetzner – Einrichtung des Servers:
+  `hetzner/README.md`.
+- **Lizenz-Seats:** Ohne Lizenz (Core-Tier) zählen nur Nutzer*innen mit *App Access*/*Admin Access*
+  (Directus-Studio), nach heutigem Stand max. 3. Deshalb haben `Mitglied` und `Vorstand`
+  **kein App Access** – sie arbeiten nur im Vereinsheim (Login über die API). Studio nur für
+  Admins. Flows sparsam (Core-Tier: wenige); Open Innovation Grant beantragen.
 - Die Website spricht Directus **nur serverseitig** an (`server/utils/*`), nie aus dem Browser.
   Dafür gibt es einen **Server-User** mit statischem Token (`NUXT_DIRECTUS_TOKEN`).
   → **Keine öffentlichen Rechte** in Directus nötig.
