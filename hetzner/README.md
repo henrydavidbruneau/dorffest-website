@@ -8,7 +8,7 @@ angelegt wird (Collections, Policies), steht in `../DIRECTUS.md`.
 (`docker-compose.yml`): **Postgres** (Datenbank), **Directus**, **Caddy** (HTTPS-Zertifikat
 automatisch, leitet an Directus weiter). Alle Daten liegen unter `/opt/directus/data`.
 
-Dauer: ca. 45 Minuten. Kosten: ca. 5–6 €/Monat (Server + Backups).
+Dauer: ca. 45 Minuten. Kosten: ca. 6,60 €/Monat (CX23 5,49 € + Backups 20 %).
 
 ---
 
@@ -31,7 +31,7 @@ vom DPAT-Server) → **Ressource erstellen ▾ → Server**:
 |---|---|
 | Standort | Nürnberg oder Falkenstein |
 | Image | **Ubuntu 24.04** |
-| Typ | Shared vCPU, **x86**, kleinster mit **4 GB RAM** (CX22/CX23) |
+| Typ | **CX23** (Shared vCPU, x86, 2 vCPU, 4 GB RAM, wie `dpat-core`) |
 | Netzwerk | öffentliche IPv4 + IPv6 an |
 | SSH-Key | den aus Schritt 1 einfügen |
 | Firewall | neu anlegen „web“: eingehend **TCP 22, TCP 80, TCP 443, UDP 443** |
