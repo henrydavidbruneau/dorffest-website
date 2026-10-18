@@ -1,5 +1,5 @@
 // Gemeinsame Bausteine für öffentliche Formulare (Muster aus DPAT):
-// Rate-Limit → Honeypot → (später Turnstile) → Validierung → (später Directus/Brevo)
+// Rate-Limit → Honeypot → Validierung → Turnstile → Directus (+ Mail über Brevo)
 import type { H3Event } from 'h3'
 
 export const fail = (statusCode: number, code: string, statusMessage: string) =>
@@ -41,4 +41,24 @@ export function rateLimit(event: H3Event, schluessel: string, max = 5, fensterMs
 export async function leseBody(event: H3Event): Promise<Record<string, unknown>> {
   const body = await readBody(event).catch(() => null)
   return body && typeof body === 'object' ? body as Record<string, unknown> : {}
+}
+
+/**
+ * Cloudflare Turnstile serverseitig prüfen (Feld `turnstile` im Body).
+ * Ohne NUXT_TURNSTILE_SECRET_KEY (lokal, Deploy-Preview) wird nicht geprüft.
+ */
+export async function pruefeTurnstile(event: H3Event, body: Record<string, unknown>) {
+  const { turnstileSecretKey } = useRuntimeConfig()
+  if (!turnstileSecretKey) return
+  const token = typeof body.turnstile === 'string' ? body.turnstile : ''
+  if (!token) throw fail(400, 'turnstile', 'Bitte warte kurz, bis die Bot-Prüfung durch ist, und schick es dann noch einmal.')
+  const ergebnis = await $fetch<{ success: boolean }>('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    body: new URLSearchParams({
+      secret: turnstileSecretKey,
+      response: token,
+      remoteip: getRequestIP(event, { xForwardedFor: true }) ?? '',
+    }),
+  }).catch(() => ({ success: false }))
+  if (!ergebnis.success) throw fail(403, 'turnstile', 'Die Bot-Prüfung hat nicht geklappt. Lade die Seite neu und versuch es noch einmal.')
 }

@@ -4,9 +4,10 @@ Bauplan für das Directus der Königsdorf-Seite und das **Vereinsheim** (Admin-B
 `/vereinsheim`). Vorbild ist DPAT (`~/Documents/Projects/WirSindRaus/dont-post-about-this`,
 dort `DIRECTUS.md`, `scripts/directus-setup.mjs`, `server/utils/adminSession.ts`).
 
-Stand: 18.10.2026. **Directus ist eingerichtet** (Collections, Rechte, Startinhalte – siehe
-„Einrichtung“ unten), die Website läuft aber noch mit Platzhalterdaten aus `server/data/*.ts`,
-bis `server/utils/*` umgestellt sind. Die Typen in `shared/types/*.ts` entsprechen den Collections unten.
+Stand: 18.10.2026. **Directus ist eingerichtet und die Website angebunden** (Collections, Rechte,
+Rollen, Flows, Startinhalte – siehe „Einrichtung“ unten). Lesen und Formulare laufen über
+`server/utils/*` mit dem Server-Token. Die Typen in `shared/types/*.ts` entsprechen den Collections
+unten. Noch offen: das Vereinsheim.
 
 Server: `https://api.xn--knigsdorf-rckt-zusammen-7kc4n.de` (= `api.königsdorf-rückt-zusammen.de`,
 in Konfigurationen immer Punycode), Directus 12.5.0, Lizenz: Open Innovation Grant.
@@ -362,7 +363,7 @@ node scripts/directus-seed.mjs              # Startinhalte
 
 `directus-setup.mjs` ist der Bauplan in Code: Neue Felder/Rechte dort ergänzen und erneut
 ausführen. An vorhandene Rechte werden neue Felder angehängt; sonstige Abweichungen meldet das
-Skript nur. Stand 18.10.2026: 21 Collections, 5 Ordner, 3 Policies, alles angelegt.
+Skript nur. Stand 18.10.2026: 21 Collections, 5 Ordner, 3 Policies, 2 Rollen, 2 Flows, alles angelegt.
 
 ### Was angelegt ist
 
@@ -391,6 +392,8 @@ Skript nur. Stand 18.10.2026: 21 Collections, 5 Ordner, 3 Policies, alles angele
   - **Dateien:** liest nur Ordner `termine`, `artikel`, `stimmen`; lädt nur in `gastbeitraege`
     hoch. Beim Annehmen eines Gastbeitrags verschiebt das Vereinsheim das Foto nach `artikel`.
   - `directus_users`: nur `email` + `benutzername` aktiver User mit Benutzernamen (Login, s.u.)
+  - `plenum_erinnerungen`: liest nur `id` (für den signierten Link), ändert nur `bestaetigt` /
+    `abgemeldet_am` (Double-Opt-in)
 - **`Mitglied`:** wie in der Tabelle. Auslagen: eigene lesen, bearbeiten nur solange
   `eingereicht`. Dateien: alles außer fremden Belegen lesen/bearbeiten, hochladen (nicht
   löschen). Ordner lesen. User: `id`, Name, `email`, `avatar`, `benutzername` aller lesen; eigenes
@@ -411,8 +414,8 @@ Bilder im Markdown (`inhalt`) zeigen auf `https://api.xn--knigsdorf-rckt-zusamme
 
 1. Studio → **User Directory** → **+**: Vorname, Nachname, E-Mail, **Benutzername**,
    Startpasswort (privat weitergeben; keine Einladungs-Mail – die führt ins Studio).
-2. **Role leer lassen**, unter **Policies** `Mitglied` hinzufügen (Vorstand zusätzlich `Vorstand`).
-   Ohne App Access → kein Lizenz-Seat.
+2. **Role** `Mitglied` wählen, Vorstandsleute bekommen `Vorstand` (enthält beide Policies – jeder
+   User hat nur eine Rolle). Ohne App Access → kein Lizenz-Seat.
 3. Optional mit `mitglieder.user` verknüpfen.
 
 **Login mit Benutzernamen:** Directus meldet nur per E-Mail an. Das Feld
@@ -423,12 +426,42 @@ E-Mail zum Benutzernamen und meldet dann mit E-Mail + Passwort bei `/auth/login`
 Fehlermeldung für „unbekannt“ und „falsches Passwort“; Rate-Limit wie bei den Formularen.
 Jede*r braucht trotzdem eine E-Mail (Directus-Pflicht, Passwort vergessen).
 
+### Rollen
+
+- `Mitglied` → Policy `Mitglied`
+- `Vorstand` → Policies `Mitglied` + `Vorstand`
+
+### Flows
+
+- **Kleinanzeigen: max. 4 veröffentlicht** – Filter-Hook auf `items.create`/`items.update`: liest die
+  veröffentlichten Anzeigen und bricht ab, wenn es mit dieser mehr als 4 wären (Meldung „Es sind
+  schon 4 Kleinanzeigen veröffentlicht …“). Getestet am 18.10.2026.
+- **Aufräumen: Abgelehntes nach 6 Monaten löschen** – täglich 3 Uhr: `gastbeitraege` und
+  `mitgliedsantraege` mit Status `abgelehnt`, letzte Änderung bzw. Entscheidung älter als 6 Monate.
+
+### Website-Anbindung
+
+- **Lesen:** `server/utils/<typ>.ts` über `directusServer()` (`server/utils/directus.ts`), filtert
+  selbst auf `published`. Fehler von Directus → 502 mit freundlicher Meldung, Details im Log.
+- **Formulare:** Rate-Limit → Honeypot → Validierung → Turnstile → Directus → Mail.
+  - Anmeldung: `anmeldungen` + Bestätigungsmail · Mitbringen: `beitraege`
+  - Leserbrief / Idee: sofort sichtbar · Vorschlag: + Hinweis an den Verein
+  - Mitgliedsantrag: + Eingangsbestätigung (Beitrag, IBAN, Verwendungszweck) + Hinweis an den Verein
+  - Gastbeitrag: Foto → Ordner `gastbeitraege`, Eintrag, Link verbraucht (außer `mehrfach`), Hinweis
+  - Plenum-Erinnerung: Double-Opt-in mit signierten Links (`NUXT_LINK_SECRET`),
+    `/api/plenum-erinnerung/bestaetigen|abmelden` → zurück auf `/mitmachen?plenum=…`
+- **Ohne Schlüssel** (lokal, Deploy-Preview): Mails nur im Log (`NUXT_BREVO_API_KEY`), keine
+  Bot-Prüfung (`NUXT_TURNSTILE_SECRET_KEY` / `NUXT_PUBLIC_TURNSTILE_SITE_KEY`), keine Plenum-Links.
+- **Bilder:** `<NuxtImg :src="datei-id" :provider="bildAnbieter(src)">` → `/bilder/:id?width=…`.
+- **Achtung:** Directus prüft „Pflichtfeld“ (`required`) bei API-Anlagen nicht zuverlässig – die
+  Website validiert selbst, das Vereinsheim muss es auch tun.
+
 ### Noch offen
 
-- **Flows:** Kleinanzeigen auf 4 veröffentlichte begrenzen (Filter-Hook), abgelehnte
-  Gastbeiträge/Anträge nach 6 Monaten löschen.
-- **Double-Opt-in** (Plenum-Erinnerung, Newsletter): Rechte zum Bestätigen/Abmelden ergänzen.
-- Optional Rollen `Mitglied`/`Vorstand`, die die Policies bündeln (bequemer beim Anlegen).
+- `verein` (Singleton) wird noch nicht gelesen – Kontakt/Konto stehen weiter in
+  `shared/utils/kontakt.ts`, der Infochannel in `app/navigation.ts`.
+- Newsletter (Box ist nur Oberfläche), Erinnerungsmails ans Plenum verschicken.
+- Vereinsheim.
 
 ## Startinhalte
 
@@ -451,7 +484,7 @@ Porträt-Feldern, Kleinanzeigen, FAQ, Stimmen, Singleton `verein`).
 
 1. ✅ Collections + Policies anlegen (`scripts/directus-setup.mjs`, nach DPAT-Muster).
 2. ✅ Startinhalte aus `scripts/directus-seed/inhalte.json` importieren (siehe oben).
-3. `server/utils/*.ts` von `server/data` auf Directus umstellen – Routen, Composables und
+3. ✅ `server/utils/*.ts` von `server/data` auf Directus umstellen – Routen, Composables und
    Seiten bleiben unverändert (außer den beiden markierten Code-Anpassungen).
-4. POST-Routen speichern statt loggen, Turnstile + Brevo anbinden.
+4. ✅ POST-Routen speichern statt loggen, Turnstile + Brevo anbinden.
 5. Vereinsheim bauen.

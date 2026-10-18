@@ -1,5 +1,5 @@
 // POST /api/termine/:slug/beitrag – "Was bringst du mit?" bei Terminen ohne Anmeldung.
-// Vorerst nur Prüfung + Log. Später: in Directus `beitraege` speichern.
+// Speichert in Directus `beitraege`.
 export default defineEventHandler(async (event) => {
   rateLimit(event, 'beitrag')
   const body = await leseBody(event)
@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
   if (!was) throw fail(400, 'was', 'Was bringst du mit?')
   if (body.email && !mail) throw fail(400, 'email', 'Das sieht nicht nach einer E-Mail-Adresse aus.')
 
-  console.info('[beitrag]', { termin: termin.slug, name, was, email: mail || null })
+  await pruefeTurnstile(event, body)
+  await directusAnlegen('beitraege', { termin: termin.id, name, was, email: mail || null })
   return { ok: true }
 })

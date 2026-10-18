@@ -21,9 +21,10 @@ Treffpunkte und Hilfe im Dorf organisieren.
 
 - **Nuxt 4** (`app/`-Verzeichnis), **SSR auf Netlify** (`nitro.preset: 'netlify'`).
 - Module: `@nuxt/fonts` (Schriften lokal), `@nuxt/image` (Fotos als WebP), `@nuxt/eslint`.
-- **Directus** (self-hosted, eingerichtet – siehe `DIRECTUS.md`) für alles Dynamische; die Website ist noch nicht umgestellt.
+- **Directus** (self-hosted, siehe `DIRECTUS.md`) für alles Dynamische – angebunden über `server/utils/*`.
 - **Kein** Nuxt Content, **kein** Nuxt Studio, **kein** i18n.
-- Später: **Brevo** (Mails/Newsletter), **Cloudflare Turnstile** (Bot-Schutz).
+- **Brevo** (Mails, `server/utils/mail.ts`) und **Cloudflare Turnstile** (Bot-Schutz, `<BasisTurnstile>`);
+  ohne Schlüssel nur Log bzw. keine Prüfung.
 - `.env` ist gitignored (`.env.example` zeigt die Variablen). Tokens nur serverseitig
   über `useRuntimeConfig()`, nie im Frontend.
 - npm braucht `legacy-peer-deps=true` (steht in `.npmrc`), sonst bricht `npm install`
@@ -44,8 +45,8 @@ app/
   texte.ts                längere Texte, die im Code gepflegt werden
 shared/types/             Interfaces = spätere Directus-Collections
 server/api/               Server-Routen (GET + POST)
-server/data/              Platzhalterdaten, bis Directus angebunden ist
-server/utils/             Hilfsfunktionen (später Directus-Client)
+server/routes/bilder/     Bild-Route: Directus-Dateien über den Server-Token
+server/utils/             Directus-Zugriff (directus.ts), Lesen je Typ, Formular-Helfer, Mail
 public/illustrationen/    Illustrationen (SVG)
 public/fotos/             Fotos (WebP, über <NuxtImg>)
 scripts/                  directus-setup.mjs (Schema/Rechte), directus-seed.mjs (Startinhalte)
@@ -64,23 +65,21 @@ scripts/                  directus-setup.mjs (Schema/Rechte), directus-seed.mjs 
   Verein"), `ausgaben` (Dorfanzeiger-Ausgaben), `formulare` + `einreichungen`,
   `abstimmungen` + `optionen` + `stimmen`, `newsletter`, evtl. `mitgliedsantraege`.
 
-### Datenschicht (Directus später nur an einer Stelle)
+### Datenschicht (Directus nur an einer Stelle)
 
 1. **Typen:** pro Datentyp ein Interface in `shared/types/`, benannt und aufgebaut wie die
-   spätere Directus-Collection (Feldnamen `snake_case`, `status`, `slug`,
-   `date_created` …).
-2. **Server-Routen** unter `server/api/…` (z.B. `termine.get.ts`,
-   `termine/[slug].get.ts`, `dorfanzeiger.get.ts`) liefern vorerst Platzhalterdaten aus
-   `server/data/*.ts`. Später zeigen **genau diese Routen** auf Directus.
+   Directus-Collection (Feldnamen `snake_case`, `status`, `slug`, `date_created` …).
+2. **Server-Routen** unter `server/api/…` sind dünn; Lesen + Mapping in `server/utils/<typ>.ts`
+   über `directusServer()` (Server-Token, selbst auf `published` filtern).
 3. **Composables** (`useTermine()`, `useDorfanzeiger()`, `useKleinanzeigen()`,
    `useFaq()` …) rufen nur die Server-Routen auf (`useFetch('/api/…')`).
 4. **Seiten kennen nur Composables**, nie Server-Daten oder Directus direkt.
-5. **Formulare** (Newsletter, Mitgliedsantrag, Kleinanzeige aufgeben, Fest-Beiträge,
-   Abstimmung) haben eine **POST-Route**, die validiert und vorerst nur loggt bzw. eine
-   Erfolgsmeldung zurückgibt. Kein Speichern, keine Mails.
-6. **Platzhalterdaten** = Inhalte aus dem Design (15.11. Kleidertausch, 19.12.
-   Königsdorf singt zusammen, Dorffest 2026, Artikel „Ein Tag, an dem das ganze Dorf
-   zusammenkam" …) plus 1–2 weitere, damit Listen realistisch aussehen.
+5. **Formulare** haben eine **POST-Route**: Rate-Limit → Honeypot → Validierung → Turnstile →
+   Directus → Mail (Details in `DIRECTUS.md` → „Website-Anbindung“).
+6. **Bilder** aus Directus sind Datei-IDs: `<NuxtImg :src="id" :provider="bildAnbieter(id)">`
+   → `/bilder/:id`. Lokale Bilder (`/fotos/…`) wie bisher.
+7. **Inhalte** pflegt der Verein in Directus (bald im Vereinsheim); Startinhalte kamen aus
+   `scripts/directus-seed/inhalte.json`.
 
 ## Vorbild: DPAT („Don't Post About This")
 

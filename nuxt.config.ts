@@ -30,7 +30,12 @@ export default defineNuxtConfig({
     directusUrl: '',
     directusToken: '',
     brevoApiKey: '',
+    // Absender bei Brevo (Domain muss dort verifiziert sein)
+    mailVon: 'kontakt@koenigsdorf-rueckt-zusammen.de',
+    mailVonName: 'Königsdorf rückt zusammen',
     turnstileSecretKey: '',
+    // Schlüssel für signierte Bestätigungs-/Abmeldelinks (Plenum-Erinnerung)
+    linkSecret: '',
     public: {
       siteUrl: 'https://königsdorf-rückt-zusammen.de',
       turnstileSiteKey: '',
@@ -57,6 +62,11 @@ export default defineNuxtConfig({
 
   image: {
     format: ['webp'],
+    // Bilder aus Directus: <NuxtImg :src="datei-id" provider="directus"> → /bilder/:id?width=…
+    // (Server-Route mit dem Server-Token, siehe server/routes/bilder/[id].get.ts)
+    directus: {
+      baseURL: '/bilder/',
+    },
   },
 
   eslint: {

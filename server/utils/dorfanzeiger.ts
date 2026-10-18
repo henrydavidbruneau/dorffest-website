@@ -1,13 +1,21 @@
-// Lesezugriff auf Dorfanzeiger-Artikel. Heute aus server/data, später aus Directus (`dorfanzeiger`).
-import { artikel as platzhalter } from '../data/dorfanzeiger'
+// Lesezugriff auf Dorfanzeiger-Artikel aus Directus (`artikel`, Ressort als Slug).
+// Ein Porträt („Fünf Fragen an …“) ist ein Artikel im Ressort „Porträts“.
 
 export interface ArtikelFilter {
   ressort?: Ressort
-  /** Interviews ("Fünf Fragen an …") mit ausgeben */
+  /** Porträts („Fünf Fragen an …“) mit ausgeben */
   mitInterviews?: boolean
   ausgabe?: number
   hervorgehoben?: boolean
   limit?: number
+}
+
+type ArtikelRoh = Omit<Artikel, 'ressort'> & { ressort: { slug: Ressort } | null }
+
+const FELDER = '*,ressort.slug'
+
+function mitRessortSlug({ ressort, ...artikel }: ArtikelRoh): Artikel {
+  return { ...artikel, ressort: ressort?.slug ?? 'verein' }
 }
 
 /** Titelgeschichte zuerst, dann nach manueller Sortierung der Redaktion */
@@ -17,16 +25,25 @@ function sortierung(a: Artikel, b: Artikel) {
 }
 
 export async function ladeArtikelListe(filter: ArtikelFilter = {}): Promise<Artikel[]> {
-  // Interviews ("Fünf Fragen an …") laufen über die Porträts, nicht über die Listen
-  let liste = platzhalter.filter(a => a.status === 'published' && (filter.mitInterviews || a.art === 'artikel'))
-  if (filter.ressort) liste = liste.filter(a => a.ressort === filter.ressort)
-  if (filter.ausgabe) liste = liste.filter(a => a.ausgabe === filter.ausgabe)
-  if (filter.hervorgehoben) liste = liste.filter(a => a.hervorgehoben)
-  liste = [...liste].sort(sortierung)
+  const bedingungen: object[] = [VEROEFFENTLICHT]
+  if (filter.ressort) bedingungen.push({ ressort: { slug: { _eq: filter.ressort } } })
+  // Porträts laufen über „Fünf Fragen an …“, nicht über die Listen (außer im Ressort-Filter)
+  else if (!filter.mitInterviews) bedingungen.push({ ressort: { slug: { _neq: 'portraets' } } })
+  if (filter.ausgabe) bedingungen.push({ ausgabe: { _eq: filter.ausgabe } })
+  if (filter.hervorgehoben) bedingungen.push({ hervorgehoben: { _eq: true } })
+  const roh = await directusListe<ArtikelRoh>('artikel', { fields: FELDER, filter: { _and: bedingungen } })
+  const liste = roh.map(mitRessortSlug).sort(sortierung)
   return filter.limit ? liste.slice(0, filter.limit) : liste
 }
 
 export async function ladeArtikel(slug: string): Promise<ArtikelDetail | null> {
-  const artikel = platzhalter.find(a => a.slug === slug && a.status === 'published')
-  return artikel ? { ...artikel, inhalt_html: markdownZuHtml(artikel.inhalt) } : null
+  if (!/^[a-z0-9-]{1,120}$/.test(slug)) return null
+  const [roh] = await directusListe<ArtikelRoh>('artikel', {
+    fields: FELDER,
+    filter: { _and: [VEROEFFENTLICHT, { slug: { _eq: slug } }] },
+    limit: 1,
+  })
+  if (!roh) return null
+  const artikel = mitRessortSlug(roh)
+  return { ...artikel, inhalt_html: markdownZuHtml(artikel.inhalt ?? '') }
 }

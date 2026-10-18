@@ -7,7 +7,7 @@ useSeoMeta({ title: 'Mitmachen', description: t.meta, ogTitle: 'Mitmachen – K�
 
 // Eigene Idee einreichen
 const { status, fehler, senden } = useFormular('/api/vorschlaege')
-const form = reactive({ name: '', email: '', idee: '', dorffest: true, selbst_mitmachen: true, website: '' })
+const form = reactive({ name: '', email: '', idee: '', dorffest: true, selbst_mitmachen: true, website: '', turnstile: '' })
 
 const drehungen = [-1.5, 1, -1, 1.5]
 </script>
@@ -66,6 +66,7 @@ const drehungen = [-1.5, 1, -1, 1.5]
             <div class="nur-screenreader" aria-hidden="true">
               <label>Website <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off"></label>
             </div>
+            <BasisTurnstile v-model="form.turnstile" />
             <p v-if="status === 'fehler'" class="idee__fehler" role="alert">{{ fehler }}</p>
             <BasisKnopf type="submit" :disabled="status === 'sendet'">
               {{ status === 'sendet' ? 'Wird gesendet …' : 'Idee abschicken' }}

@@ -37,10 +37,10 @@ const dachzeile = computed(() => {
 // Mehr aus dieser Ausgabe: zwei Beiträge aus anderen Ressorts, dann das Porträt
 const mehr = computed(() => {
   const andere = ausgabeArtikel.value.filter(a => a.slug !== slug.value)
-  const beitraege = andere.filter(a => a.art === 'artikel')
+  const beitraege = andere.filter(a => a.ressort !== 'portraets')
   const fremdeRessorts = beitraege.filter(a => a.ressort !== artikel.value?.ressort)
   const auswahl = [...fremdeRessorts, ...beitraege.filter(a => !fremdeRessorts.includes(a))].slice(0, 2)
-  const interview = andere.find(a => a.art === 'interview')
+  const interview = andere.find(a => a.ressort === 'portraets')
   return interview ? [...auswahl, interview] : beitraege.slice(0, 3)
 })
 
@@ -66,7 +66,7 @@ useSeoMeta({
   ogTitle: () => artikel.value?.titel,
   ogDescription: () => artikel.value?.teaser,
   ogType: 'article',
-  ogImage: () => (artikel.value?.bild ? `${seitenUrl.origin}${artikel.value.bild}` : undefined),
+  ogImage: () => (artikel.value?.bild ? `${seitenUrl.origin}${bildUrl(artikel.value.bild)}` : undefined),
   articlePublishedTime: () => artikel.value?.veroeffentlicht_am ?? undefined,
   articleAuthor: () => (artikel.value?.autor_in ? [artikel.value.autor_in] : undefined),
 })
@@ -92,7 +92,7 @@ useSeoMeta({
       <span class="beitrag__autor">
         <NuxtImg
           v-if="artikel.autor_in_bild"
-          :src="artikel.autor_in_bild"
+          :src="artikel.autor_in_bild" :provider="bildAnbieter(artikel.autor_in_bild)"
           alt=""
           width="64"
           height="64"
@@ -109,7 +109,7 @@ useSeoMeta({
 
     <figure v-if="artikel.bild" class="beitrag__hauptbild">
       <NuxtImg
-        :src="artikel.bild"
+        :src="artikel.bild" :provider="bildAnbieter(artikel.bild)"
         :alt="artikel.bild_alt ?? ''"
         width="1480"
         height="760"
@@ -149,7 +149,7 @@ useSeoMeta({
         <li v-for="a in mehr" :key="a.id" class="beitrag__mehr-eintrag">
           <NuxtImg
             v-if="a.bild"
-            :src="a.bild"
+            :src="a.bild" :provider="bildAnbieter(a.bild)"
             :alt="a.bild_alt ?? ''"
             width="560"
             height="160"

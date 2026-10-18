@@ -5,7 +5,16 @@ const t = texte.mitmachen.plenum
 const { data: termin } = await useTermin('plenum')
 
 const { status, fehler, senden } = useFormular('/api/plenum-erinnerung')
-const form = reactive({ name: '', email: '', wie: 'jedes', einwilligung: false, website: '' })
+const form = reactive({ name: '', email: '', wie: 'jedes', einwilligung: false, website: '', turnstile: '' })
+
+// Rückkehr von den Links aus der Bestätigungsmail
+const HINWEISE: Record<string, string> = {
+  bestaetigt: 'Danke, du bist bestätigt! Wir erinnern dich ans Plenum.',
+  abgemeldet: 'Erledigt – wir erinnern dich nicht mehr.',
+  ungueltig: 'Dieser Link hat nicht geklappt. Melde dich gern einfach noch einmal an.',
+}
+const route = useRoute()
+const hinweis = computed(() => HINWEISE[String(route.query.plenum ?? '')] ?? '')
 </script>
 
 <template>
@@ -31,9 +40,10 @@ const form = reactive({ name: '', email: '', wie: 'jedes', einwilligung: false, 
 
       <BasisNotizzettel farbe="weiss" tape="mitte" tape-farbe="gelb" :drehung="1.5" class="plenum__zettel">
         <p class="plenum__zettel-titel">{{ t.formTitel }}</p>
+        <p v-if="hinweis && status !== 'fertig'" class="plenum__danke" role="status">{{ hinweis }}</p>
         <p v-if="status === 'fertig'" class="plenum__danke" role="status">
-          <span class="handschrift">Bis bald im Plenum, {{ form.name }}!</span><br>
-          Wir schicken dir den Termin und den Link per Mail.
+          <span class="handschrift">Fast geschafft, {{ form.name }}!</span><br>
+          Bitte bestätige noch kurz den Link in der Mail, die wir dir gerade geschickt haben.
         </p>
         <form v-else class="plenum__formular" novalidate @submit.prevent="senden({ ...form })">
           <p class="plenum__zettel-text">{{ t.formText }}</p>
@@ -46,6 +56,7 @@ const form = reactive({ name: '', email: '', wie: 'jedes', einwilligung: false, 
           <div class="nur-screenreader" aria-hidden="true">
             <label>Website <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off"></label>
           </div>
+          <BasisTurnstile v-model="form.turnstile" />
           <label class="plenum__haken">
             <input v-model="form.einwilligung" type="checkbox" required>
             <span>Ihr dürft mir dazu Mails schicken. Abmelden geht jederzeit. <NuxtLink to="/datenschutz">Datenschutz</NuxtLink></span>

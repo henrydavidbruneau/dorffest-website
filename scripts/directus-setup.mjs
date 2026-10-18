@@ -7,6 +7,8 @@
 //   • Policies `Server`, `Mitglied`, `Vorstand` (alle ohne App Access, siehe „Lizenz-Seats“)
 //     mit ihren Rechten
 //   • hängt `Server` an den User `website-server` (dessen Token liegt auf Netlify)
+//   • Rollen `Mitglied` (Policy Mitglied) und `Vorstand` (Mitglied + Vorstand)
+//   • Flows: Kleinanzeigen max. 4, Abgelehntes nach 6 Monaten löschen
 //
 // Bestehendes wird nie geändert oder gelöscht – Ausnahme: an vorhandene Rechte werden neue
 // Felder aus dem Bauplan angehängt. Weicht ein Recht sonst ab, meldet das Skript es nur. Beliebig oft ausführbar. Die öffentliche Rolle bekommt keine Rechte.
@@ -595,12 +597,63 @@ const SYSTEM_FIELDS = {
   ],
 }
 
+/* ── Flows ─────────────────────────────────────────────── */
+
+// Sechs Monate nach der Ablehnung (bzw. der letzten Änderung) löschen
+const VOR_6_MONATEN = '$NOW(-6 months)'
+const alt = (feld) => ({ _or: [{ [feld]: { _lt: VOR_6_MONATEN } }, { _and: [{ [feld]: { _null: true } }, { date_created: { _lt: VOR_6_MONATEN } }] }] })
+
+// Operationen laufen der Reihe nach (resolve → nächste)
+const FLOWS = [
+  {
+    name: 'Kleinanzeigen: max. 4 veröffentlicht',
+    icon: 'sell',
+    description: 'Verhindert eine fünfte veröffentlichte Kleinanzeige (Bauplan: DIRECTUS.md).',
+    trigger: 'event',
+    options: { type: 'filter', scope: ['items.create', 'items.update'], collections: ['kleinanzeigen'], return: '$last' },
+    operations: [
+      { key: 'veroeffentlicht', name: 'Veröffentlichte lesen', type: 'item-read', options: { collection: 'kleinanzeigen', permissions: '$full', query: { filter: { status: { _eq: 'published' } }, fields: ['id'], limit: -1 } } },
+      {
+        key: 'pruefen', name: 'Höchstens 4', type: 'exec', options: {
+          code: [
+            'module.exports = async function (data) {',
+            '  const payload = data.$trigger.payload || {}',
+            '  if (payload.status !== \'published\') return payload',
+            '  const keys = (data.$trigger.keys || []).map(String)',
+            '  const andere = (data.veroeffentlicht || []).filter((k) => !keys.includes(String(k.id)))',
+            '  if (andere.length + Math.max(keys.length, 1) > 4) throw new Error(\'Es sind schon 4 Kleinanzeigen veröffentlicht – bitte erst eine zurückziehen.\')',
+            '  return payload',
+            '}',
+          ].join('\n'),
+        },
+      },
+    ],
+  },
+  {
+    name: 'Aufräumen: Abgelehntes nach 6 Monaten löschen',
+    icon: 'delete_sweep',
+    description: 'Täglich um 3 Uhr: abgelehnte Gastbeiträge und Mitgliedsanträge, die älter als 6 Monate sind.',
+    trigger: 'schedule',
+    options: { cron: '0 0 3 * * *' },
+    operations: [
+      { key: 'gastbeitraege', name: 'Gastbeiträge', type: 'item-delete', options: { collection: 'gastbeitraege', permissions: '$full', query: { filter: { _and: [{ status: { _eq: 'abgelehnt' } }, alt('date_updated')] }, limit: -1 } } },
+      { key: 'antraege', name: 'Mitgliedsanträge', type: 'item-delete', options: { collection: 'mitgliedsantraege', permissions: '$full', query: { filter: { _and: [{ status: { _eq: 'abgelehnt' } }, alt('entschieden_am')] }, limit: -1 } } },
+    ],
+  },
+]
+
 /* ── Policies & Rechte ─────────────────────────────────── */
 
 const POLICIES = {
   Server: { icon: 'dns', description: 'Website (Netlify): liest Veröffentlichtes, legt Einreichungen an. Token: NUXT_DIRECTUS_TOKEN.' },
   Mitglied: { icon: 'groups', description: 'Vereinsmitglieder im Vereinsheim: Inhalte pflegen, Anmeldungen sehen, eigene Auslagen.' },
   Vorstand: { icon: 'workspace_premium', description: 'Vorstand (zusätzlich zu Mitglied): Mitgliedsanträge, Mitgliederliste, alle Auslagen.' },
+}
+
+// Rollen bündeln Policies: beim User nur die Rolle wählen. Ohne App Access → kein Lizenz-Seat.
+const ROLES = {
+  Mitglied: { icon: 'groups', description: 'Vereinsheim-Zugang für Mitglieder', policies: ['Mitglied'] },
+  Vorstand: { icon: 'workspace_premium', description: 'Vereinsheim-Zugang für den Vorstand', policies: ['Mitglied', 'Vorstand'] },
 }
 
 const PUBLISHED = { status: { _eq: 'published' } }
@@ -630,6 +683,9 @@ const PERMISSIONS = {
     { collection: 'ideen', action: 'read', fields: ['id', 'status', 'name', 'text', 'date_created'], permissions: PUBLISHED },
     { collection: 'vorschlaege', action: 'create', fields: ['name', 'email', 'idee', 'dorffest', 'selbst_mitmachen'] },
     { collection: 'plenum_erinnerungen', action: 'create', fields: ['name', 'email', 'wie'] },
+    // Double-Opt-in: ID des neuen Eintrags für den signierten Link, dann bestätigen/abmelden
+    { collection: 'plenum_erinnerungen', action: 'read', fields: ['id'] },
+    { collection: 'plenum_erinnerungen', action: 'update', fields: ['bestaetigt', 'abgemeldet_am'] },
     { collection: 'mitgliedsantraege', action: 'create', fields: ['art', 'beitrag_stufe', 'beitrag_jahr', 'vorname', 'nachname', 'strasse', 'plz', 'ort', 'email', 'telefon', 'plenum_besucht', 'nachricht', 'satzung_anerkannt_am'] },
     { collection: 'verein', action: 'read', fields: ['*'] },
     // Vereinsheim-Login: Benutzername → E-Mail (nur aktive User mit Benutzernamen)
@@ -822,6 +878,39 @@ async function main() {
     const access = policyIds.Server.startsWith('<neu') ? [] : await api('GET', `/access?filter[user][_eq]=${serverUser[0].id}&filter[policy][_eq]=${policyIds.Server}&fields=id`)
     if (access.length) skipped.push(`Policy Server → User ${SERVER_USER} – schon zugeordnet`)
     else await step(`Policy Server → User ${SERVER_USER}`, () => api('POST', '/access', { user: serverUser[0].id, policy: policyIds.Server, role: null }))
+  }
+
+  // 7. Rollen mit ihren Policies
+  const roles = await api('GET', '/roles?fields=id,name&limit=-1')
+  for (const [name, def] of Object.entries(ROLES)) {
+    const same = roles.filter((r) => r.name === name)
+    if (same.length > 1) { failed.push(`Es gibt ${same.length} Rollen namens „${name}“ – bitte in Directus klären`); continue }
+    let roleId = same[0]?.id
+    if (roleId) skipped.push(`Rolle ${name} – schon vorhanden`)
+    else roleId = (await step(`Rolle ${name} anlegen`, () => api('POST', '/roles', { name, icon: def.icon, description: def.description })))?.id
+    for (const pname of def.policies) {
+      const policy = policyIds[pname]
+      if (!policy) continue
+      const access = roleId && !policy.startsWith('<neu') ? await api('GET', `/access?filter[role][_eq]=${roleId}&filter[policy][_eq]=${policy}&fields=id`) : []
+      if (access.length) skipped.push(`Policy ${pname} → Rolle ${name} – schon zugeordnet`)
+      else await step(`Policy ${pname} → Rolle ${name}`, () => api('POST', '/access', { role: roleId, policy, user: null }))
+    }
+  }
+
+  // 8. Flows (erkannt am Namen; vorhandene werden nicht angefasst)
+  const flows = await api('GET', '/flows?fields=id,name&limit=-1')
+  for (const f of FLOWS) {
+    if (flows.some((x) => x.name === f.name)) { skipped.push(`Flow „${f.name}“ – schon vorhanden`); continue }
+    await step(`Flow „${f.name}“ anlegen (${f.operations.length} Operationen)`, async () => {
+      const flow = await api('POST', '/flows', { name: f.name, icon: f.icon, description: f.description, status: 'active', trigger: f.trigger, options: f.options, accountability: 'all' })
+      // von hinten anlegen, damit jede Operation ihre Nachfolgerin kennt
+      let naechste = null
+      for (const [i, op] of [...f.operations].reverse().entries()) {
+        const angelegt = await api('POST', '/operations', { ...op, flow: flow.id, resolve: naechste, reject: null, position_x: 19 + (f.operations.length - 1 - i) * 18, position_y: 1 })
+        naechste = angelegt.id
+      }
+      await api('PATCH', `/flows/${flow.id}`, { operation: naechste })
+    })
   }
 
   // Hinweis: öffentliche Rolle soll keine Rechte haben

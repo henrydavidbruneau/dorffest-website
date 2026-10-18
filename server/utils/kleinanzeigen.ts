@@ -1,7 +1,5 @@
-// Lesezugriff auf Kleinanzeigen. Heute aus server/data, später aus Directus (`kleinanzeigen`).
-import { kleinanzeigen as platzhalter } from '../data/kleinanzeigen'
+// Lesezugriff auf Kleinanzeigen aus Directus (`kleinanzeigen`, max. 4 veröffentlichte).
 
 export async function ladeKleinanzeigen(limit?: number): Promise<Kleinanzeige[]> {
-  const liste = platzhalter.filter(k => k.status === 'published')
-  return limit ? liste.slice(0, limit) : liste
+  return directusListe<Kleinanzeige>('kleinanzeigen', { fields: '*', filter: VEROEFFENTLICHT, sort: 'sort,id', limit: limit ?? 4 })
 }

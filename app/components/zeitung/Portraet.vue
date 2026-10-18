@@ -6,7 +6,7 @@ defineProps<{ portraet: Portraet }>()
   <div class="portraet">
     <NuxtImg
       v-if="portraet.bild"
-      :src="portraet.bild"
+      :src="portraet.bild" :provider="bildAnbieter(portraet.bild)"
       :alt="portraet.bild_alt ?? ''"
       width="300"
       height="300"

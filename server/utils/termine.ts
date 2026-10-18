@@ -1,7 +1,5 @@
-// Lesezugriff auf Termine. Heute aus server/data, später aus Directus (`termine`).
-// Nur diese Datei muss dann umgestellt werden – Routen, Composables und Seiten bleiben.
-import { termine as platzhalter } from '../data/termine'
-import { angemeldetePersonen } from '../data/anmeldungen'
+// Lesezugriff auf Termine aus Directus (`termine`, Anmeldezahlen aus `anmeldungen`).
+// Nur diese Datei kennt Directus – Routen, Composables und Seiten bleiben gleich.
 
 export interface TerminFilter {
   zeitraum?: 'kommend' | 'vergangen' | 'alle'
@@ -25,27 +23,43 @@ function nachBeginn(a: Termin, b: Termin) {
   return Date.parse(a.beginn ?? '') - Date.parse(b.beginn ?? '') || 0
 }
 
+// Ausdrücklich ohne den Alias `anmeldungen` (O2M) – die liest der Server-Token nicht
+const FELDER = [
+  'id', 'status', 'date_created', 'date_updated', 'titel', 'slug', 'beginn', 'ende', 'uhrzeit_folgt',
+  'datum_text', 'rhythmus_kurz', 'hinweis', 'ort', 'adresse', 'bild', 'bild_alt', 'kurzbeschreibung',
+  'beschreibung', 'aufruf_text', 'hervorgehoben', 'anmeldung_aktiv', 'plaetze', 'mitbringen_position',
+  'mitbringen_text', 'mitbringen_vorschlaege',
+].join(',')
+
 export async function ladeTermine(filter: TerminFilter = {}): Promise<Termin[]> {
   const jetzt = Date.now()
   const zeitraum = filter.zeitraum ?? 'kommend'
-
-  let liste = platzhalter.filter(t => t.status === 'published')
-  if (filter.hervorgehoben) liste = liste.filter(t => t.hervorgehoben)
-  if (filter.mitDatum) liste = liste.filter(t => !!t.beginn)
+  const bedingungen: object[] = [VEROEFFENTLICHT]
+  if (filter.hervorgehoben) bedingungen.push({ hervorgehoben: { _eq: true } })
+  if (filter.mitDatum) bedingungen.push({ beginn: { _nnull: true } })
+  let liste = await directusListe<Termin>('termine', { fields: FELDER, filter: { _and: bedingungen } })
   if (zeitraum === 'kommend') liste = liste.filter(t => istKommend(t, jetzt)).sort(nachBeginn)
   if (zeitraum === 'vergangen') liste = liste.filter(t => !istKommend(t, jetzt)).sort((a, b) => nachBeginn(b, a))
   if (zeitraum === 'alle') liste = [...liste].sort(nachBeginn)
-
   return filter.limit ? liste.slice(0, filter.limit) : liste
 }
 
 export async function ladeTermin(slug: string): Promise<Termin | null> {
-  return platzhalter.find(t => t.slug === slug && t.status === 'published') ?? null
+  if (!/^[a-z0-9-]{1,120}$/.test(slug)) return null
+  const [termin] = await directusListe<Termin>('termine', {
+    fields: FELDER,
+    filter: { _and: [VEROEFFENTLICHT, { slug: { _eq: slug } }] },
+    limit: 1,
+  })
+  return termin ?? null
 }
 
-/** bisher angemeldete Personen (später: Summe aus Directus `anmeldungen`) */
+/** bisher angemeldete Personen (Summe `personen`, abgemeldete zählen nicht) */
 export async function zaehleAnmeldungen(terminId: number): Promise<number> {
-  return angemeldetePersonen[terminId] ?? 0
+  const [zeile] = await directusServer<{ sum: { personen: string | number | null } }[]>('/items/anmeldungen', {
+    query: { 'aggregate[sum]': 'personen', 'filter': { termin: { _eq: terminId }, status: { _eq: 'angemeldet' } } },
+  })
+  return Number(zeile?.sum.personen ?? 0) || 0
 }
 
 export async function ladeTerminDetail(slug: string): Promise<TerminDetail | null> {

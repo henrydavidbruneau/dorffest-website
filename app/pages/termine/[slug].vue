@@ -30,7 +30,7 @@ useSeoMeta({
   description: () => termin.value?.kurzbeschreibung ?? undefined,
   ogTitle: () => termin.value?.titel,
   ogDescription: () => termin.value?.kurzbeschreibung ?? undefined,
-  ogImage: () => (termin.value?.bild ? `${seitenUrl.origin}${termin.value.bild}` : undefined),
+  ogImage: () => (termin.value?.bild ? `${seitenUrl.origin}${bildUrl(termin.value.bild)}` : undefined),
 })
 
 // strukturierte Daten für Suchmaschinen

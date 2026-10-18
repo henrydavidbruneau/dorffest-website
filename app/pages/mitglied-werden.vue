@@ -24,7 +24,7 @@ const form = reactive({
   nachricht: '',
   satzung: false,
   einwilligung: false,
-  website: '',
+  website: '', turnstile: '',
 })
 
 const optionen = computed(() => BEITRAEGE.filter(b => b.art === form.art))
@@ -147,6 +147,7 @@ function euro(n: number) {
           <div class="nur-screenreader" aria-hidden="true">
             <label>Website <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off"></label>
           </div>
+          <BasisTurnstile v-model="form.turnstile" />
 
           <label class="haken">
             <input v-model="form.satzung" type="checkbox" required>

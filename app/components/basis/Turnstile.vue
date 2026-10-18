@@ -1,0 +1,37 @@
+<script setup lang="ts">
+// Cloudflare Turnstile (Bot-Schutz). Ohne Site-Key (lokal, Deploy-Preview) wird nichts angezeigt –
+// dann prüft auch der Server nicht. Das Token landet per v-model im Formular (Feld `turnstile`).
+const token = defineModel<string>({ default: '' })
+
+const { turnstileSiteKey } = useRuntimeConfig().public
+const box = ref<HTMLElement>()
+let widgetId: string | undefined
+
+onMounted(async () => {
+  if (!turnstileSiteKey || !box.value) return
+  const turnstile = await ladeTurnstile()
+  widgetId = turnstile.render(box.value, {
+    'sitekey': turnstileSiteKey,
+    'language': 'de',
+    'appearance': 'interaction-only',
+    'callback': (t: string) => (token.value = t),
+    'expired-callback': () => (token.value = ''),
+    'error-callback': () => (token.value = ''),
+  })
+  registriereTurnstile(widgetId, () => (token.value = ''))
+})
+
+onBeforeUnmount(() => {
+  if (widgetId) entferneTurnstile(widgetId)
+})
+</script>
+
+<template>
+  <div v-if="turnstileSiteKey" ref="box" class="turnstile" />
+</template>
+
+<style scoped>
+.turnstile:empty {
+  display: none;
+}
+</style>

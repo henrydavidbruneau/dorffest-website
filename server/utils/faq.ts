@@ -1,8 +1,5 @@
-// Lesezugriff auf FAQ. Heute aus server/data, später aus Directus (`faq`).
-import { faq as platzhalter } from '../data/faq'
+// Lesezugriff auf FAQ aus Directus (`faq`).
 
 export async function ladeFaq(): Promise<Faq[]> {
-  return platzhalter
-    .filter(f => f.status === 'published')
-    .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
+  return directusListe<Faq>('faq', { fields: '*', filter: VEROEFFENTLICHT, sort: 'sort,id' })
 }

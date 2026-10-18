@@ -38,7 +38,7 @@ const aktiv = computed(() => stimmen.value.find(s => s.id === aktivId.value) ?? 
             :aria-pressed="s.id === aktiv.id"
             @click="aktivId = s.id"
           >
-            <NuxtImg v-if="s.bild" :src="s.bild" alt="" width="160" height="160" />
+            <NuxtImg v-if="s.bild" :src="s.bild" :provider="bildAnbieter(s.bild)" alt="" width="160" height="160" />
             <span class="nur-screenreader">{{ s.name }}</span>
           </button>
         </div>

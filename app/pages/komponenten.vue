@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { KONTAKT_MAIL } from '#shared/utils/kontakt'
+
 // Interne Vorschau der Basis-Komponenten. Vor dem Livegang entfernen.
 useSeoMeta({ title: 'Komponenten', robots: 'noindex, nofollow' })
 
@@ -9,8 +11,8 @@ const artikel = computed(() => alleArtikel.value[0]!)
 const basis = { status: 'published', date_created: '2025-10-01T10:00:00Z', date_updated: null } as const
 
 const anzeigen: Kleinanzeige[] = [
-  { ...basis, id: 1, art: 'gesucht', titel: 'Kuchen', text: 'Für das Adventscafé, ein Blech reicht.', link_text: 'melde dich!', link: '#' },
-  { ...basis, id: 2, art: 'gefunden', titel: 'Schal', text: 'Blau, beim Dorffest. Liegt im JuMa.', link_text: 'abholen', link: '#' },
+  { ...basis, id: 1, sort: 1, ueberschrift: 'Gesucht: Kuchen', kurzbeschreibung: 'Für das Adventscafé, ein Blech reicht.', link_text: 'melde dich!', ziel_email: KONTAKT_MAIL },
+  { ...basis, id: 2, sort: 2, ueberschrift: 'Gefunden: Schal', kurzbeschreibung: 'Blau, beim Dorffest. Liegt im JuMa.', link_text: 'abholen', ziel_email: KONTAKT_MAIL },
 ]
 </script>
 

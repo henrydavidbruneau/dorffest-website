@@ -24,7 +24,7 @@ const form = reactive({
   autor_in: '',
   email: '',
   rechte: false,
-  website: '',
+  website: '', turnstile: '',
 })
 
 // Foto: wird im Browser verkleinert und erst beim Absenden mitgeschickt
@@ -174,6 +174,7 @@ function absenden() {
         <div class="nur-screenreader" aria-hidden="true">
           <label>Website <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off"></label>
         </div>
+        <BasisTurnstile v-model="form.turnstile" />
 
         <p v-if="status === 'fehler'" class="gast__fehler" role="alert">{{ fehler }}</p>
         <BasisKnopf type="submit" :disabled="status === 'sendet'" class="gast__senden">

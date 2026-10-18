@@ -21,6 +21,9 @@ export function usePinnwand<T extends { id: number }>(url: string) {
       status.value = 'fehler'
       return false
     }
+    finally {
+      if (import.meta.client) turnstileZuruecksetzen()
+    }
   }
 
   return { eintraege, status, fehler, neuId, anpinnen }
