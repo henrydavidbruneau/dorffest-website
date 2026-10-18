@@ -134,9 +134,14 @@ Directus 12 läuft ohne Lizenz im kostenlosen **Core-Tier**. Der ist eng: nach h
 und wenige Flows. Nutzer*innen, die sich nur über die API anmelden – der Server-User und alle,
 die nur das **Vereinsheim** benutzen – zählen nicht.
 
-Der Verein erfüllt die Bedingungen des kostenlosen **Open Innovation Grant**
-(< 5 Mio. $ Umsatz, < 50 Beschäftigte). Beantragen auf directus.com (Licensing), den Schlüssel
-in `.env` als `LICENSE_KEY=` eintragen, `docker compose up -d`. Bis dahin reicht Core.
+Der Verein hat eine Lizenz über den kostenlosen **Open Innovation Grant** (Oktober 2026).
+Den Schlüssel (`DXXXX-XXXXX-XXXXX-XXXXC`) in `.env` als `LICENSE_KEY=` eintragen,
+`docker compose up -d`, dann im Studio unter *Settings → License* prüfen. Schlüssel nur im
+Passwortmanager und in der Server-`.env`, nie im Repo oder Chat.
+
+Die Lizenz hat nur wenige Aktivierungen (je Adresse/`PUBLIC_URL` eine): **nicht** für lokale
+Test-Instanzen verwenden – die laufen ohne Schlüssel im Core-Tier. Die Website ist so geplant,
+dass sie auch ohne Lizenz funktioniert (Vereinsheim-Nutzer*innen ohne App Access, Flows sparsam).
 
 ## 10. Updates
 
