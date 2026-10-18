@@ -1,6 +1,6 @@
 import type { DirectusEintrag } from './directus'
 
-export type Ressort = 'feste' | 'verein' | 'treffen' | 'kinder' | 'rezepte'
+export type Ressort = 'feste' | 'verein' | 'dorffunk' | 'rezepte' | 'feuilleton' | 'portraets'
 
 /** Directus-Collection `dorfanzeiger` (Artikel) */
 export interface Artikel extends DirectusEintrag {

@@ -3,7 +3,8 @@ import type { Ressort } from '../types/artikel'
 export const RESSORTS: Record<Ressort, string> = {
   feste: 'Feste',
   verein: 'Verein',
-  treffen: 'Treffen',
-  kinder: 'Kinder',
+  dorffunk: 'Dorffunk',
   rezepte: 'Rezepte',
+  feuilleton: 'Feuilleton',
+  portraets: 'Porträts',
 }

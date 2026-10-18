@@ -26,7 +26,7 @@ const kopfzeile = computed(() => {
 })
 
 function ressortName(a: Artikel) {
-  return a.art === 'interview' ? 'Porträt' : RESSORTS[a.ressort]
+  return RESSORTS[a.ressort]
 }
 
 const dachzeile = computed(() => {
