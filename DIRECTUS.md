@@ -292,11 +292,24 @@ Sichtbar nur für die Policy `Vorstand`. Der Server-Token darf nur **anlegen**, 
 | `NUXT_TURNSTILE_SECRET_KEY` / `NUXT_PUBLIC_TURNSTILE_SITE_KEY` | Bot-Schutz für Formulare |
 | `NUXT_SESSION_SECRET` | Vereinsheim-Session (wie DPAT) |
 
+## Startinhalte
+
+`scripts/directus-seed/inhalte.json` enthält alle Inhalte, die die Website heute als
+Platzhalter zeigt – schon im Schema oben (Ressorts, Ausgaben, Termine, Artikel inkl.
+Porträt-Feldern, Kleinanzeigen, FAQ, Stimmen, Singleton `verein`).
+
+- **Dateien:** Felder der Form `{"datei": "public/fotos/…"}` beim Import aus dem Repo hochladen
+  und durch die Datei-ID ersetzen; Bilder im Markdown (`/fotos/…`) ebenso, dort die URL ersetzen.
+- **Relationen:** `ressort` = Slug, `ausgabe` = Nummer, beim Import in IDs auflösen.
+- **Entwürfe:** `status: draft` = unbestätigt (FAQ-Entwürfe, fehlende Zitate, Adventscafé).
+- **Nicht enthalten:** Beispiel-Leserbriefe und Beispiel-Ideen.
+- Neu erzeugen (Dev-Server muss laufen): Inhalte aus `/api/*` exportieren und umformen – siehe
+  Commit-Historie; einfacher ist es, die Datei direkt anzupassen.
+
 ## Umstellung der Website (Reihenfolge)
 
 1. Collections + Policies anlegen (`scripts/directus-setup.mjs`, nach DPAT-Muster).
-2. Platzhalterdaten aus `server/data/*.ts` einmalig importieren (ohne die mit „Beispiel“
-   markierten Leserbriefe/Ideen).
+2. Startinhalte aus `scripts/directus-seed/inhalte.json` importieren (siehe oben).
 3. `server/utils/*.ts` von `server/data` auf Directus umstellen – Routen, Composables und
    Seiten bleiben unverändert (außer den beiden markierten Code-Anpassungen).
 4. POST-Routen speichern statt loggen, Turnstile + Brevo anbinden.
