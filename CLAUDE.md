@@ -146,7 +146,7 @@ gleichnamige Datei auf dem Desktop ist ein älterer, anderer Stand). Daneben lie
   ploppen auf, wenn die Linie sie erreicht. Alles aus bei `prefers-reduced-motion`.
 - Scroll-Einblendungen: Direktive `v-einblenden` (Plugin `einblenden.ts`) setzt einmalig `.ist-sichtbar`.
   Startzustand nur mit `:root.js .x` (nicht `:global(html.js)` – das macht Vue zu `html.js` allein!).
-- Kontakt-Mail `kontakt@königsdorf-rückt-zusammen.de` (mit ö) und Vereinskonto (IBAN) in `shared/utils/kontakt.ts`.
+- Kontakt-Mail `kontakt@koenigsdorf-rueckt-zusammen.de` (ohne Umlaute, Weiterleitung bei IONOS; Umlaut-Adressen machen bei Mail Ärger) und Vereinskonto (IBAN) in `shared/utils/kontakt.ts`.
 - Logo: `public/logo-mobil.svg` (Schild ohne Pfosten), gerade, nicht gedreht.
 - Navigation ohne gestrichelte Linie. Dorfanzeiger-Seiten (Layout `zeitung`) zeigen testweise
   dieselbe Navigation im lila Farbschema (`<LayoutKopf dunkel>`); sie fährt beim Betreten von oben herein.

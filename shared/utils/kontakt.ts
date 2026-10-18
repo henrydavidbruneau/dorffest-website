@@ -1,5 +1,5 @@
 // Von App und Server genutzt
-export const KONTAKT_MAIL = 'kontakt@königsdorf-rückt-zusammen.de'
+export const KONTAKT_MAIL = 'kontakt@koenigsdorf-rueckt-zusammen.de'
 
 /** Vereinskonto (für Mitgliedsbeiträge) */
 export const KONTO = {

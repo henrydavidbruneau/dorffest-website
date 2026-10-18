@@ -12,7 +12,7 @@ Baumschulenstraße 28<br>
 
 ## Kontakt
 
-E-Mail: [kontakt@königsdorf-rückt-zusammen.de](mailto:kontakt@königsdorf-rückt-zusammen.de)
+E-Mail: [kontakt@koenigsdorf-rueckt-zusammen.de](mailto:kontakt@koenigsdorf-rueckt-zusammen.de)
 
 ## Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV
 
