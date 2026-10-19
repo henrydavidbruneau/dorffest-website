@@ -84,7 +84,7 @@ onBeforeUnmount(() => document.removeEventListener('click', schliessen))
 <template>
   <div class="termine">
     <VereinsheimKopf titel="Unsere" hervorhebung="Termine">
-      <BasisKnopf to="/vereinsheim/termine/neu" groesse="klein">+ Neuer Termin</BasisKnopf>
+      <BasisKnopf to="/vereinsheim/termine/neu" groesse="klein" data-tour="termin-neu">+ Neuer Termin</BasisKnopf>
     </VereinsheimKopf>
 
     <VereinsheimReiter

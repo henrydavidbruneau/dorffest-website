@@ -35,6 +35,11 @@ wo wir gerade sind und was als Nächstes kommt.
 - Phase 8 begonnen: SEO-Grundwerte (og:*, Canonical), `robots.txt`, Mobil: Hero mittig, „Fragen?“ ohne Figur und
   zentriert, Newsletter-Zettel im Dorfanzeiger mobil gerade, Querscrollen bei Tablets behoben.
 
+- **Tour + Profil:** Tour durchs Vereinsheim (Vorschlag auf dem Dashboard, im Profil wiederholbar), Profil-Knopf mit
+  rundem Profilbild neben „Tschüss“, Profilbild-Upload unter „Mein Profil“.
+  **Bruno: `node scripts/directus-setup.mjs` einmal ausführen** (legt `tour_erledigt_am`, Ordner `profilbilder` und die
+  Rechte an) – bis dahin merkt sich nur der Browser die Tour.
+
 ## Offen / als Nächstes
 
 1. **Phase 8:** rechtliche Seiten mit echten Inhalten (Impressum: Vorstand, Registereintrag, Verantwortliche*r nach

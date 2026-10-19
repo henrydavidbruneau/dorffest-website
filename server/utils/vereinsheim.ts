@@ -155,11 +155,22 @@ export async function directusPerson<T>(event: H3Event, pfad: string, anfrage: P
 
 /** Wer ist angemeldet? Vorstand = darf `mitglieder` lesen (Policy `Vorstand`). */
 export async function ich(event: H3Event): Promise<VereinsheimIch> {
+  // fields=* liefert nur die Felder, die die Person lesen darf – so klappt es auch, solange
+  // `tour_erledigt_am` noch nicht angelegt ist (directus-setup.mjs), statt mit 403 abzubrechen
   const [user, vorstand] = await Promise.all([
-    directusPerson<Omit<VereinsheimIch, 'vorstand'>>(event, '/users/me', { query: { fields: 'id,first_name,last_name,email,benutzername' } }),
+    directusPerson<Partial<VereinsheimIch>>(event, '/users/me', { query: { fields: '*' } }),
     istVorstand(event),
   ])
-  return { ...user, vorstand }
+  return {
+    id: user.id ?? '',
+    first_name: user.first_name ?? null,
+    last_name: user.last_name ?? null,
+    email: user.email ?? null,
+    benutzername: user.benutzername ?? null,
+    avatar: user.avatar ?? null,
+    tour_erledigt_am: user.tour_erledigt_am ?? null,
+    vorstand,
+  }
 }
 
 /** Nur die Vorstands-Frage (eine Anfrage an Directus statt zwei) */

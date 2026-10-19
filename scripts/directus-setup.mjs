@@ -188,7 +188,7 @@ const STATUS_PUBLISH = [['published', 'Veröffentlicht'], ['draft', 'Entwurf'], 
 const archive = { archive_field: 'status', archive_value: 'archived', unarchive_value: 'draft', archive_app_filter: true }
 const DOT = 'Nur über den Server-Token anlegbar, nie öffentlich.'
 
-const FOLDERS = ['termine', 'artikel', 'gastbeitraege', 'stimmen', 'belege']
+const FOLDERS = ['termine', 'artikel', 'gastbeitraege', 'stimmen', 'belege', 'profilbilder']
 
 const COLLECTIONS = [
   /* Termine */
@@ -596,6 +596,8 @@ const SYSTEM_FIELDS = {
       ...str('benutzername', { unique: true, width: 'half', max: 30 }),
       meta: { interface: 'input', width: 'half', note: 'Login im Vereinsheim (statt E-Mail). Nur a–z, 0–9, . _ -', options: { trim: true }, validation: { benutzername: { _regex: '^[a-z0-9._-]{3,30}$' } }, validation_message: '3–30 Zeichen: a–z, 0–9, . _ -' },
     },
+    // Tour durchs Vereinsheim gemacht oder abgelehnt → wird nicht mehr vorgeschlagen (im Konto wiederholbar)
+    timestamp('tour_erledigt_am', { note: 'Vereinsheim-Tour gemacht oder abgelehnt' }),
   ],
 }
 
@@ -728,9 +730,9 @@ const PERMISSIONS = {
     { collection: 'directus_files', action: 'read', fields: ['*'], permissions: { _or: [{ folder: { _null: true } }, { folder: { name: { _neq: 'belege' } } }, { uploaded_by: { _eq: '$CURRENT_USER' } }] } },
     { collection: 'directus_files', action: 'update', fields: ['*'], permissions: { _or: [{ folder: { _null: true } }, { folder: { name: { _neq: 'belege' } } }, { uploaded_by: { _eq: '$CURRENT_USER' } }] } },
     { collection: 'directus_folders', action: 'read', fields: ['*'] },
-    // Namen anderer (wer hat angelegt/geprüft), eigenes Konto bearbeiten (Name, Passwort)
-    { collection: 'directus_users', action: 'read', fields: ['id', 'first_name', 'last_name', 'email', 'avatar', 'benutzername'] },
-    { collection: 'directus_users', action: 'update', fields: ['first_name', 'last_name', 'email', 'password', 'avatar'], permissions: { id: { _eq: '$CURRENT_USER' } } },
+    // Namen anderer (wer hat angelegt/geprüft), eigenes Konto bearbeiten (Name, Passwort, Profilbild, Tour)
+    { collection: 'directus_users', action: 'read', fields: ['id', 'first_name', 'last_name', 'email', 'avatar', 'benutzername', 'tour_erledigt_am'] },
+    { collection: 'directus_users', action: 'update', fields: ['first_name', 'last_name', 'email', 'password', 'avatar', 'tour_erledigt_am'], permissions: { id: { _eq: '$CURRENT_USER' } } },
   ],
   // Vorstand bekommt zusätzlich zu Mitglied alles (Policies addieren sich)
   Vorstand: [

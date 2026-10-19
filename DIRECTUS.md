@@ -366,6 +366,8 @@ node scripts/directus-seed.mjs              # Startinhalte
 `directus-setup.mjs` ist der Bauplan in Code: Neue Felder/Rechte dort ergänzen und erneut
 ausführen. An vorhandene Rechte werden neue Felder angehängt; sonstige Abweichungen meldet das
 Skript nur. Stand 18.10.2026: 21 Collections, 5 Ordner, 3 Policies, 2 Rollen, 2 Flows, alles angelegt.
+**Neu seit 19.10.2026 (noch ausführen):** Ordner `profilbilder`, Feld `directus_users.tour_erledigt_am` und die
+Rechte dafür (Mitglied: lesen + eigenes Konto ändern).
 
 ### Was angelegt ist
 
@@ -419,6 +421,11 @@ Bilder im Markdown (`inhalt`) zeigen auf `https://api.xn--knigsdorf-rckt-zusamme
 2. **Role** `Mitglied` wählen, Vorstandsleute bekommen `Vorstand` (enthält beide Policies – jeder
    User hat nur eine Rolle). Ohne App Access → kein Lizenz-Seat.
 3. Optional mit `mitglieder.user` verknüpfen.
+
+**Profilbild und Tour:** `directus_users.avatar` (Directus-Standardfeld) ist das Profilbild im Vereinsheim
+(Upload in den Ordner `profilbilder`, rund in der Navigation). `directus_users.tour_erledigt_am` (eigenes Feld,
+`directus-setup.mjs`) merkt sich, dass die Vereinsheim-Tour gemacht oder abgelehnt wurde; Mitglieder dürfen beides
+am eigenen Konto lesen/ändern. Fehlt das Feld noch, merkt sich der Browser die Tour (`localStorage`).
 
 **Login mit Benutzernamen:** Directus meldet nur per E-Mail an. Das Feld
 `directus_users.benutzername` (eindeutig, 3–30 Zeichen a–z 0–9 . _ -) erlaubt im Vereinsheim

@@ -6,6 +6,7 @@ const { meldung } = useVereinsheimMeldung()
 const route = useRoute()
 
 interface Reiter { text: string, to: string }
+const slug = (to: string) => to.split('/').pop() || 'dashboard'
 
 const reiter = computed<Reiter[]>(() => [
   { text: 'Dashboard', to: '/vereinsheim' },
@@ -77,9 +78,9 @@ async function abmelden() {
         <nav id="vh-nav" class="vh__nav" :class="{ 'vh__nav--offen': menueOffen }" aria-label="Vereinsheim">
           <ul class="vh__liste">
             <li v-for="r in reiter" :key="r.to">
-              <NuxtLink :to="r.to" class="vh__link" :aria-current="aktiv(r.to) ? 'page' : undefined">{{ r.text }}</NuxtLink>
+              <NuxtLink :to="r.to" class="vh__link" :data-tour="`nav-${r.to === '/vereinsheim/kassenbuch' ? 'kasse' : slug(r.to)}`" :aria-current="aktiv(r.to) ? 'page' : undefined">{{ r.text }}</NuxtLink>
             </li>
-            <li ref="diversesEl" class="vh__diverses">
+            <li ref="diversesEl" class="vh__diverses" data-tour="nav-diverses">
               <button
                 type="button"
                 class="vh__link vh__diverses-knopf"
@@ -98,8 +99,18 @@ async function abmelden() {
             </li>
           </ul>
           <div class="vh__person">
-            <NuxtLink to="/vereinsheim/konto" class="vh__name" :aria-current="aktiv('/vereinsheim/konto') ? 'page' : undefined">
-              {{ ich?.first_name || ich?.benutzername || 'Mein Konto' }}
+            <NuxtLink
+              to="/vereinsheim/konto"
+              class="vh__profil"
+              data-tour="profil"
+              title="Mein Profil"
+              :aria-current="aktiv('/vereinsheim/konto') ? 'page' : undefined"
+            >
+              <img v-if="ich?.avatar" :src="vh.bild(ich.avatar, 96)" alt="" class="vh__avatar" width="36" height="36">
+              <span v-else class="vh__avatar vh__avatar--leer" aria-hidden="true">
+                <VereinsheimIcon name="konto" />
+              </span>
+              <span class="vh__profil-name"><span class="nur-screenreader">Mein Profil: </span>{{ ich?.first_name || ich?.benutzername || 'Profil' }}</span>
             </NuxtLink>
             <BasisKnopf variante="hell" groesse="klein" @click="abmelden">Tschüss</BasisKnopf>
           </div>
@@ -110,6 +121,8 @@ async function abmelden() {
     <main id="inhalt" class="vh__inhalt" :class="{ 'vh__inhalt--vollbreit': vollbreit }" tabindex="-1">
       <slot />
     </main>
+
+    <VereinsheimTour />
 
     <div class="vh__meldung-ort" aria-live="polite">
       <p v-if="meldung" :key="meldung.nr" class="vh__meldung" :class="`vh__meldung--${meldung.art}`" :role="meldung.art === 'fehler' ? 'alert' : 'status'">
@@ -280,15 +293,46 @@ async function abmelden() {
   gap: var(--abstand-s);
 }
 
-.vh__name {
-  font-size: var(--groesse-s);
-  font-weight: var(--gewicht-text-normal);
+/* Profil: rundes Bild (oder Symbol) + Vorname, führt zu „Mein Konto“ */
+.vh__profil {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.8rem 0.2rem 0.2rem;
+  border: 1.5px solid rgb(252 224 197 / 0.5);
+  border-radius: 999px;
   color: var(--farbe-pfirsich);
+  font-size: var(--groesse-xs);
+  font-weight: var(--gewicht-text-mittel);
   text-decoration: none;
+  transition: background-color var(--dauer-kurz) ease, border-color var(--dauer-kurz) ease;
 }
 
-.vh__name:hover {
-  text-decoration: underline;
+.vh__profil:hover,
+.vh__profil[aria-current='page'] {
+  border-color: var(--farbe-pfirsich);
+  background: rgb(252 224 197 / 0.15);
+}
+
+.vh__avatar {
+  display: block;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.vh__avatar--leer {
+  display: grid;
+  place-items: center;
+  background: var(--farbe-pfirsich);
+  color: var(--farbe-lila);
+}
+
+.vh__avatar--leer :deep(svg) {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 /* ---------- Inhalt ---------- */

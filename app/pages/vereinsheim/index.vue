@@ -122,7 +122,7 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
         </div>
 
         <!-- Vorstand: Post · Mitglieder: eigene Einreichungen -->
-        <BasisNotizzettel farbe="pfirsich" radius="l" :drehung="1.5" class="dash__karte">
+        <BasisNotizzettel farbe="pfirsich" radius="l" :drehung="1.5" class="dash__karte" data-tour="post">
           <template v-if="ich?.vorstand && mails">
             <p class="dash__karte-titel"><VereinsheimIcon name="post" class="dash__karte-icon" /> Neue Post</p>
             <ul v-if="mails.length" class="dash__post">
@@ -171,7 +171,7 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
     </section>
 
     <section class="dash__kacheln" aria-label="Bereiche">
-      <ul class="kacheln">
+      <ul class="kacheln" data-tour="kacheln">
         <li v-for="(k, i) in kacheln" :key="k.to">
           <NuxtLink :to="k.to" class="kachel-link">
             <BasisNotizzettel farbe="pfirsich" radius="l" :tape="k.tape" :tape-farbe="k.farbe" :drehung="[-1, 0.6, -0.4, 0.8, -0.8, 0.5][i % 6]" class="kachel">

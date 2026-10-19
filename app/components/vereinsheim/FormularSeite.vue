@@ -134,7 +134,7 @@ defineExpose({ daten, speichern, ungespeichert })
       <form novalidate @submit.prevent="speichern()">
         <!-- zweispaltig in Abschnitten -->
         <div v-if="abschnitte.length" class="formular-seite__raster">
-          <div class="formular-seite__spalte">
+          <div class="formular-seite__spalte" data-tour="formular-haupt">
             <component
               :is="g.einklappbar ? 'details' : 'section'"
               v-for="g in haupt"
@@ -149,7 +149,7 @@ defineExpose({ daten, speichern, ungespeichert })
             </component>
             <slot :daten="daten" />
           </div>
-          <aside class="formular-seite__spalte formular-seite__spalte--rand">
+          <aside class="formular-seite__spalte formular-seite__spalte--rand" data-tour="formular-rand">
             <component
               :is="g.einklappbar ? 'details' : 'section'"
               v-for="g in rand"
@@ -171,7 +171,7 @@ defineExpose({ daten, speichern, ungespeichert })
           <slot :daten="daten" />
         </div>
 
-        <div class="formular-seite__leiste">
+        <div class="formular-seite__leiste" data-tour="formular-leiste">
           <p v-if="fehlend.length" class="formular-seite__fehlend" role="alert">
             Da fehlt noch was: {{ fehlend.join(', ') }}
           </p>
