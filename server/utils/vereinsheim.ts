@@ -28,6 +28,10 @@ const nichtAngemeldet = () => createError({ statusCode: 401, statusMessage: 'Bit
 
 // secure nur in Produktion – sonst kommt das Cookie über http://localhost nie an
 const cookieBasis = () => ({ httpOnly: true, secure: !import.meta.dev, sameSite: 'lax' as const, path: '/' })
+// Lesbarer Hinweis „vermutlich angemeldet“ (kein Geheimnis): Damit zeigt die Website z.B. bei
+// Dorfanzeiger-Artikeln „Bearbeiten“, ohne für jede*n Besucher*in die Sitzung zu prüfen.
+export const HINWEIS_COOKIE = 'vh_angemeldet'
+const hinweisBasis = () => ({ ...cookieBasis(), httpOnly: false })
 
 function directusBasis() {
   const { directusUrl } = useRuntimeConfig()
@@ -38,20 +42,30 @@ function directusBasis() {
 function speichereTokens(event: H3Event, auth: DirectusAuth) {
   setCookie(event, AT, auth.access_token, { ...cookieBasis(), maxAge: Math.max(60, Math.floor(auth.expires / 1000)) })
   setCookie(event, RT, auth.refresh_token, { ...cookieBasis(), maxAge: RT_MAX_AGE })
+  setCookie(event, HINWEIS_COOKIE, '1', { ...hinweisBasis(), maxAge: RT_MAX_AGE })
 }
 
 export function loescheTokens(event: H3Event) {
   deleteCookie(event, AT, cookieBasis())
   deleteCookie(event, RT, cookieBasis())
+  deleteCookie(event, HINWEIS_COOKIE, hinweisBasis())
 }
 
 /** Benutzername → E-Mail (Directus meldet nur per E-Mail an). Mit `@` = schon eine E-Mail. */
 export async function loginEmail(eingabe: string): Promise<string | null> {
   if (eingabe.includes('@')) return eingabe.toLowerCase()
   if (!/^[a-z0-9._-]{3,30}$/.test(eingabe)) return null
-  const [user] = await directusServer<{ email: string | null }[]>('/users', { query: { fields: 'email', filter: { benutzername: { _eq: eingabe } }, limit: 1 } })
+  const [user] = await directusServer<{ id: string, email: string | null }[]>('/users', { query: { fields: 'id,email', filter: { benutzername: { _eq: eingabe } }, limit: 1 } })
     .catch(() => [])
-  return user?.email ?? null
+  if (!user) return null
+  if (user.email) return user.email
+  // Konto ohne E-Mail: Platzhalter eintragen (Server-Token darf nur leere E-Mails so füllen)
+  const email = platzhalterMail(eingabe)
+  return directusServer(`/users/${user.id}`, { method: 'PATCH', body: { email } })
+    .then(() => email, (e) => {
+      console.error('[vereinsheim-login] Platzhalter-E-Mail', eingabe, e?.data ?? e)
+      return null
+    })
 }
 
 /** Anmelden; gibt den frischen Access-Token zurück (die Cookies stehen erst in der Antwort) */

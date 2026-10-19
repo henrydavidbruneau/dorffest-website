@@ -99,7 +99,7 @@ async function passwortAendern() {
           <BasisFeld v-model="name.last_name" label="Nachname" name="last_name" autocomplete="family-name" />
           <p class="konto__info">
             Benutzername: <strong>{{ ich?.benutzername ?? '–' }}</strong><br>
-            E-Mail: <strong>{{ ich?.email ?? '–' }}</strong><br>
+            E-Mail: <strong>{{ echteMail(ich?.email) ?? 'keine (Anmeldung mit Benutzername)' }}</strong><br>
             <small>Benutzername oder E-Mail ändern? Sag dem Vorstand Bescheid.</small>
           </p>
           <BasisKnopf type="submit" variante="outline">Speichern</BasisKnopf>

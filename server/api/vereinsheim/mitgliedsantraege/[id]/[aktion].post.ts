@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
     an: antrag.email,
     betreff: 'Willkommen bei Königsdorf rückt zusammen!',
     tags: ['mitglied-willkommen'],
-    antwortAn: person.email ?? undefined,
+    antwortAn: echteMail(person.email) ?? undefined,
     text: [
       `Hallo ${antrag.vorname},`,
       `der Vorstand hat deinen Antrag angenommen – du bist jetzt ${antrag.art === 'regulaer' ? 'stimmberechtigtes Mitglied' : 'Fördermitglied'} bei Königsdorf rückt zusammen e.V. Herzlich willkommen!`,

@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
         betreff: `Dein Beitrag „${beitrag.titel}“`,
         tags: ['gastbeitrag'],
         text: `Hallo ${beitrag.autor_in},\n\n${nachricht}\n\n${GRUSS}`,
-        antwortAn: person.email ?? undefined,
+        antwortAn: echteMail(person.email) ?? undefined,
       })
     }
     return { ok: true }

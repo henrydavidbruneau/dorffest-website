@@ -51,6 +51,13 @@ wo wir gerade sind und was als Nächstes kommt.
   Artikel-Editor: Abschnitt „Porträt“ nur im Ressort Porträts.
   `scripts/directus-setup.mjs` ist am 19.10.2026 gelaufen (Wiederholung, Anrede, Tour, Profilbilder + Rechte).
 
+- **Nextup per Stern** (`im_fokus`, höchstens ein Termin). **Eigene Frage** statt „Was bringst du mit?“
+  (`termine.mitbringen_frage`, z.B. Song-Wunschliste für „Königsdorf singt zusammen“: Frage + Vorschläge eintragen).
+- Vereinsheim: Fuß „Wir sehen uns im Plenum!“ mit Link zur Website auf jeder Seite. „Tschüss“ führt nur noch zur
+  Website (bleibt angemeldet), klein darunter „Abmelden“. Angemeldet zeigen Dorfanzeiger-Artikel „Bearbeiten“.
+- **Login ohne E-Mail:** Konten ohne Mail bekommen beim ersten Login einen Platzhalter (siehe `DIRECTUS.md` →
+  Login mit Benutzernamen). Setup-Skript ist dafür gelaufen. Betrifft derzeit `brunobalscheit` und `vivienfuhs`.
+
 ## Offen / als Nächstes
 
 1. **Phase 8:** rechtliche Seiten mit echten Inhalten (Impressum: Vorstand, Registereintrag, Verantwortliche*r nach

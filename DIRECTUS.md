@@ -99,6 +99,7 @@ Vorstand + Ersteller*in lesbar). Server darf Dateien lesen, die an veröffentlic
 | `anmeldung_aktiv` | Boolean | Anmeldezettel anzeigen |
 | `plaetze` | Zahl, optional | leer = unbegrenzt; sonst Restplätze + Sticker |
 | `mitbringen_position` | Auswahl: `aus` · `seite_1` · `seite_2` | „Was bringst du mit?“ aus / auf dem Anmeldezettel / als 2. Seite |
+| `mitbringen_frage` | Text, optional (max. 120) | Eigene Frage statt „Was bringst du mit?“, z.B. „Welche Songs sollen wir singen?“ (Vorschläge = Wunschliste) |
 | `mitbringen_text` | Text, optional | Einleitung, z.B. „Wir stellen einen Tisch mit Getränken …“ |
 | `mitbringen_vorschlaege` | Tags (JSON-Liste) | antippbare Vorschläge |
 
@@ -406,7 +407,8 @@ und nennt es; Directus meldet unbekannte Felder als „fehlendes Recht“ – di
     `plenum_erinnerungen`, `mitgliedsantraege` (nur die Formularfelder, Status = Standard)
   - **Dateien:** liest nur Ordner `termine`, `artikel`, `stimmen`; lädt nur in `gastbeitraege`
     hoch. Beim Annehmen eines Gastbeitrags verschiebt das Vereinsheim das Foto nach `artikel`.
-  - `directus_users`: nur `email` + `benutzername` aktiver User mit Benutzernamen (Login, s.u.)
+  - `directus_users`: nur `id`, `email` + `benutzername` aktiver User mit Benutzernamen (Login, s.u.);
+    `email` ändern nur, wenn leer, und nur auf den Platzhalter (Konten ohne E-Mail)
   - `plenum_erinnerungen`: liest nur `id` (für den signierten Link), ändert nur `bestaetigt` /
     `abgemeldet_am` (Double-Opt-in)
 - **`Mitglied`:** wie in der Tabelle. Auslagen: eigene lesen, bearbeiten nur solange
@@ -444,7 +446,10 @@ trotzdem den Benutzernamen: Die Login-Route (`server/api/vereinsheim/login.post.
 Benutzername **oder** E-Mail; enthält die Eingabe kein `@`, sucht sie mit dem Server-Token die
 E-Mail zum Benutzernamen und meldet dann mit E-Mail + Passwort bei `/auth/login` an. Gleiche
 Fehlermeldung für „unbekannt“ und „falsches Passwort“; Rate-Limit wie bei den Formularen.
-Jede*r braucht trotzdem eine E-Mail (Directus-Pflicht, Passwort vergessen).
+Konten **ohne E-Mail** gehen auch: Fehlt sie, trägt die Login-Route beim ersten Anmelden den Platzhalter
+`<benutzername>@ohne-mail.koenigsdorf-rueckt-zusammen.de` ein (`shared/utils/konto.ts`; die Server-Policy darf
+`email` nur so und nur, wenn sie leer ist). An Platzhalter geht nie eine Mail; „Mein Profil“ zeigt „keine“.
+Ohne echte E-Mail gibt es kein „Passwort vergessen“ – dann setzt ein Admin das Passwort in Directus.
 
 ### Rollen
 
