@@ -3,7 +3,7 @@
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
 useSeoMeta({ title: 'Termine · Vereinsheim', robots: 'noindex, nofollow' })
 
-interface TerminZeile { id: number, status: string, titel: string, slug: string, beginn: string | null, ende: string | null, datum_text: string | null, uhrzeit_folgt: boolean | null, ort: string | null, plaetze: number | null, anmeldung_aktiv: boolean, wiederholung?: string | null, wiederholung_bis?: string | null }
+interface TerminZeile { id: number, status: string, titel: string, slug: string, beginn: string | null, ende: string | null, datum_text: string | null, uhrzeit_folgt: boolean | null, ort: string | null, plaetze: number | null, anmeldung_aktiv: boolean, wiederholung?: string | null, wiederholung_bis?: string | null, im_fokus?: boolean | null }
 
 const { zeige, fehler } = useVereinsheimMeldung()
 const ansicht = ref<'kommend' | 'vergangen' | 'entwuerfe'>('kommend')
@@ -55,6 +55,23 @@ async function duplizieren(t: TerminZeile) {
     const kopie = await vh.anlegen<{ id: number }>('termine', { ...voll, slug: `${t.slug}-kopie-${Date.now().toString(36).slice(-4)}`, titel: `${t.titel} (Kopie)`, status: 'draft' })
     zeige('Kopie angelegt (als Entwurf).')
     await navigateTo(`/vereinsheim/termine/${kopie.id}`)
+  }
+  catch (e) {
+    fehler(e)
+  }
+}
+
+// Nextup: höchstens ein Termin steht im Countdown-Band der Startseite
+const nextupMoeglich = computed(() => data.value.some(t => 'im_fokus' in t))
+async function nextup(t: TerminZeile) {
+  const an = !t.im_fokus
+  try {
+    if (an) {
+      for (const alt of data.value.filter(x => x.im_fokus && x.id !== t.id)) await vh.aendern('termine', alt.id, { im_fokus: false })
+    }
+    await vh.aendern('termine', t.id, { im_fokus: an })
+    zeige(an ? `„${t.titel}“ steht jetzt im Nextup auf der Startseite.` : 'Nextup zeigt wieder den nächsten Termin.')
+    await refresh()
   }
   catch (e) {
     fehler(e)
@@ -152,6 +169,17 @@ onBeforeUnmount(() => document.removeEventListener('click', schliessen))
           <span v-else class="termin__anmeldungen termin__anmeldungen--aus">ohne Anmeldung</span>
 
           <div class="termin__aktionen">
+            <button
+              v-if="nextupMoeglich && t.status === 'published'"
+              type="button"
+              class="termin__nextup"
+              :class="{ 'termin__nextup--an': t.im_fokus }"
+              :aria-pressed="!!t.im_fokus"
+              :title="t.im_fokus ? 'Steht im Nextup auf der Startseite – zum Entfernen klicken' : 'Im Nextup auf der Startseite zeigen'"
+              @click="nextup(t)"
+            >
+              <span aria-hidden="true">{{ t.im_fokus ? '★' : '☆' }}</span> Nextup
+            </button>
             <BasisKnopf :to="`/vereinsheim/termine/${t.id}`" groesse="klein" variante="outline">Bearbeiten</BasisKnopf>
             <div class="termin__mehr">
               <button type="button" class="termin__mehr-knopf" :aria-expanded="menue === t.id" :aria-label="`Mehr zu ${t.titel}`" @click="menue = menue === t.id ? null : t.id">⋯</button>
@@ -311,6 +339,30 @@ a.termin__anmeldungen:hover {
   display: flex;
   align-items: center;
   gap: var(--abstand-2xs);
+}
+
+.termin__nextup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--vh-rand);
+  border-radius: 999px;
+  background: var(--farbe-weiss);
+  font: inherit;
+  font-size: var(--groesse-xs);
+  font-weight: var(--gewicht-text-mittel);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.termin__nextup:hover {
+  background: var(--farbe-pfirsich);
+}
+
+.termin__nextup--an {
+  border-color: var(--farbe-orange);
+  background: var(--farbe-gelb);
 }
 
 .termin__mehr {

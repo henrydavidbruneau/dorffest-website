@@ -216,6 +216,7 @@ const COLLECTIONS = [
       markdown('beschreibung', { note: 'Markdown – „Worum geht’s?“' }),
       str('aufruf_text', { width: 'half', max: 40, note: 'Linktext auf dem Zettel, Standard „Details“' }),
       bool('hervorgehoben', { note: 'Auf der Startseite unter „Was kommt“' }),
+      bool('im_fokus', { note: 'Im Nextup-Band auf der Startseite (höchstens einer; sonst der nächste Termin)' }),
       bool('anmeldung_aktiv', { note: 'Anmeldezettel anzeigen' }),
       int('plaetze', { min: 1, note: 'Leer = unbegrenzt' }),
       select('mitbringen_position', [['aus', 'Aus'], ['seite_1', 'Auf dem Anmeldezettel'], ['seite_2', 'Als 2. Seite']], { def: 'aus', note: '„Was bringst du mit?“' }),

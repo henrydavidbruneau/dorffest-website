@@ -2,9 +2,13 @@
 import { texte } from '~/texte'
 
 const t = texte.start.wasKommt
-const { data: termine } = await useTermine({ hervorgehoben: true, limit: 3 })
-// Band: der nächste Termin. Zettel: die nächsten drei – der nächste taucht dort bewusst noch einmal auf.
-const naechster = computed(() => termine.value[0] ?? null)
+const [{ data: termine }, { data: fokus }] = await Promise.all([
+  useTermine({ hervorgehoben: true, limit: 3 }),
+  useTermine({ fokus: true, limit: 1 }),
+])
+// Band (Nextup): der im Vereinsheim gewählte Termin, sonst der nächste.
+// Zettel: die nächsten drei – der nächste taucht dort bewusst noch einmal auf.
+const naechster = computed(() => fokus.value[0] ?? termine.value[0] ?? null)
 const weitere = computed(() => termine.value.slice(0, 3))
 
 // Drehung der Zettel wie im Design

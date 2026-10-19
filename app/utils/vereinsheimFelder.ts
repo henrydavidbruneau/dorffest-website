@@ -45,6 +45,7 @@ export const FELDER_TERMIN: FeldDef[] = [
   { feld: 'titel', gruppe: 'text', gross: true, label: 'Titel', typ: 'text', pflicht: true, breit: true, maxlength: 160 },
   { feld: 'slug', gruppe: 'website', label: 'Adresse (/termine/…)', typ: 'text', pflicht: true, hinweis: 'nur a–z, 0–9 und Bindestriche', maxlength: 120 },
   { feld: 'hervorgehoben', gruppe: 'website', label: 'Auf der Startseite unter „Was kommt“', typ: 'janein' },
+  { feld: 'im_fokus', gruppe: 'website', label: 'Im Nextup auf der Startseite', typ: 'janein', hinweis: 'großes Countdown-Band; nur ein Termin – ohne Auswahl der nächste' },
   { feld: 'beginn', gruppe: 'wann', label: 'Beginn', typ: 'zeitpunkt', hinweis: 'leer = Datum steht noch nicht fest; bei regelmäßigen das erste Mal' },
   { feld: 'ende', gruppe: 'wann', label: 'Ende', typ: 'zeitpunkt' },
   { feld: 'uhrzeit_folgt', gruppe: 'wann', label: 'Datum fest, Uhrzeit folgt', typ: 'janein' },

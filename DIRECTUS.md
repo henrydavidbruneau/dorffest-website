@@ -95,6 +95,7 @@ Vorstand + Ersteller*in lesbar). Server darf Dateien lesen, die an veröffentlic
 | `beschreibung` | Markdown | „Worum geht’s?“ |
 | `aufruf_text` | Text, optional | Linktext auf dem Zettel, Standard „Details“ |
 | `hervorgehoben` | Boolean | auf der Startseite unter „Was kommt“ |
+| `im_fokus` | Boolean | im Nextup-Band (Countdown) auf der Startseite – höchstens einer, das Vereinsheim nimmt ihn beim alten weg; ohne Auswahl der nächste Termin |
 | `anmeldung_aktiv` | Boolean | Anmeldezettel anzeigen |
 | `plaetze` | Zahl, optional | leer = unbegrenzt; sonst Restplätze + Sticker |
 | `mitbringen_position` | Auswahl: `aus` · `seite_1` · `seite_2` | „Was bringst du mit?“ aus / auf dem Anmeldezettel / als 2. Seite |
@@ -373,7 +374,7 @@ node scripts/directus-seed.mjs              # Startinhalte
 `directus-setup.mjs` ist der Bauplan in Code: Neue Felder/Rechte dort ergänzen und erneut
 ausführen. An vorhandene Rechte werden neue Felder angehängt; sonstige Abweichungen meldet das
 Skript nur. Stand 18.10.2026: 21 Collections, 5 Ordner, 3 Policies, 2 Rollen, 2 Flows, alles angelegt.
-**Neu seit 19.10.2026 (ausgeführt am 19.10.2026, jetzt 281 Einträge):** Ordner `profilbilder`, Feld `directus_users.tour_erledigt_am` und die
+**Neu seit 19.10.2026 (ausgeführt am 19.10.2026; danach noch `termine.im_fokus`):** Ordner `profilbilder`, Feld `directus_users.tour_erledigt_am` und die
 Rechte dafür (Mitglied: lesen + eigenes Konto ändern); `termine.wiederholung` + `wiederholung_bis`;
 `leserbriefe.anrede` (Server: anlegen + lesen); Server liest bei `anmeldungen` zusätzlich `date_created`
 (Plätze bei regelmäßigen Terminen je Runde). Fehlt ein Feld einmal, blendet das Vereinsheim es im Formular aus

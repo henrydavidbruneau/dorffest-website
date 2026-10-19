@@ -1,6 +1,8 @@
 export interface TermineOptionen {
   zeitraum?: 'kommend' | 'vergangen' | 'alle'
   hervorgehoben?: boolean
+  /** nur den Termin fürs Nextup-Band */
+  fokus?: boolean
   mitDatum?: boolean
   limit?: number
 }

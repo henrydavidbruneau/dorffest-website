@@ -4,6 +4,8 @@
 export interface TerminFilter {
   zeitraum?: 'kommend' | 'vergangen' | 'alle'
   hervorgehoben?: boolean
+  /** nur den Termin fürs Nextup-Band (`im_fokus`) */
+  fokus?: boolean
   /** nur Termine mit festem Datum oder Rhythmus (für den Terminkalender) */
   mitDatum?: boolean
   limit?: number
@@ -33,7 +35,8 @@ const FELDER = [
   'beschreibung', 'aufruf_text', 'hervorgehoben', 'anmeldung_aktiv', 'plaetze', 'mitbringen_position',
   'mitbringen_text', 'mitbringen_vorschlaege',
 ].join(',')
-const FELDER_WIEDERHOLUNG = `${FELDER},wiederholung,wiederholung_bis`
+// neuere Felder – fehlen sie in Directus noch, wird ohne sie gelesen
+const FELDER_WIEDERHOLUNG = `${FELDER},wiederholung,wiederholung_bis,im_fokus`
 
 // Solange `wiederholung` in Directus noch nicht angelegt ist (scripts/directus-setup.mjs), ohne lesen
 let mitWiederholung = true
@@ -67,8 +70,16 @@ export async function ladeTermine(filter: TerminFilter = {}): Promise<Termin[]> 
   const zeitraum = filter.zeitraum ?? 'kommend'
   const bedingungen: object[] = [VEROEFFENTLICHT]
   if (filter.hervorgehoben) bedingungen.push({ hervorgehoben: { _eq: true } })
+  if (filter.fokus) {
+    if (!mitWiederholung) return [] // Feld fehlt noch
+    bedingungen.push({ im_fokus: { _eq: true } })
+  }
   if (filter.mitDatum) bedingungen.push({ beginn: { _nnull: true } })
-  let liste = (await leseTermine({ filter: { _and: bedingungen } })).map(t => aufNaechstesDatum(t, jetzt))
+  // Nextup-Abfrage darf nie die Startseite kippen (z.B. solange `im_fokus` in Directus fehlt)
+  const roh = filter.fokus
+    ? await leseTermine({ filter: { _and: bedingungen } }).catch(() => [])
+    : await leseTermine({ filter: { _and: bedingungen } })
+  let liste = roh.map(t => aufNaechstesDatum(t, jetzt))
   if (zeitraum === 'kommend') liste = liste.filter(t => istKommend(t, jetzt)).sort(nachBeginn)
   if (zeitraum === 'vergangen') liste = liste.filter(t => !istKommend(t, jetzt)).sort((a, b) => nachBeginn(b, a))
   if (zeitraum === 'alle') liste = [...liste].sort(nachBeginn)

@@ -37,6 +37,8 @@ export interface Termin extends DirectusEintrag {
   aufruf_text: string | null
   /** auf der Startseite unter "Was kommt" zeigen */
   hervorgehoben: boolean
+  /** im Nextup-Band (Countdown) auf der Startseite – höchstens einer; fehlt, solange das Feld nicht angelegt ist */
+  im_fokus?: boolean | null
 
   /** Anmeldung möglich? */
   anmeldung_aktiv: boolean
