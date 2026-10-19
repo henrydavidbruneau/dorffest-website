@@ -20,9 +20,9 @@ export default defineEventHandler(async (event) => {
     'BEGIN:VEVENT',
     `UID:termin-${termin.id}@koenigsdorf-rueckt-zusammen.de`,
     `DTSTAMP:${icsZeit(new Date().toISOString())}`,
-    // Uhrzeit noch offen → ganztägig
+    // Uhrzeit noch offen → ganztägig (Datum in Ortszeit; Directus speichert UTC)
     ...(termin.uhrzeit_folgt
-      ? [`DTSTART;VALUE=DATE:${termin.beginn.slice(0, 10).replace(/-/g, '')}`]
+      ? [`DTSTART;VALUE=DATE:${datumLang(termin.beginn).split('.').reverse().join('')}`]
       : [`DTSTART:${icsZeit(termin.beginn)}`, `DTEND:${icsZeit(ende)}`]),
     `SUMMARY:${icsText(termin.titel)}`,
     termin.ort ? `LOCATION:${icsText([termin.ort, termin.adresse].filter(Boolean).join(', '))}` : '',

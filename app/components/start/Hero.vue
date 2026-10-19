@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { links } from '~/navigation'
 import { texte } from '~/texte'
+
+const verein = useVerein()
 
 const t = texte.start.hero
 </script>
@@ -25,7 +26,7 @@ const t = texte.start.hero
       </h1>
       <p class="hero__text">{{ t.text }}</p>
       <div class="hero__knoepfe">
-        <BasisKnopf :to="links.infochannel" target="_blank">{{ t.knopfInfochannel }}</BasisKnopf>
+        <BasisKnopf :to="verein.infochannel_url" target="_blank">{{ t.knopfInfochannel }}</BasisKnopf>
         <BasisKnopf id="knopf-was-wir-tun" to="#was-wir-tun" variante="outline">{{ t.knopfWasWirTun }}</BasisKnopf>
       </div>
     </div>

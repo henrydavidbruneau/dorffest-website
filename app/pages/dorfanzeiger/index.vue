@@ -57,7 +57,7 @@ useSeoMeta({
           </h2>
           <p class="titelgeschichte__teaser">{{ titel.teaser }}</p>
           <figure v-if="titel.bild" class="titelgeschichte__bild">
-            <NuxtImg :src="titel.bild" :alt="titel.bild_alt ?? ''" width="1280" height="780" sizes="100vw md:60vw lg:640px" />
+            <NuxtImg :src="titel.bild" :provider="bildAnbieter(titel.bild)" :alt="titel.bild_alt ?? ''" width="1280" height="780" sizes="100vw md:60vw lg:640px" />
             <figcaption v-if="titel.bildunterschrift" class="handschrift">{{ titel.bildunterschrift }}</figcaption>
           </figure>
           <p class="titelgeschichte__zeile">

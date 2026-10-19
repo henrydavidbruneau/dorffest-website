@@ -16,6 +16,9 @@ export function useFormular(url: MaybeRefOrGetter<string>) {
       fehler.value = err.data?.statusMessage || err.statusMessage || 'Das hat gerade nicht geklappt. Bitte versuch es noch einmal.'
       status.value = 'fehler'
     }
+    finally {
+      if (import.meta.client) turnstileZuruecksetzen()
+    }
   }
 
   return { status, fehler, senden }

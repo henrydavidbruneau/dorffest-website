@@ -20,7 +20,7 @@ export interface Termin extends DirectusEintrag {
   /** null = "Ort folgt" */
   ort: string | null
   adresse: string | null
-  /** Directus: Datei-ID. Bis dahin: Pfad unter public/ */
+  /** Directus: Datei-ID (über die Bild-Route /bilder/:id) */
   bild: string | null
   bild_alt: string | null
   /** kurzer Text für Kacheln (Startseite) */

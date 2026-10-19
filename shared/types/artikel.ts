@@ -2,7 +2,7 @@ import type { DirectusEintrag } from './directus'
 
 export type Ressort = 'feste' | 'verein' | 'dorffunk' | 'rezepte' | 'feuilleton' | 'portraets'
 
-/** Directus-Collection `dorfanzeiger` (Artikel) */
+/** Directus-Collection `artikel` (Ressort als Slug aufgelöst) */
 export interface Artikel extends DirectusEintrag {
   slug: string
   titel: string
@@ -12,8 +12,6 @@ export interface Artikel extends DirectusEintrag {
   teaser: string
   /** noch kürzerer Teaser für die Startseite. Sonst `teaser` */
   teaser_kurz: string | null
-  /** normaler Artikel oder Interview ("Fünf Fragen an …", erscheint nicht in den Listen) */
-  art: 'artikel' | 'interview'
   ressort: Ressort
   autor_in: string | null
   /** kleines Rundbild neben dem Namen */
@@ -23,7 +21,7 @@ export interface Artikel extends DirectusEintrag {
   /** Ersetzt die Datumsanzeige, z.B. "November" oder "Datum folgt" */
   datum_text: string | null
   lesedauer_minuten: number | null
-  /** Directus: Datei-ID. Bis dahin: Pfad unter public/ */
+  /** Directus: Datei-ID (über die Bild-Route /bilder/:id) */
   bild: string | null
   bild_alt: string | null
   bildunterschrift: string | null
@@ -45,6 +43,9 @@ export interface Artikel extends DirectusEintrag {
   sort: number | null
   /** Fremdschlüssel auf `ausgaben` */
   ausgabe: number | null
+  /** nur Ressort „Porträts“: Name und Zitat für „Fünf Fragen an …“ */
+  portraet_name: string | null
+  portraet_zitat: string | null
 }
 
 /** Artikel-Detail: wie in Directus, plus serverseitig gerendertes HTML */

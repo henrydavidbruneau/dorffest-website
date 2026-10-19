@@ -1,7 +1,6 @@
 // POST /api/gastbeitrag/:schluessel – Gastbeitrag einreichen (multipart, optional mit Foto).
-// Vorerst nur Prüfung + Log. Später: Foto in Directus-Ordner `gastbeitraege` hochladen,
-// Eintrag in `gastbeitraege` mit Status `eingereicht`, Einladung auf `eingereicht` setzen
-// (außer `mehrfach`), Hinweis-Mail an den Verein (Brevo).
+// Foto in den Directus-Ordner `gastbeitraege` hochladen, Eintrag in `gastbeitraege` (Status
+// `eingereicht`), Einladung auf `eingereicht` setzen (außer `mehrfach`), Hinweis an den Verein.
 import { RESSORTS } from '#shared/utils/ressorts'
 import type { Ressort } from '#shared/types/artikel'
 
@@ -64,6 +63,25 @@ export default defineEventHandler(async (event) => {
     if (foto.daten.length > BILD_MAX) throw fail(413, 'foto', 'Das Foto ist zu groß (max. 4 MB). Schick es uns gern per Mail.')
   }
 
-  console.info('[gastbeitrag]', { ...beitrag, inhalt: `${beitrag.inhalt.length} Zeichen`, foto: foto ? `${foto.typ}, ${Math.round(foto.daten.length / 1024)} KB` : null })
+  await pruefeTurnstile(event, body)
+
+  const endung = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[foto?.typ ?? ''] ?? 'jpg'
+  const bild = foto
+    ? (await directusDateiHochladen(
+        { daten: foto.daten, typ: foto.typ, name: `gastbeitrag-${Date.now()}.${endung}` },
+        { title: beitrag.titel },
+      )).id
+    : null
+  await directusAnlegen('gastbeitraege', { ...beitrag, ressort: await ressortId(beitrag.ressort), bild })
+  await markiereEingereicht(einladung)
+  await mailAnVerein(
+    `Neuer Gastbeitrag: „${beitrag.titel}“ von ${beitrag.autor_in}`,
+    [
+      `${beitrag.autor_in} <${beitrag.email}> hat über den Link für ${einladung.name} einen Beitrag eingereicht (Rubrik ${RESSORTS[beitrag.ressort]}${bild ? ', mit Foto' : ''}).`,
+      beitrag.teaser ?? beitrag.inhalt.slice(0, 300) + ' …',
+      'Lesen und annehmen/ablehnen im Vereinsheim bzw. in Directus unter „gastbeitraege“.',
+    ].join('\n\n'),
+    beitrag.email,
+  )
   return { ok: true }
 })

@@ -4,7 +4,7 @@ Wir freuen uns über deinen Besuch und nehmen den Schutz deiner Daten ernst. Hie
 
 Rückt Zusammen e.V.<br>
 Baumschulenstraße 28, 50226 Frechen<br>
-E-Mail: [kontakt@königsdorf-rückt-zusammen.de](mailto:kontakt@königsdorf-rückt-zusammen.de)
+E-Mail: [kontakt@koenigsdorf-rueckt-zusammen.de](mailto:kontakt@koenigsdorf-rueckt-zusammen.de)
 
 Einen Datenschutzbeauftragten haben wir nicht bestellt, da wir dazu gesetzlich nicht verpflichtet sind. Bei Fragen schreib uns einfach an die oben genannte Adresse.
 

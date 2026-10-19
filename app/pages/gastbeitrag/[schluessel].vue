@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Gastbeitrag für den Dorfanzeiger über einen privaten Link (/gastbeitrag/:schluessel).
 // Ohne Hauptnavigation; der Beitrag landet im Vereinsheim und erscheint erst nach dem Okay eines Mitglieds.
-import { links } from '~/navigation'
+
+const verein = useVerein()
 
 definePageMeta({ layout: 'schlicht' })
 
@@ -24,7 +25,7 @@ const form = reactive({
   autor_in: '',
   email: '',
   rechte: false,
-  website: '',
+  website: '', turnstile: '',
 })
 
 // Foto: wird im Browser verkleinert und erst beim Absenden mitgeschickt
@@ -83,7 +84,7 @@ function absenden() {
         <template v-if="einladung?.grund === 'eingereicht'">Über diesen Link wurde schon ein Beitrag eingereicht. Wir schauen ihn uns an und melden uns.</template>
         <template v-else>Vielleicht ist er abgelaufen oder hat einen Tippfehler.</template>
         Du willst trotzdem etwas für den Dorfanzeiger schreiben? Schreib uns an
-        <a :href="`mailto:${links.kontaktMail}`" class="gast__mail">{{ links.kontaktMail }}</a>.
+        <a :href="`mailto:${verein.kontakt_email}`" class="gast__mail">{{ verein.kontakt_email }}</a>.
       </p>
       <BasisKnopf to="/">Zur Startseite</BasisKnopf>
     </div>
@@ -174,6 +175,7 @@ function absenden() {
         <div class="nur-screenreader" aria-hidden="true">
           <label>Website <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off"></label>
         </div>
+        <BasisTurnstile v-model="form.turnstile" />
 
         <p v-if="status === 'fehler'" class="gast__fehler" role="alert">{{ fehler }}</p>
         <BasisKnopf type="submit" :disabled="status === 'sendet'" class="gast__senden">

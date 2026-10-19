@@ -3,7 +3,7 @@ import { texte } from '~/texte'
 
 const t = texte.mitmachen.ideenwand
 const { eintraege, status, fehler, neuId, anpinnen } = usePinnwand<Idee>('/api/ideen')
-const form = reactive({ name: '', text: '', website: '' })
+const form = reactive({ name: '', text: '', website: '', turnstile: '' })
 
 // Post-its in wechselnden Farben und Drehungen
 const farben = ['gelb', 'pfirsich', 'flieder', 'weiss'] as const
@@ -27,6 +27,7 @@ async function absenden() {
         <div class="nur-screenreader" aria-hidden="true">
           <label>Website <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off"></label>
         </div>
+        <BasisTurnstile v-model="form.turnstile" />
         <BasisKnopf type="submit" :disabled="status === 'sendet'" class="wand__knopf">
           {{ status === 'sendet' ? 'Wird angepinnt …' : 'Anpinnen' }}
         </BasisKnopf>

@@ -1,5 +1,6 @@
 // POST /api/mitgliedsantrag – Mitgliedsantrag.
-// Vorerst nur Prüfung + Log. Später: in Directus `mitgliedsantraege` (Status `eingereicht`), Mail an den Vorstand.
+// Speichert in Directus `mitgliedsantraege` (Status `eingereicht`), schickt eine Eingangsbestätigung
+// mit Beitrag und Konto und gibt dem Vorstand Bescheid.
 export default defineEventHandler(async (event) => {
   rateLimit(event, 'mitgliedsantrag', 3)
   const body = await leseBody(event)
@@ -43,6 +44,36 @@ export default defineEventHandler(async (event) => {
   if (body.satzung !== true) throw fail(400, 'satzung', 'Bitte bestätige, dass du die Satzung gelesen hast.')
   if (body.einwilligung !== true) throw fail(400, 'einwilligung', 'Bitte stimm der Verarbeitung deiner Angaben zu.')
 
-  console.info('[mitgliedsantrag]', antrag)
+  await pruefeTurnstile(event, body)
+  // Satzung gilt mit dem Antrag als anerkannt (§ 4) – Zeitpunkt als Textform-Nachweis
+  await directusAnlegen('mitgliedsantraege', { ...antrag, satzung_anerkannt_am: new Date().toISOString() })
+
+  const konto = await ladeVerein()
+  const artText = art === 'foerder' ? 'Fördermitglied' : 'reguläres Mitglied'
+  const betrag = beitrag.art === 'foerder' ? `${beitrag.monat} € im Monat (${beitragJahr} € im Jahr)` : `${beitragJahr} € im Jahr`
+  const zweck = `Mitgliedsbeitrag ${antrag.vorname} ${antrag.nachname}`
+  await sendeMailStill({
+    an: antrag.email,
+    betreff: 'Dein Mitgliedsantrag ist da',
+    tags: ['mitgliedsantrag'],
+    text: [
+      `Hallo ${antrag.vorname},`,
+      `danke für deinen Antrag – du willst ${artText} bei Königsdorf rückt zusammen e.V. werden. Wie schön!`,
+      'Der Vorstand schaut sich den Antrag an und meldet sich bei dir, sobald er entschieden hat.',
+      `Dein Beitrag: ${betrag}\nKonto: ${konto.kontoinhaber}\nIBAN: ${konto.iban}\nVerwendungszweck: ${zweck}`,
+      'Am einfachsten richtest du einen Dauerauftrag ein. Fragen? Antworte einfach auf diese Mail.',
+      GRUSS,
+    ].join('\n\n'),
+  })
+  await mailAnVerein(
+    `Neuer Mitgliedsantrag: ${antrag.vorname} ${antrag.nachname} (${artText})`,
+    [
+      `${antrag.vorname} ${antrag.nachname}, ${antrag.strasse}, ${antrag.plz} ${antrag.ort}\n${antrag.email}${antrag.telefon ? ` · ${antrag.telefon}` : ''}`,
+      `Beitrag: ${betrag}${art === 'regulaer' ? '\nWar laut eigener Angabe schon beim Plenum.' : ''}`,
+      antrag.nachricht ? `Nachricht: ${antrag.nachricht}` : '',
+      'Entscheiden im Vereinsheim bzw. in Directus unter „mitgliedsantraege“.',
+    ].filter(Boolean).join('\n\n'),
+    antrag.email,
+  )
   return { ok: true }
 })

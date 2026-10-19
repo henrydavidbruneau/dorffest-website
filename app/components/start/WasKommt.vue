@@ -2,10 +2,10 @@
 import { texte } from '~/texte'
 
 const t = texte.start.wasKommt
-const { data: termine } = await useTermine({ hervorgehoben: true, limit: 4 })
-// der nächste Termin als große Kachel, die folgenden als Zettel
+const { data: termine } = await useTermine({ hervorgehoben: true, limit: 3 })
+// Band: der nächste Termin. Zettel: die nächsten drei – der nächste taucht dort bewusst noch einmal auf.
 const naechster = computed(() => termine.value[0] ?? null)
-const weitere = computed(() => termine.value.slice(1, 4))
+const weitere = computed(() => termine.value.slice(0, 3))
 
 // Drehung der Zettel wie im Design
 const drehungen = [-1.3, 0.8, -0.5]

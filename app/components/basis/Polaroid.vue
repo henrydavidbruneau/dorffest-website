@@ -19,7 +19,7 @@ withDefaults(
 <template>
   <figure class="polaroid" :style="{ '--drehung': `${drehung}deg` }">
     <BasisKlebeband v-if="tape" :position="tape" :farbe="tapeFarbe" />
-    <NuxtImg :src="src" :alt="alt" :width="breite" :height="hoehe" class="polaroid__bild" />
+    <NuxtImg :src="src" :provider="bildAnbieter(src)" :alt="alt" :width="breite" :height="hoehe" class="polaroid__bild" />
     <figcaption v-if="unterschrift" class="polaroid__unterschrift handschrift">
       {{ unterschrift }}
     </figcaption>

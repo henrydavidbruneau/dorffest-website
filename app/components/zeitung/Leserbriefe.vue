@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Leserbriefe: angepinnte Zeitungsschnipsel + Zettel zum Selberschreiben
 const { eintraege, status, fehler, neuId, anpinnen } = usePinnwand<Leserbrief>('/api/leserbriefe')
-const form = reactive({ name: '', text: '', website: '' })
+const form = reactive({ name: '', text: '', website: '', turnstile: '' })
 
 // leichte, feste Unregelmäßigkeit je Brief
 const drehung = (i: number) => [-1.6, 1.2, -0.6, 1.8, -1.2, 0.8][i % 6]
@@ -45,6 +45,7 @@ async function absenden() {
           <div class="nur-screenreader" aria-hidden="true">
             <label>Website <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off"></label>
           </div>
+          <BasisTurnstile v-model="form.turnstile" />
           <p v-if="status === 'fehler'" class="brief__fehler" role="alert">{{ fehler }}</p>
           <p v-else-if="status === 'fertig'" class="brief__danke" role="status">Danke! Dein Brief hängt jetzt an der Wand.</p>
           <BasisKnopf type="submit" groesse="klein" :disabled="status === 'sendet'">

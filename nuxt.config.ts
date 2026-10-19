@@ -30,7 +30,14 @@ export default defineNuxtConfig({
     directusUrl: '',
     directusToken: '',
     brevoApiKey: '',
+    // Brevo-Liste für den Newsletter (Zahl aus Brevo → Kontakte → Listen)
+    brevoNewsletterListe: '',
+    // Absender bei Brevo (Domain muss dort verifiziert sein)
+    mailVon: 'kontakt@koenigsdorf-rueckt-zusammen.de',
+    mailVonName: 'Königsdorf rückt zusammen',
     turnstileSecretKey: '',
+    // Schlüssel für signierte Bestätigungs-/Abmeldelinks (Plenum-Erinnerung)
+    linkSecret: '',
     public: {
       siteUrl: 'https://königsdorf-rückt-zusammen.de',
       turnstileSiteKey: '',
@@ -44,6 +51,9 @@ export default defineNuxtConfig({
   // Es gibt keine eigene Terminübersicht – alle Termine stehen auf der Startseite unter "Was kommt"
   routeRules: {
     '/termine': { redirect: '/#was-kommt' },
+    // Vereinsheim: nur im Browser (Session über httpOnly-Cookies), nie in Suchmaschinen
+    '/vereinsheim/**': { ssr: false, headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
+    '/vereinsheim': { ssr: false, headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
   },
 
   // Schriften aus Figma, von @nuxt/fonts heruntergeladen und lokal ausgeliefert
@@ -57,6 +67,11 @@ export default defineNuxtConfig({
 
   image: {
     format: ['webp'],
+    // Bilder aus Directus: <NuxtImg :src="datei-id" provider="directus"> → /bilder/:id?width=…
+    // (Server-Route mit dem Server-Token, siehe server/routes/bilder/[id].get.ts)
+    directus: {
+      baseURL: '/bilder/',
+    },
   },
 
   eslint: {

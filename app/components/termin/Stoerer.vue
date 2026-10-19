@@ -9,7 +9,7 @@ const props = defineProps<{ termin: TerminDetail }>()
 const anmeldung = useFormular(() => `/api/termine/${props.termin.slug}/anmeldung`)
 const beitrag = useFormular(() => `/api/termine/${props.termin.slug}/beitrag`)
 
-const form = reactive({ name: '', email: '', personen: 1, nachricht: '', mitbringen: '', einwilligung: false, website: '' })
+const form = reactive({ name: '', email: '', personen: 1, nachricht: '', mitbringen: '', einwilligung: false, website: '', turnstile: '' })
 const seite = ref<1 | 2>(1)
 const pruefFehler = ref('')
 const zettel = ref<HTMLElement>()
@@ -74,7 +74,7 @@ async function absenden() {
   if (nurMitbringen.value) {
     if (!form.mitbringen.trim()) return (pruefFehler.value = 'Was bringst du mit?')
     if (!form.name.trim()) return (pruefFehler.value = 'Bitte gib deinen Namen an.')
-    return beitrag.senden({ name: form.name, was: form.mitbringen, email: form.email, website: form.website })
+    return beitrag.senden({ name: form.name, was: form.mitbringen, email: form.email, website: form.website, turnstile: form.turnstile })
   }
   if (zweiSeiten.value && seite.value === 1) return zuSeite(2)
   pruefFehler.value = pruefeSeite1()
@@ -138,6 +138,7 @@ async function absenden() {
         <div class="nur-screenreader" aria-hidden="true">
           <label>Website <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off"></label>
         </div>
+        <BasisTurnstile v-model="form.turnstile" />
 
         <label v-if="mitAnmeldung && (!zweiSeiten || seite === 2)" class="stoerer__einwilligung">
           <input v-model="form.einwilligung" type="checkbox" required>

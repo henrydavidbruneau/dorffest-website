@@ -26,7 +26,7 @@ const datum = computed(() => {
   <article class="teaser" :class="`teaser--${variante}`">
     <NuxtImg
       v-if="mitBild"
-      :src="artikel.bild!"
+      :src="artikel.bild!" :provider="bildAnbieter(artikel.bild)"
       :alt="artikel.bild_alt ?? ''"
       width="740"
       height="490"

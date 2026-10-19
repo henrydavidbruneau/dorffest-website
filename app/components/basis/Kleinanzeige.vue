@@ -4,20 +4,18 @@ const props = defineProps<{
   ebene?: 2 | 3 | 4
 }>()
 
-const ART: Record<KleinanzeigeArt, string> = {
-  gesucht: 'Gesucht',
-  biete: 'Biete',
-  gefunden: 'Gefunden',
-}
-
 const tag = computed(() => `h${props.ebene ?? 3}`)
+// Antwort per Mail, Betreff „Kleinanzeige: …“
+const link = computed(() => props.anzeige.ziel_email
+  ? `mailto:${props.anzeige.ziel_email}?subject=${encodeURIComponent(`Kleinanzeige: ${props.anzeige.ueberschrift}`)}`
+  : null)
 </script>
 
 <template>
   <article class="kleinanzeige">
-    <component :is="tag" class="kleinanzeige__titel">{{ ART[anzeige.art] }}: {{ anzeige.titel }}</component>
-    <p class="kleinanzeige__text">{{ anzeige.text }}</p>
-    <a v-if="anzeige.link" :href="anzeige.link" class="kleinanzeige__link handschrift">
+    <component :is="tag" class="kleinanzeige__titel">{{ anzeige.ueberschrift }}</component>
+    <p v-if="anzeige.kurzbeschreibung" class="kleinanzeige__text">{{ anzeige.kurzbeschreibung }}</p>
+    <a v-if="link" :href="link" class="kleinanzeige__link handschrift">
       → {{ anzeige.link_text ?? 'melde dich!' }}
     </a>
   </article>

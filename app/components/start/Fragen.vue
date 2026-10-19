@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { links } from '~/navigation'
 import { texte } from '~/texte'
+
+const verein = useVerein()
 
 const { data: fragen } = await useFaq()
 </script>
@@ -13,7 +14,7 @@ const { data: fragen } = await useFaq()
         <BasisNotizzettel farbe="papier" befestigung="klammer" :drehung="-2.5" class="fragen__notiz">
           <p class="handschrift">
             {{ texte.start.fragen.notiz }}<br>
-            <a :href="`mailto:${links.kontaktMail}`" class="fragen__mail">{{ links.kontaktMail }}</a>
+            <a :href="`mailto:${verein.kontakt_email}`" class="fragen__mail">{{ verein.kontakt_email }}</a>
           </p>
         </BasisNotizzettel>
       </div>

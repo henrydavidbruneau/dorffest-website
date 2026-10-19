@@ -1,6 +1,6 @@
 // POST /api/termine/:slug/anmeldung – Anmeldung zu einem Termin.
 // Enthält optional auch "Was bringst du mit?".
-// Vorerst nur Prüfung + Log. Später: in Directus `anmeldungen` (+ `beitraege`) speichern, Bestätigungsmail über Brevo.
+// Speichert in Directus `anmeldungen` und schickt eine Bestätigung (Brevo).
 export default defineEventHandler(async (event) => {
   rateLimit(event, 'anmeldung')
   const body = await leseBody(event)
@@ -25,6 +25,25 @@ export default defineEventHandler(async (event) => {
     throw fail(409, 'ausgebucht', termin.plaetze_frei === 0 ? 'Leider sind schon alle Plätze vergeben.' : `Es sind nur noch ${termin.plaetze_frei} Plätze frei.`)
   }
 
-  console.info('[anmeldung]', { termin: termin.slug, name, email: mail, personen, nachricht, mitbringen })
+  await pruefeTurnstile(event, body)
+  await directusAnlegen('anmeldungen', { termin: termin.id, name, email: mail, personen, nachricht, mitbringen })
+
+  const wann = termin.beginn
+    ? `${datumAusgeschrieben(termin.beginn)}${termin.uhrzeit_folgt ? ' (Uhrzeit folgt)' : `, ${uhrzeit(termin.beginn)} Uhr`}`
+    : (termin.datum_text ?? 'Datum folgt')
+  const wo = [termin.ort, termin.adresse].filter(Boolean).join(', ') || 'Ort folgt'
+  await sendeMailStill({
+    an: mail,
+    betreff: `Du bist angemeldet: ${termin.titel}`,
+    tags: ['anmeldung'],
+    text: [
+      `Hallo ${name},`,
+      `schön, dass du dabei bist! Wir haben dich für „${termin.titel}“ angemeldet${personen > 1 ? ` – mit ${personen} Personen` : ''}.`,
+      `Wann: ${wann}\nWo: ${wo}${mitbringen ? `\nDu bringst mit: ${mitbringen}` : ''}`,
+      `Alle Infos: ${seitenUrl(event)}/termine/${termin.slug}`,
+      'Du kannst doch nicht? Antworte einfach auf diese Mail, dann geben wir deinen Platz weiter.',
+      GRUSS,
+    ].join('\n\n'),
+  })
   return { ok: true }
 })
