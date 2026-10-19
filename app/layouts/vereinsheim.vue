@@ -1,20 +1,22 @@
 <script setup lang="ts">
-// Vereinsheim: Holzleiste mit Schild oben, Karteireiter als Navigation, darunter die Korkwand.
+// Vereinsheim im Look der Website: lila Kopf mit Navigation, darunter cremefarbener Grund.
+// Seiten mit `vollbreit: true` (Dashboard, Dorfanzeiger) bringen ihren eigenen Hintergrund mit.
 const { ich } = useVereinsheimIch()
 const { meldung } = useVereinsheimMeldung()
 const route = useRoute()
 
 const reiter = computed(() => [
-  { text: 'Schwarzes Brett', to: '/vereinsheim' },
+  { text: 'Dashboard', to: '/vereinsheim' },
   { text: 'Termine', to: '/vereinsheim/termine' },
   { text: 'Dorfanzeiger', to: '/vereinsheim/dorfanzeiger' },
-  { text: 'Mitmachen', to: '/vereinsheim/mitmachen' },
+  { text: 'Ideensammlung', to: '/vereinsheim/ideensammlung' },
   { text: 'Über uns', to: '/vereinsheim/ueber-uns' },
-  { text: 'Kassenbuch', to: '/vereinsheim/kassenbuch' },
+  { text: 'Kasse', to: '/vereinsheim/kassenbuch' },
   ...(ich.value?.vorstand ? [{ text: 'Mitglieder', to: '/vereinsheim/mitglieder' }] : []),
 ])
 
 const aktiv = (to: string) => (to === '/vereinsheim' ? route.path === to : route.path.startsWith(to))
+const vollbreit = computed(() => !!route.meta.vollbreit)
 
 const menueOffen = ref(false)
 watch(() => route.fullPath, () => (menueOffen.value = false))
@@ -29,40 +31,34 @@ async function abmelden() {
 <template>
   <div class="vh">
     <a href="#inhalt" class="vh__sprunglink">Zum Inhalt springen</a>
-    <header class="vh__leiste">
-      <div class="vh__leiste-innen">
-        <NuxtLink to="/vereinsheim" class="vh__schild">
-          <img src="/logo-mobil.svg" alt="" width="512" height="245" class="vh__logo">
-          <span class="vh__schild-text">Vereinsheim</span>
+    <header class="vh__kopf">
+      <div class="vh__leiste">
+        <NuxtLink to="/vereinsheim" class="vh__marke">
+          <img src="/logo-mobil.svg" alt="Königsdorf rückt zusammen" width="512" height="245" class="vh__logo">
+          <span class="vh__heim handschrift">Vereinsheim</span>
         </NuxtLink>
-        <div class="vh__person">
-          <NuxtLink to="/vereinsheim/konto" class="vh__konto">{{ ich?.first_name || ich?.benutzername || 'Mein Konto' }}</NuxtLink>
-          <button type="button" class="vh__raus" @click="abmelden">Tschüss&nbsp;👋</button>
-          <NuxtLink to="/" class="vh__website">zur Website</NuxtLink>
-        </div>
-        <button type="button" class="vh__menue-knopf" :aria-expanded="menueOffen" aria-controls="vh-reiter" @click="menueOffen = !menueOffen">
+
+        <button type="button" class="vh__menueknopf" :aria-expanded="menueOffen" aria-controls="vh-nav" @click="menueOffen = !menueOffen">
           {{ menueOffen ? 'Zu' : 'Menü' }}
         </button>
+
+        <nav id="vh-nav" class="vh__nav" :class="{ 'vh__nav--offen': menueOffen }" aria-label="Vereinsheim">
+          <ul class="vh__liste">
+            <li v-for="r in reiter" :key="r.to">
+              <NuxtLink :to="r.to" class="vh__link" :aria-current="aktiv(r.to) ? 'page' : undefined">{{ r.text }}</NuxtLink>
+            </li>
+          </ul>
+          <div class="vh__person">
+            <NuxtLink to="/vereinsheim/konto" class="vh__name handschrift" :aria-current="aktiv('/vereinsheim/konto') ? 'page' : undefined">
+              {{ ich?.first_name || ich?.benutzername || 'Mein Konto' }}
+            </NuxtLink>
+            <BasisKnopf variante="hell" groesse="klein" @click="abmelden">Tschüss</BasisKnopf>
+          </div>
+        </nav>
       </div>
-      <nav id="vh-reiter" class="vh__reiter" :class="{ 'vh__reiter--offen': menueOffen }" aria-label="Vereinsheim">
-        <NuxtLink
-          v-for="r in reiter"
-          :key="r.to"
-          :to="r.to"
-          class="vh__reiter-link"
-          :aria-current="aktiv(r.to) ? 'page' : undefined"
-        >
-          {{ r.text }}
-        </NuxtLink>
-        <div class="vh__reiter-extra">
-          <NuxtLink to="/vereinsheim/konto" class="vh__reiter-link">Mein Konto</NuxtLink>
-          <button type="button" class="vh__reiter-link" @click="abmelden">Tschüss 👋</button>
-          <NuxtLink to="/" class="vh__reiter-link">zur Website</NuxtLink>
-        </div>
-      </nav>
     </header>
 
-    <main id="inhalt" class="vh__wand" tabindex="-1">
+    <main id="inhalt" class="vh__inhalt" :class="{ 'vh__inhalt--vollbreit': vollbreit }" tabindex="-1">
       <slot />
     </main>
 
@@ -76,16 +72,10 @@ async function abmelden() {
 
 <style scoped>
 .vh {
-  /* Holz und Kork nur im Vereinsheim */
-  --holz: #6e4526;
-  --holz-hell: #8a5a33;
-  --kork: #c79d6c;
-  --kork-dunkel: #b0844f;
-  --farbe-fokus: var(--farbe-lila);
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--kork);
+  background: var(--farbe-creme);
   overflow-x: clip;
 }
 
@@ -103,153 +93,105 @@ async function abmelden() {
   top: 1rem;
 }
 
-/* ---------- Holzleiste ---------- */
-.vh__leiste {
+/* ---------- Kopf ---------- */
+.vh__kopf {
   --farbe-fokus: var(--farbe-gelb);
-  position: relative;
-  z-index: 2;
-  background:
-    repeating-linear-gradient(90deg, rgb(0 0 0 / 0.04) 0 2px, transparent 2px 9px),
-    linear-gradient(180deg, var(--holz-hell), var(--holz));
-  color: var(--farbe-creme);
-  box-shadow: 0 4px 10px rgb(0 0 0 / 0.25);
+  background: var(--farbe-lila);
+  color: var(--farbe-pfirsich);
 }
 
-.vh__leiste-innen {
+.vh__leiste {
   display: flex;
   align-items: center;
-  gap: var(--abstand-m);
-  max-width: var(--inhaltsbreite);
+  gap: var(--abstand-s) var(--abstand-l);
+  max-width: calc(var(--inhaltsbreite) + 2 * var(--seitenrand));
   margin-inline: auto;
-  padding: var(--abstand-s) var(--seitenrand) var(--abstand-2xs);
+  padding: var(--abstand-m) var(--seitenrand);
 }
 
-.vh__schild {
-  display: inline-flex;
-  align-items: center;
+.vh__marke {
+  display: flex;
+  align-items: flex-end;
   gap: var(--abstand-xs);
-  padding: 0.4rem 0.9rem 0.4rem 0.5rem;
-  border: 2px solid var(--farbe-schwarz);
-  border-radius: var(--radius-m);
-  background: var(--farbe-gelb);
-  color: var(--farbe-schwarz);
   text-decoration: none;
-  box-shadow: 3px 3px 0 rgb(0 0 0 / 0.35);
-  rotate: -1.5deg;
 }
 
 .vh__logo {
-  width: 4.5rem;
+  width: clamp(5.5rem, 8vw, 7.5rem);
   height: auto;
 }
 
-.vh__schild-text {
+.vh__heim {
+  margin-bottom: -0.4rem;
+  font-size: var(--groesse-hand-m);
+  color: var(--farbe-pfirsich);
+  rotate: -4deg;
+}
+
+.vh__menueknopf {
+  display: none;
+}
+
+.vh__nav {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--abstand-m);
+}
+
+.vh__liste {
+  display: flex;
+  gap: 0.3rem clamp(0.7rem, 1.2vw, 1.25rem);
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.vh__link {
   font-family: var(--schrift-display);
   font-weight: var(--gewicht-display);
-  font-size: clamp(1.4rem, 2.5vw, 2rem);
-  text-transform: uppercase;
-  line-height: 1;
+  font-size: 1.1rem;
+  color: var(--farbe-pfirsich);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.vh__link:hover,
+.vh__link[aria-current='page'] {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.3em;
 }
 
 .vh__person {
   display: flex;
+  flex: none;
   align-items: center;
   gap: var(--abstand-s);
-  margin-left: auto;
-  font-size: var(--groesse-xs);
 }
 
-.vh__konto,
-.vh__website {
-  color: var(--farbe-creme);
-}
-
-.vh__konto {
-  font-family: var(--schrift-hand);
-  font-size: var(--groesse-hand-s);
+.vh__name {
+  font-size: var(--groesse-hand-m);
+  color: var(--farbe-pfirsich);
   text-decoration: none;
 }
 
-.vh__raus {
-  padding: 0.3rem 0.8rem;
-  border: 1.5px solid var(--farbe-creme);
-  border-radius: var(--radius-m);
-  background: transparent;
-  color: var(--farbe-creme);
-  font: inherit;
-  cursor: pointer;
+.vh__name:hover {
+  text-decoration: underline;
 }
 
-.vh__raus:hover {
-  background: rgb(255 255 255 / 0.12);
-}
-
-.vh__menue-knopf,
-.vh__reiter-extra {
-  display: none;
-}
-
-/* ---------- Karteireiter ---------- */
-.vh__reiter {
-  display: flex;
-  gap: 0.3rem;
-  max-width: var(--inhaltsbreite);
-  margin-inline: auto;
-  padding: var(--abstand-2xs) var(--seitenrand) 0;
-  overflow-x: auto;
-}
-
-.vh__reiter-link {
-  flex: none;
-  padding: 0.55rem 1rem 0.5rem;
-  border: 1.5px solid var(--farbe-schwarz);
-  border-bottom: 0;
-  border-radius: 0.6rem 0.6rem 0 0;
-  background: var(--farbe-pfirsich);
-  color: var(--farbe-schwarz);
-  font-family: var(--schrift-display);
-  font-weight: var(--gewicht-display);
-  font-size: 1rem;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  text-decoration: none;
-  translate: 0 0.25rem;
-  transition: translate var(--dauer-kurz);
-}
-
-.vh__reiter-link:nth-child(3n + 2) {
-  background: var(--farbe-gelb);
-}
-
-.vh__reiter-link:nth-child(3n) {
-  background: var(--farbe-tape-flieder);
-}
-
-.vh__reiter-link:hover {
-  translate: 0 0;
-}
-
-.vh__reiter-link[aria-current='page'] {
-  background: var(--farbe-creme);
-  translate: 0 0;
-  box-shadow: 0 -2px 0 var(--farbe-orange) inset;
-}
-
-/* ---------- Korkwand ---------- */
-.vh__wand {
+/* ---------- Inhalt ---------- */
+.vh__inhalt {
   flex: 1;
-  padding: var(--abstand-l) var(--seitenrand) var(--abstand-xl);
-  /* Korkkörnung: zwei versetzte Punktraster + leichte Wolken */
-  background-color: var(--kork);
-  background-image:
-    radial-gradient(circle at 20% 30%, var(--kork-dunkel) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 70% 80%, rgb(255 255 255 / 0.18) 0 1px, transparent 1.5px),
-    radial-gradient(ellipse at 30% 10%, rgb(255 255 255 / 0.12), transparent 60%),
-    radial-gradient(ellipse at 80% 90%, rgb(0 0 0 / 0.1), transparent 55%);
-  background-size: 7px 7px, 11px 11px, 100% 100%, 100% 100%;
+  padding: var(--abstand-xl) var(--seitenrand);
 }
 
-.vh__wand:focus {
+.vh__inhalt--vollbreit {
+  padding: 0;
+}
+
+.vh__inhalt:focus {
   outline: none;
 }
 
@@ -287,62 +229,47 @@ async function abmelden() {
   from { opacity: 0; translate: 0 1rem; }
 }
 
-@media (max-width: 760px) {
-  .vh__person {
-    display: none;
-  }
-
-  .vh__menue-knopf {
+@media (max-width: 80rem) {
+  .vh__menueknopf {
     display: block;
     margin-left: auto;
     padding: 0.4rem 0.9rem;
-    border: 1.5px solid var(--farbe-creme);
+    border: 1.5px solid var(--farbe-pfirsich);
     border-radius: var(--radius-m);
     background: transparent;
-    color: var(--farbe-creme);
+    color: var(--farbe-pfirsich);
     font: inherit;
   }
 
-  .vh__reiter {
-    display: none;
-    flex-direction: column;
-    padding-bottom: var(--abstand-s);
+  .vh__leiste {
+    flex-wrap: wrap;
   }
 
-  .vh__reiter--offen,
-  .vh__reiter-extra {
+  .vh__nav {
+    display: none;
+    flex-basis: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .vh__nav--offen {
     display: flex;
   }
 
-  .vh__reiter-extra {
+  .vh__liste {
     flex-direction: column;
-    gap: 0.3rem;
-    margin-top: var(--abstand-2xs);
+    margin: 0;
   }
 
-  button.vh__reiter-link {
-    font: inherit;
-    font-family: var(--schrift-display);
-    text-align: left;
-    cursor: pointer;
-  }
-
-  .vh__reiter-link {
-    border-bottom: 1.5px solid var(--farbe-schwarz);
-    border-radius: var(--radius-m);
-    translate: none;
+  .vh__link {
+    font-size: 1.5rem;
   }
 }
 
 @media print {
-  .vh__leiste,
+  .vh__kopf,
   .vh__meldung-ort {
     display: none;
-  }
-
-  .vh,
-  .vh__wand {
-    background: none;
   }
 }
 
