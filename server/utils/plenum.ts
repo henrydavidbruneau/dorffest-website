@@ -21,13 +21,13 @@ export async function erinnereAnsPlenum(event: H3Event, plenum: PlenumTermin, be
     an: abo.email,
     betreff: `Erinnerung: ${plenum.titel} am ${tagMonat(beginn)}`,
     tags: ['plenum-erinnerung'],
+    ...(abmelden ? { abmelden } : {}),
     text: [
       `Hallo ${abo.name || 'du'},`,
       'das nächste Plenum steht an – komm vorbei, hier wird entschieden, was wir als Nächstes machen!',
       `Wann: ${wann}\nWo: ${wo}`,
-      `Alle Infos: ${seitenUrl(event)}/termine/${plenum.slug}`,
+      `[Alle Infos zum Plenum](${seitenUrl(event)}/termine/${plenum.slug})`,
       abo.wie === 'naechstes' ? 'Du wolltest nur an dieses Plenum erinnert werden – danach schreiben wir dir nicht mehr.' : '',
-      abmelden ? `Keine Erinnerungen mehr? ${abmelden}` : '',
       GRUSS,
     ].filter(Boolean).join('\n\n'),
   }).then(() => true, (err) => {

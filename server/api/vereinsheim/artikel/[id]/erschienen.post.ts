@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
       text: [
         `Hallo ${b.autor_in},`,
         'dein Beitrag steht jetzt im Königsdorfer Dorfanzeiger – danke, dass du mitgeschrieben hast!',
-        `${seitenUrl(event)}/dorfanzeiger/${artikel.slug}`,
+        `[Zum Artikel](${seitenUrl(event)}/dorfanzeiger/${artikel.slug})`,
         'Erzähl’s gern weiter. Und wenn du wieder etwas zu erzählen hast: Wir freuen uns.',
         GRUSS,
       ].join('\n\n'),

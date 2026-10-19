@@ -73,6 +73,7 @@ async function erinnerungLoeschen(e: Erinnerung) {
 // Vorschau der Rundmail, so wie sie bei der ersten Person ankommt
 const vorschauAn = computed(() => angemeldet.value[0] ?? nurErinnerung.value[0] ?? null)
 const vorschauText = computed(() => [`Hallo ${vorschauAn.value?.name || 'du'},`, mail.text.trim() || '…', GRUSS].join('\n\n'))
+const vorschauHtml = computed(() => mailHtml(vorschauText.value, { basis: window.location.origin }))
 
 const kopfDatum = computed(() => (regelmaessig.value ? gewaehlt.value : data.value?.termin.beginn) || null)
 
@@ -204,15 +205,15 @@ watch(() => data.value?.termin, (t) => {
         <p>Jede*r bekommt die Mail einzeln mit persönlicher Anrede („Hallo …“) und unserem Gruß darunter.<template v-if="nurErinnerung.length"> Auch an die {{ nurErinnerung.length }}, die ans Plenum erinnert werden wollen (mit Abmelde-Link).</template></p>
         <form class="anm__form" @submit.prevent="rundmail">
           <BasisFeld v-model="mail.betreff" label="Betreff" name="betreff" required :maxlength="200" />
-          <BasisFeld v-model="mail.text" label="Text" name="text" required mehrzeilig :zeilen="7" />
+          <BasisFeld v-model="mail.text" label="Text" name="text" required mehrzeilig :zeilen="7" hinweis="Leerzeile = neuer Absatz. **fett** · [Knopftext](https://…) allein in einer Zeile wird ein Knopf." />
           <div v-if="vorschauAn" class="anm__vorschau" aria-live="polite">
             <p class="anm__vorschau-titel">Vorschau</p>
             <dl class="anm__vorschau-kopf">
               <dt>An</dt><dd>{{ vorschauAn.name || vorschauAn.email }}{{ empfaengerAnzahl > 1 ? ` (und ${empfaengerAnzahl - 1} weitere, jede*r einzeln)` : '' }}</dd>
               <dt>Betreff</dt><dd>{{ mail.betreff || '…' }}</dd>
             </dl>
-            <p class="anm__vorschau-text">{{ vorschauText }}</p>
-            <p v-if="nurErinnerung.length" class="anm__vorschau-hinweis">Wer nur ans Plenum erinnert werden will, bekommt vor dem Gruß noch einen Abmelde-Link.</p>
+            <iframe :srcdoc="vorschauHtml" title="Vorschau der Mail" class="anm__vorschau-mail" sandbox="" />
+            <p v-if="nurErinnerung.length" class="anm__vorschau-hinweis">Wer nur ans Plenum erinnert werden will, bekommt unten noch einen Abmelde-Link.</p>
           </div>
           <BasisKnopf type="submit" :disabled="sendet || !empfaengerAnzahl">{{ sendet ? 'Wird gesendet …' : `An ${empfaengerAnzahl} schicken` }}</BasisKnopf>
         </form>
@@ -448,10 +449,14 @@ watch(() => data.value?.termin, (t) => {
   overflow-wrap: anywhere;
 }
 
-.anm__vorschau-text {
-  margin: var(--abstand-xs) 0 0;
-  font-size: var(--groesse-s);
-  white-space: pre-line;
+.anm__vorschau-mail {
+  display: block;
+  width: 100%;
+  height: 32rem;
+  margin-top: var(--abstand-xs);
+  border: 0;
+  border-radius: var(--vh-radius);
+  background: var(--farbe-lila);
 }
 
 .anm__vorschau-hinweis {

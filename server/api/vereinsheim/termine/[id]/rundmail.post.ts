@@ -31,7 +31,8 @@ export default defineEventHandler(async (event) => {
       an: a.email,
       betreff,
       tags: ['rundmail'],
-      text: [`Hallo ${a.name || 'du'},`, inhalt, abmelden ? `Keine Plenum-Erinnerungen mehr? ${abmelden}` : '', GRUSS].filter(Boolean).join('\n\n'),
+      text: [`Hallo ${a.name || 'du'},`, inhalt, GRUSS].join('\n\n'),
+      ...(abmelden ? { abmelden } : {}),
     }).then(() => gesendet++, e => console.error('[rundmail]', a.email, e?.data ?? e))
   }
   await directusPerson(event, '/items/termin_rundmails', {

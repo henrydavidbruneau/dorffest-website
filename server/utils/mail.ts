@@ -1,5 +1,5 @@
 // Mails über die Brevo-Transactional-API (Muster aus DPAT). Text schreiben wir selbst,
-// das HTML entsteht daraus (Absätze, Links klickbar).
+// das HTML im Look der Website entsteht daraus (`shared/utils/mailHtml.ts`).
 //
 // Ohne NUXT_BREVO_API_KEY (lokal / Deploy-Preview) wird NICHT gesendet: Empfänger, Betreff
 // und Text landen im Server-Log – so bleiben die Abläufe testbar, ohne echte Mails.
@@ -14,22 +14,19 @@ export interface Mail {
   antwortAn?: string
   /** Brevo-Tags fürs Filtern im Brevo-Log */
   tags?: string[]
+  /** Abmelde-Link im Fuß der Mail */
+  abmelden?: string
 }
 
-function escapeHtml(text: string) {
-  return text.replace(/[&<>"']/g, z => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' })[z]!)
+/** Adresse der Website für Logo und Links in Mails (Punycode – Umlaut-Domains machen in Mails Ärger) */
+export function mailBasis() {
+  return new URL(useRuntimeConfig().public.siteUrl).origin
 }
 
-function alsHtml(text: string) {
-  const absaetze = text.trim().split(/\n\s*\n/).map(a =>
-    `<p>${escapeHtml(a).replace(/https?:\/\/\S+/g, url => `<a href="${url}">${url}</a>`).replace(/\n/g, '<br>')}</p>`)
-  return `<div style="font-family: system-ui, sans-serif; font-size: 16px; line-height: 1.5; color: #1a1a1a; max-width: 560px">${absaetze.join('\n')}</div>`
-}
-
-export async function sendeMail({ an, betreff, text, antwortAn, tags }: Mail): Promise<void> {
+export async function sendeMail({ an, betreff, text, antwortAn, tags, abmelden }: Mail): Promise<void> {
   const { brevoApiKey, mailVon, mailVonName } = useRuntimeConfig()
   if (!brevoApiKey) {
-    console.info(`[mail] Kein NUXT_BREVO_API_KEY – nicht gesendet.\n  An: ${an}\n  Betreff: ${betreff}\n-----\n${text}\n-----`)
+    console.info(`[mail] Kein NUXT_BREVO_API_KEY – nicht gesendet.\n  An: ${an}\n  Betreff: ${betreff}\n-----\n${mailText(text)}${abmelden ? `\n\nAbmelden: ${abmelden}` : ''}\n-----`)
     return
   }
   await $fetch('https://api.brevo.com/v3/smtp/email', {
@@ -39,8 +36,8 @@ export async function sendeMail({ an, betreff, text, antwortAn, tags }: Mail): P
       sender: { email: mailVon, name: mailVonName },
       to: [{ email: an }],
       subject: betreff,
-      textContent: text,
-      htmlContent: alsHtml(text),
+      textContent: mailText(text) + (abmelden ? `\n\nAbmelden: ${abmelden}` : ''),
+      htmlContent: mailHtml(text, { basis: mailBasis(), abmelden }),
       ...(antwortAn ? { replyTo: { email: antwortAn } } : {}),
       ...(tags?.length ? { tags } : {}),
     },

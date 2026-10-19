@@ -24,11 +24,11 @@ export default defineEventHandler(async (event) => {
     an: mail,
     betreff: 'Bitte bestätigen: Erinnerung ans Plenum',
     tags: ['plenum-doi'],
+    abmelden: await link('abmelden'),
     text: [
       `Hallo ${name},`,
       `schön, dass du zum Plenum kommen willst! Bitte bestätige kurz, dass wir dich ${wie === 'jedes' ? 'vor jedem Plenum' : 'vor dem nächsten Plenum'} erinnern dürfen:`,
-      await link('bestaetigen'),
-      `Doch keine Erinnerung mehr? Hier abmelden: ${await link('abmelden')}`,
+      `[Ja, erinnert mich](${await link('bestaetigen')})`,
       'Du hast dich nicht angemeldet? Dann ignorier diese Mail einfach.',
       GRUSS,
     ].join('\n\n'),

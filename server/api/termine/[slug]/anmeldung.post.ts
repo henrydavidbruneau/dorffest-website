@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
       `Hallo ${name},`,
       `schön, dass du dabei bist! Wir haben dich für „${termin.titel}“ angemeldet${personen > 1 ? ` – mit ${personen} Personen` : ''}.`,
       `Wann: ${wann}\nWo: ${wo}${mitbringen ? `\n${termin.mitbringen_frage ? `Deine Antwort auf „${termin.mitbringen_frage}“` : 'Du bringst mit'}: ${mitbringen}` : ''}`,
-      `Alle Infos: ${seitenUrl(event)}/termine/${termin.slug}`,
+      `[Alle Infos zum Termin](${seitenUrl(event)}/termine/${termin.slug})`,
       'Du kannst doch nicht? Antworte einfach auf diese Mail, dann geben wir deinen Platz weiter.',
       GRUSS,
     ].join('\n\n'),

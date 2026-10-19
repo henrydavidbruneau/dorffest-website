@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     text: [
       'Hallo!',
       'Schön, dass du von uns hören willst. Bitte bestätige kurz deine Adresse – dann bekommst du neue Termine und Neuigkeiten aus dem Dorf:',
-      link,
+      `[Ja, ich will Post](${link})`,
       'Du hast dich nicht eingetragen? Dann ignorier diese Mail einfach.',
       GRUSS,
     ].join('\n\n'),
