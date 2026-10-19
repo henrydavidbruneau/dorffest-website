@@ -43,6 +43,8 @@ export default defineNuxtConfig({
     imapPort: '993',
     imapBenutzer: '',
     imapPasswort: '',
+    // Senden aus dem Vereinsheim (gleiche Zugangsdaten wie IMAP)
+    smtpHost: 'smtp.ionos.de',
     webmailUrl: 'https://mail.ionos.de',
     public: {
       siteUrl: 'https://königsdorf-rückt-zusammen.de',
