@@ -334,6 +334,18 @@ async function abmelden() {
   }
 }
 
+@media print {
+  .vh__leiste,
+  .vh__meldung-ort {
+    display: none;
+  }
+
+  .vh,
+  .vh__wand {
+    background: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .vh__meldung {
     animation: none;

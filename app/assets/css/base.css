@@ -186,3 +186,13 @@ textarea {
     scroll-behavior: auto !important;
   }
 }
+
+/* Vereinsheim: gerenderter Markdown-Text in Vorschauen (wie im Dorfanzeiger) */
+.vh-text > :first-child { margin-top: 0; }
+.vh-text p { margin: 0 0 0.9em; }
+.vh-text h2, .vh-text h3, .vh-text h4 { margin: 1.2em 0 0.4em; color: var(--farbe-lila); }
+.vh-text img { max-width: 100%; height: auto; }
+.vh-text figure { margin: 1em 0; }
+.vh-text figcaption { font-family: var(--schrift-hand); font-size: var(--groesse-hand-s); }
+.vh-text blockquote { margin: 1em 0; padding: 0.8em 1em; border-left: 4px solid var(--farbe-orange); background: var(--farbe-pfirsich); }
+.vh-text blockquote footer { margin-top: 0.4em; font-size: var(--groesse-xs); }
