@@ -1,4 +1,5 @@
 import type { DirectusEintrag } from './directus'
+import type { Wiederholung } from '../utils/wiederholung'
 
 export type MitbringenPosition = 'aus' | 'seite_1' | 'seite_2'
 
@@ -13,8 +14,13 @@ export interface Termin extends DirectusEintrag {
   uhrzeit_folgt: boolean
   /** Ersetzt die Datumsanzeige, solange `beginn` fehlt, z.B. "2026" */
   datum_text: string | null
-  /** Regelmäßiger Termin: Kurzform statt Datum, z.B. "1. Mo" (jeden ersten Montag) */
+  /** Regelmäßiger Termin: Kurzform statt Datum, z.B. "1. Mo" (leer = automatisch aus `wiederholung`) */
   rhythmus_kurz: string | null
+  /** Regelmäßig? `beginn`/`ende` sind das erste Datum (siehe shared/utils/wiederholung.ts).
+   *  Fehlt, solange das Feld in Directus noch nicht angelegt ist. */
+  wiederholung?: Wiederholung | null
+  /** letzter Tag der Wiederholung (YYYY-MM-DD) */
+  wiederholung_bis?: string | null
   /** Text statt Uhrzeit/Ort, z.B. "Termin folgt – hilf mit planen" */
   hinweis: string | null
   /** null = "Ort folgt" */
@@ -48,7 +54,10 @@ export interface Termin extends DirectusEintrag {
 }
 
 /** Termin-Detail: wie in Directus, plus serverseitig berechnete Felder */
+/** wie geliefert: bei regelmäßigen Terminen sind `beginn`/`ende` schon das nächste Datum */
 export interface TerminDetail extends Termin {
+  /** „jeden ersten Montag im Monat“ (leer bei einmaligen) */
+  wiederholung_text: string
   beschreibung_html: string
   /** freie Plätze (nur bei begrenzten Plätzen), sonst null */
   plaetze_frei: number | null

@@ -47,6 +47,12 @@ wo wir gerade sind und was als Nächstes kommt.
 - Dashboard: Kacheln springen nicht mehr (Post-Karte hat feste Mindesthöhe + Platzhalter), Plenum-Fuß ohne Datum,
   Tour-Vorschlag nach 1 s mittig mit abgedunkeltem Hintergrund. Turnstile in schmalen Spalten kompakt (Leserbrief).
 
+- **Regelmäßige Termine:** Wiederholen (jede Woche, alle zwei Wochen, monatlich gleicher Wochentag/gleiches Datum,
+  optional bis) im Termin-Formular; Website zeigt das nächste Datum. Leserbrief: eigene Überschrift, breiterer Zettel.
+  Artikel-Editor: Abschnitt „Porträt“ nur im Ressort Porträts.
+  **Bruno: `node scripts/directus-setup.mjs` ausführen** (legt `wiederholung`, `wiederholung_bis`, `leserbriefe.anrede`
+  und die Rechte an). Bis dahin läuft alles weiter, nur Wiederholen und eigene Überschriften werden noch nicht gespeichert.
+
 ## Offen / als Nächstes
 
 1. **Phase 8:** rechtliche Seiten mit echten Inhalten (Impressum: Vorstand, Registereintrag, Verantwortliche*r nach

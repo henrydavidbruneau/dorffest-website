@@ -83,7 +83,9 @@ Vorstand + Ersteller*in lesbar). Server darf Dateien lesen, die an veröffentlic
 | `ende` | Datum+Zeit, optional | |
 | `uhrzeit_folgt` | Boolean, Standard false | Datum fest, Uhrzeit offen (Kalenderdatei ganztägig) |
 | `datum_text` | Text, optional | ersetzt das Datum, solange `beginn` leer ist („2027“) |
-| `rhythmus_kurz` | Text, optional | regelmäßige Termine, z.B. „1. Mo“ (Terminkalender) |
+| `wiederholung` | Auswahl: `aus` · `woechentlich` · `zweiwoechentlich` · `monatlich_wochentag` · `monatlich_datum` | regelmäßiger Termin; `beginn`/`ende` = das erste Mal, Website/Vereinsheim rechnen das nächste aus (`shared/utils/wiederholung.ts`, Ortszeit) |
+| `wiederholung_bis` | Datum, optional | letzter Tag der Wiederholung (einschließlich) |
+| `rhythmus_kurz` | Text, optional | Kurzform im Terminkalender; leer = automatisch („1. Mo“, „jeden Mi“) |
 | `hinweis` | Text, optional | ersetzt Uhrzeit/Ort auf dem Zettel („Programm folgt – hilf mit planen“) |
 | `ort` | Text, optional | leer = „Ort folgt“ |
 | `adresse` | Text, optional | |
@@ -195,7 +197,7 @@ und als Absicherung per Directus-Flow (Filter-Hook auf create/update → Fehler,
 > (statt `art`, `titel`, `text`, `link`).
 
 ### `leserbriefe`
-`status` (`published` · `hidden`, Standard `published` – erscheint sofort), `name`, `text`
+`status` (`published` · `hidden`, Standard `published` – erscheint sofort), `anrede` (eigene Überschrift, leer = „Liebe Nachbar*innen,“), `name`, `text`
 (≤ 600 Zeichen), optional `artikel` (M2O, „zu welchem Beitrag“). Bot-Schutz über Turnstile.
 
 ### Gastbeiträge
@@ -372,7 +374,9 @@ node scripts/directus-seed.mjs              # Startinhalte
 ausführen. An vorhandene Rechte werden neue Felder angehängt; sonstige Abweichungen meldet das
 Skript nur. Stand 18.10.2026: 21 Collections, 5 Ordner, 3 Policies, 2 Rollen, 2 Flows, alles angelegt.
 **Neu seit 19.10.2026 (noch ausführen):** Ordner `profilbilder`, Feld `directus_users.tour_erledigt_am` und die
-Rechte dafür (Mitglied: lesen + eigenes Konto ändern).
+Rechte dafür (Mitglied: lesen + eigenes Konto ändern); `termine.wiederholung` + `wiederholung_bis`;
+`leserbriefe.anrede` (Server: anlegen + lesen); Server liest bei `anmeldungen` zusätzlich `date_created`
+(Plätze bei regelmäßigen Terminen je Runde). Bis dahin läuft alles ohne diese Felder weiter.
 
 ### Was angelegt ist
 

@@ -18,10 +18,11 @@ const wann = computed(() => {
   if (!t.beginn) return t.hinweis ?? 'Datum folgt'
   if (t.uhrzeit_folgt) return `${new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', year: 'numeric' }).format(new Date(t.beginn))} · Uhrzeit folgt`
   const zeit = t.ende ? `${uhrzeit(t.beginn)}–${uhrzeit(t.ende)} Uhr` : `ab ${uhrzeit(t.beginn)} Uhr`
-  const rhythmus = t.rhythmus_kurz ? ' · jeden ersten Montag im Monat' : ''
+  // regelmäßig: „Jeden ersten Montag im Monat · ab 19:00 Uhr“ (der Zettel zeigt das nächste Datum)
+  if (t.wiederholung_text) return `${t.wiederholung_text[0]!.toUpperCase()}${t.wiederholung_text.slice(1)} · ${zeit}`
   // Datum steht schon groß auf dem Zettel – hier Wochentag + Uhrzeit
   const wochentag = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long' }).format(new Date(t.beginn))
-  return `${wochentag} · ${zeit}${rhythmus}`
+  return `${wochentag} · ${zeit}`
 })
 
 const seitenUrl = useRequestURL()

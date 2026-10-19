@@ -23,7 +23,8 @@ const { data } = useAsyncData('vh-dashboard', async () => {
   }
 
   const [naechster, neuIn] = await Promise.all([
-    vh.liste<Termin>('termine', { fields: 'id,titel,slug,beginn,ort', filter: { status: { _eq: 'published' }, beginn: { _gte: '$NOW' } }, sort: 'beginn', limit: 1 }).catch(() => []),
+    // alle veröffentlichten mit Datum; regelmäßige haben ihr erstes Datum gespeichert → nächstes ausrechnen
+    vh.liste<Termin & { ende: string | null, wiederholung?: string | null, wiederholung_bis?: string | null }>('termine', { fields: '*', filter: { status: { _eq: 'published' }, beginn: { _nnull: true } } }).catch(() => []),
     Promise.all([
       neu('anmeldungen', { date_created: WOCHE }),
       neu('gastbeitraege', { status: { _eq: 'eingereicht' } }),
@@ -62,7 +63,12 @@ const { data } = useAsyncData('vh-dashboard', async () => {
   }
 
   const [anmeldungen, gastbeitraege, leserbriefe, vorschlaege, ideen, kasse, antraege] = neuIn
-  return { naechster: naechster[0] ?? null, post: eingaenge, auslagen, neu: { anmeldungen, gastbeitraege, leserbriefe, vorschlaege, ideen, kasse, antraege } }
+  const jetzt = Date.now()
+  const kommend = naechster
+    .map(t => ({ ...t, beginn: naechstesVorkommen(t, jetzt)?.beginn ?? t.beginn }))
+    .filter(t => Date.parse(t.beginn) >= jetzt)
+    .sort((a, b) => Date.parse(a.beginn) - Date.parse(b.beginn))
+  return { naechster: kommend[0] ?? null, post: eingaenge, auslagen, neu: { anmeldungen, gastbeitraege, leserbriefe, vorschlaege, ideen, kasse, antraege } }
 }, { server: false })
 
 // Begrüßung je nach Tageszeit: Spruch als Überschrift, Name hervorgehoben

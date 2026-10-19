@@ -39,7 +39,7 @@ const werte = computed(() => Object.fromEntries(props.felder.map(f => [f.feld, w
 
 const optionen = (f: FeldDef) => {
   const liste = f.typ === 'beziehung' ? props.beziehungen?.[f.feld] ?? {} : f.optionen ?? {}
-  return f.pflicht ? liste : { '': '– nichts –', ...liste }
+  return f.pflicht ? liste : { '': f.leerText ?? '– nichts –', ...liste }
 }
 
 const EINGABETYP: Partial<Record<FeldDef['typ'], string>> = { zahl: 'number', datum: 'date', zeitpunkt: 'datetime-local', email: 'email' }

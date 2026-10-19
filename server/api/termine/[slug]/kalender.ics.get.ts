@@ -1,4 +1,4 @@
-// GET /api/termine/:slug/kalender.ics – Termin als Kalenderdatei
+// GET /api/termine/:slug/kalender.ics – Termin als Kalenderdatei (regelmäßige: erstes Datum + RRULE)
 function icsZeit(iso: string) {
   return new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
 }
@@ -8,7 +8,7 @@ function icsText(wert: string) {
 }
 
 export default defineEventHandler(async (event) => {
-  const termin = await ladeTermin(getRouterParam(event, 'slug') ?? '')
+  const termin = await ladeTerminRoh(getRouterParam(event, 'slug') ?? '')
   if (!termin?.beginn) throw fail(404, 'kein_datum', 'Für diesen Termin gibt es noch kein Datum.')
 
   const ende = termin.ende ?? new Date(Date.parse(termin.beginn) + 2 * 60 * 60 * 1000).toISOString()
@@ -24,6 +24,7 @@ export default defineEventHandler(async (event) => {
     ...(termin.uhrzeit_folgt
       ? [`DTSTART;VALUE=DATE:${datumLang(termin.beginn).split('.').reverse().join('')}`]
       : [`DTSTART:${icsZeit(termin.beginn)}`, `DTEND:${icsZeit(ende)}`]),
+    wiederholungRrule(termin.wiederholung, termin.beginn, termin.wiederholung_bis),
     `SUMMARY:${icsText(termin.titel)}`,
     termin.ort ? `LOCATION:${icsText([termin.ort, termin.adresse].filter(Boolean).join(', '))}` : '',
     termin.kurzbeschreibung ? `DESCRIPTION:${icsText(`${termin.kurzbeschreibung}\n\n${url}`)}` : `DESCRIPTION:${icsText(url)}`,

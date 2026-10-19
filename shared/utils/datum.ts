@@ -51,3 +51,34 @@ export function stunde(datum: Date = new Date()) {
     .formatToParts(datum).find(t => t.type === 'hour')
   return Number(teil?.value ?? 0)
 }
+
+// ---------- Ortszeit ↔ ISO (Directus speichert UTC) ----------
+// Für <input type="datetime-local"> im Vereinsheim und für wiederkehrende Termine
+// (die Uhrzeit bleibt in Ortszeit gleich, auch über die Zeitumstellung hinweg).
+
+function ortszeitTeile(datum: Date) {
+  const t = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone: ZEITZONE, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(datum).map(p => [p.type, p.value]))
+  return t as Record<'year' | 'month' | 'day' | 'hour' | 'minute', string>
+}
+
+/** "2026-11-15T13:00:00.000Z" → "2026-11-15T14:00" */
+export function isoZuOrtszeit(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const t = ortszeitTeile(new Date(iso))
+  return `${t.year}-${t.month}-${t.day}T${t.hour}:${t.minute}`
+}
+
+/** "2026-11-15T14:00" (Ortszeit) → ISO in UTC */
+export function ortszeitZuIso(lokal: string): string | null {
+  if (!lokal) return null
+  const [datum, zeit = '00:00'] = lokal.split('T')
+  const [j, m, d] = datum!.split('-').map(Number)
+  const [h, min] = zeit.split(':').map(Number)
+  // erst als UTC annehmen, dann um den Versatz der Zeitzone zu diesem Zeitpunkt korrigieren
+  const alsUtc = Date.UTC(j!, m! - 1, d!, h!, min!)
+  const t = ortszeitTeile(new Date(alsUtc))
+  const versatz = Date.UTC(+t.year, +t.month - 1, +t.day, +t.hour, +t.minute) - alsUtc
+  return new Date(alsUtc - versatz).toISOString()
+}

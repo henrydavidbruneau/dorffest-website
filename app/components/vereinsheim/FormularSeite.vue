@@ -33,14 +33,13 @@ const daten = ref<Record<string, unknown>>({})
 const status = ref<'laedt' | 'bereit' | 'speichert'>('laedt')
 const fehlend = ref<string[]>([])
 
-const felderNamen = computed(() => [...new Set(['id', 'status', 'date_updated', 'user_updated.first_name', ...props.felder.map(f => f.feld)])])
-
 async function laden() {
   status.value = 'laedt'
   try {
     original.value = neu.value
       ? { ...props.vorlage }
-      : await vh.eins<Record<string, unknown>>(props.collection, props.id, { fields: felderNamen.value.join(',') })
+      // `*`: Directus liefert nur vorhandene Felder – ein noch nicht angelegtes Feld (Setup-Skript) bricht so nichts
+      : await vh.eins<Record<string, unknown>>(props.collection, props.id, { fields: '*,user_updated.first_name' })
     daten.value = { ...original.value }
   }
   catch (e) {
@@ -53,7 +52,10 @@ watch(() => props.id, laden, { immediate: true })
 const titel = computed(() => String(daten.value[props.titelFeld] || (neu.value ? `Neu: ${props.art}` : props.art)))
 
 // Abschnitte mit ihren Feldern; eingeklappte gehen auf, wenn schon etwas drinsteht
-const abschnitte = computed(() => (props.gruppen ?? []).map(g => ({ ...g, felder: props.felder.filter(f => f.gruppe === g.key) })).filter(g => g.felder.length))
+const abschnitte = computed(() => (props.gruppen ?? [])
+  .filter(g => !g.wenn || g.wenn(daten.value, props.beziehungen))
+  .map(g => ({ ...g, felder: props.felder.filter(f => f.gruppe === g.key) }))
+  .filter(g => g.felder.length))
 const haupt = computed(() => abschnitte.value.filter(g => g.seite === 'haupt'))
 const rand = computed(() => abschnitte.value.filter(g => g.seite === 'rand'))
 // nach dem Laden entscheiden (nicht beim Tippen, sonst klappt der Abschnitt unter den Fingern zu)

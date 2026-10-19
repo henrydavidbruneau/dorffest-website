@@ -3,20 +3,35 @@
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
 useSeoMeta({ title: 'Termine · Vereinsheim', robots: 'noindex, nofollow' })
 
-interface TerminZeile { id: number, status: string, titel: string, slug: string, beginn: string | null, ende: string | null, datum_text: string | null, uhrzeit_folgt: boolean | null, ort: string | null, plaetze: number | null, anmeldung_aktiv: boolean }
+interface TerminZeile { id: number, status: string, titel: string, slug: string, beginn: string | null, ende: string | null, datum_text: string | null, uhrzeit_folgt: boolean | null, ort: string | null, plaetze: number | null, anmeldung_aktiv: boolean, wiederholung?: string | null, wiederholung_bis?: string | null }
 
 const { zeige, fehler } = useVereinsheimMeldung()
 const ansicht = ref<'kommend' | 'vergangen' | 'entwuerfe'>('kommend')
 
 const { data, refresh, status } = useAsyncData('vh-termine', async () => {
   const [termine, summen] = await Promise.all([
-    vh.liste<TerminZeile>('termine', { fields: 'id,status,titel,slug,beginn,ende,datum_text,uhrzeit_folgt,ort,plaetze,anmeldung_aktiv', sort: 'beginn' }),
+    // `*`: auch `wiederholung`, sobald es angelegt ist (fehlende Felder brechen so nichts)
+    vh.liste<TerminZeile>('termine', { fields: '*', sort: 'beginn' }),
     vh.liste<{ termin: number, sum: { personen: string | number | null } }>('anmeldungen', {
       'aggregate[sum]': 'personen', 'groupBy[]': 'termin', 'filter': { status: { _eq: 'angemeldet' } },
     }).catch(() => []),
   ])
   const angemeldet = Object.fromEntries(summen.map(s => [s.termin, Number(s.sum.personen ?? 0)]))
-  return termine.map(t => ({ ...t, angemeldet: angemeldet[t.id] ?? 0 }))
+  // regelmäßige Termine mit ihrem nächsten Datum zeigen (und danach sortieren)
+  const jetzt = Date.now()
+  return termine
+    .map((t) => {
+      const regelmaessig = !!t.wiederholung && t.wiederholung !== 'aus'
+      const naechstes = regelmaessig ? naechstesVorkommen(t, jetzt) : null
+      return {
+        ...t,
+        beginn: naechstes?.beginn ?? t.beginn,
+        ende: naechstes?.ende ?? t.ende,
+        rhythmus: regelmaessig ? wiederholungText(t.wiederholung, t.beginn) : '',
+        angemeldet: angemeldet[t.id] ?? 0,
+      }
+    })
+    .sort((a, b) => (Date.parse(a.beginn ?? '') || Infinity) - (Date.parse(b.beginn ?? '') || Infinity))
 }, { server: false, default: () => [] })
 
 const istVorbei = (t: TerminZeile) => !!t.beginn && Date.parse(t.ende ?? t.beginn) + (t.ende ? 0 : 86_400_000) < Date.now()
@@ -34,7 +49,9 @@ const anzahl = computed(() => ({
 
 async function duplizieren(t: TerminZeile) {
   try {
-    const voll = await vh.eins<Record<string, unknown>>('termine', t.id, { fields: FELDER_TERMIN.map(f => f.feld).join(',') })
+    // alles laden, nur die Formularfelder kopieren (fehlende Felder brechen so nichts)
+    const alles = await vh.eins<Record<string, unknown>>('termine', t.id, { fields: '*' })
+    const voll = Object.fromEntries(FELDER_TERMIN.filter(f => f.feld in alles).map(f => [f.feld, alles[f.feld]]))
     const kopie = await vh.anlegen<{ id: number }>('termine', { ...voll, slug: `${t.slug}-kopie-${Date.now().toString(36).slice(-4)}`, titel: `${t.titel} (Kopie)`, status: 'draft' })
     zeige('Kopie angelegt (als Entwurf).')
     await navigateTo(`/vereinsheim/termine/${kopie.id}`)
@@ -121,6 +138,7 @@ onBeforeUnmount(() => document.removeEventListener('click', schliessen))
             <p class="termin__meta">
               <span>{{ zeit(t) }}</span>
               <span>{{ t.ort || 'Ort folgt' }}</span>
+              <span v-if="t.rhythmus" class="termin__rhythmus">↻ {{ t.rhythmus }}</span>
               <VereinsheimStempel v-if="t.status !== 'published'" :status="t.status" />
             </p>
           </div>
@@ -248,6 +266,11 @@ onBeforeUnmount(() => document.removeEventListener('click', schliessen))
 .termin__meta > span:not(.stempel) + span:not(.stempel)::before {
   content: '·';
   margin-right: 0.5rem;
+}
+
+.termin__rhythmus {
+  color: var(--farbe-lila);
+  font-weight: var(--gewicht-text-mittel);
 }
 
 .termin__anmeldungen {

@@ -11,6 +11,8 @@ export interface FeldDef {
   breit?: boolean
   /** Auswahl: Wert → Beschriftung (bei `beziehung` lädt die Seite die Optionen) */
   optionen?: Record<string, string>
+  /** Auswahl: Beschriftung für „nichts gewählt“ (Standard „– nichts –“) */
+  leerText?: string
   /** Bild: Directus-Ordner */
   ordner?: string
   maxlength?: number
@@ -30,19 +32,27 @@ export interface GruppeDef {
   /** zugeklappt, bis jemand ihn öffnet (öffnet sich von selbst, wenn schon etwas drinsteht) */
   einklappbar?: boolean
   hinweis?: string
+  /** nur zeigen, wenn … (z.B. nur bei einem bestimmten Ressort) */
+  wenn?: (daten: Record<string, unknown>, beziehungen?: Record<string, Record<string, string>>) => boolean
 }
 
 export const STATUS_VEROEFFENTLICHT = { draft: 'Entwurf', published: 'Veröffentlicht', archived: 'Archiv' }
+
+// „aus“ steht als leere Auswahl („einmalig“) im Formular
+const { aus: _einmalig, ...WIEDERHOLUNGEN_AUSWAHL } = WIEDERHOLUNGEN
 
 export const FELDER_TERMIN: FeldDef[] = [
   { feld: 'titel', gruppe: 'text', gross: true, label: 'Titel', typ: 'text', pflicht: true, breit: true, maxlength: 160 },
   { feld: 'slug', gruppe: 'website', label: 'Adresse (/termine/…)', typ: 'text', pflicht: true, hinweis: 'nur a–z, 0–9 und Bindestriche', maxlength: 120 },
   { feld: 'hervorgehoben', gruppe: 'website', label: 'Auf der Startseite unter „Was kommt“', typ: 'janein' },
-  { feld: 'beginn', gruppe: 'wann', label: 'Beginn', typ: 'zeitpunkt', hinweis: 'leer = Datum steht noch nicht fest' },
+  { feld: 'beginn', gruppe: 'wann', label: 'Beginn', typ: 'zeitpunkt', hinweis: 'leer = Datum steht noch nicht fest; bei regelmäßigen das erste Mal' },
   { feld: 'ende', gruppe: 'wann', label: 'Ende', typ: 'zeitpunkt' },
   { feld: 'uhrzeit_folgt', gruppe: 'wann', label: 'Datum fest, Uhrzeit folgt', typ: 'janein' },
+  { feld: 'wiederholung', gruppe: 'wann', label: 'Wiederholen', typ: 'auswahl', optionen: WIEDERHOLUNGEN_AUSWAHL, leerText: 'einmalig', hinweis: 'gleicher Wochentag = z.B. jeden 1. Montag; Beginn/Ende sind das erste Mal, die Website zeigt immer das nächste Datum', wenn: d => !!d.beginn },
+  { feld: 'wiederholung_bis', gruppe: 'wann', label: 'Wiederholen bis', typ: 'datum', hinweis: 'leer = ohne Ende', wenn: d => !!d.beginn && !!d.wiederholung && d.wiederholung !== 'aus' },
+  { feld: 'rhythmus_kurz', gruppe: 'wann', label: 'Kurzform im Terminkalender', typ: 'text', hinweis: 'leer = automatisch, z.B. „1. Mo“', maxlength: 30, wenn: d => !!d.wiederholung && d.wiederholung !== 'aus' },
   { feld: 'datum_text', gruppe: 'wann', label: 'Text statt Datum', typ: 'text', hinweis: 'z.B. „2027“, solange kein Beginn eingetragen ist', maxlength: 60 },
-  { feld: 'rhythmus_kurz', gruppe: 'wann', label: 'Rhythmus (kurz)', typ: 'text', hinweis: 'z.B. „1. Mo“ für regelmäßige Termine', maxlength: 30 },
+
   { feld: 'ort', gruppe: 'wo', label: 'Ort', typ: 'text', hinweis: 'leer = „Ort folgt“', maxlength: 160 },
   { feld: 'adresse', gruppe: 'wo', label: 'Adresse', typ: 'text', maxlength: 200 },
   { feld: 'hinweis', gruppe: 'wo', label: 'Hinweis statt Uhrzeit/Ort', typ: 'text', hinweis: 'z.B. „Programm folgt – hilf mit planen“', maxlength: 160 },
@@ -95,7 +105,8 @@ export const FELDER_ARTIKEL: FeldDef[] = [
 export const GRUPPEN_ARTIKEL: GruppeDef[] = [
   { key: 'text', titel: 'Artikel', seite: 'haupt' },
   { key: 'aufruf', titel: 'Gelber Kasten am Ende', seite: 'haupt', einklappbar: true, hinweis: 'z.B. „Mach mit!“ mit Knopf' },
-  { key: 'portraet', titel: 'Porträt', seite: 'haupt', einklappbar: true, hinweis: 'nur Ressort Porträts – für „Fünf Fragen an …“' },
+  // nur im Ressort „Porträts“ – speist „Fünf Fragen an …“ im Dorfanzeiger
+  { key: 'portraet', titel: 'Porträt', seite: 'haupt', hinweis: 'Name und Zitat für „Fünf Fragen an …“', wenn: (d, b) => b?.ressort?.[String(d.ressort ?? '')] === 'Porträts' },
   { key: 'einordnung', titel: 'Einordnung', seite: 'rand' },
   { key: 'autor', titel: 'Autor*in & Datum', seite: 'rand' },
   { key: 'bild', titel: 'Hauptbild', seite: 'rand' },

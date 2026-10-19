@@ -44,7 +44,8 @@ function platzText(a: ArtikelZeile) {
 
 async function duplizieren(a: ArtikelZeile) {
   try {
-    const voll = await vh.eins<Record<string, unknown>>('artikel', a.id, { fields: FELDER_ARTIKEL.map(f => f.feld).join(',') })
+    const alles = await vh.eins<Record<string, unknown>>('artikel', a.id, { fields: '*' })
+    const voll = Object.fromEntries(FELDER_ARTIKEL.filter(f => f.feld in alles).map(f => [f.feld, alles[f.feld]]))
     const kopie = await vh.anlegen<{ id: number }>('artikel', { ...voll, slug: `${a.slug}-kopie-${Date.now().toString(36).slice(-4)}`, titel: `${a.titel} (Kopie)`, status: 'draft', veroeffentlicht_am: null })
     zeige('Kopie angelegt (als Entwurf).')
     await navigateTo(`/vereinsheim/dorfanzeiger/artikel/${kopie.id}`)
