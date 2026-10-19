@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Dashboard: lila Begrüßung mit Spruch zur Tageszeit, daneben die Post (Vorstand) bzw. die eigenen
 // Einreichungen in der Kasse (Mitglieder); darunter Kacheln mit Icons zu allen Bereichen.
+// Der Plenum-Fuß steht im Layout (auf jeder Vereinsheim-Seite).
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim', vollbreit: true })
 useSeoMeta({ title: 'Vereinsheim', robots: 'noindex, nofollow' })
 
@@ -211,17 +212,6 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
       </ul>
     </section>
 
-    <section class="dash__plenum">
-      <BasisTrennlinie />
-      <div class="dash__plenum-innen">
-        <h2 class="dash__plenum-titel">
-          Wir sehen uns im <BasisHervorhebung :drehung="-1.5">Plenum!</BasisHervorhebung>
-        </h2>
-        <p class="dash__plenum-text handschrift">
-          Wer zuletzt geht, macht das Licht aus.
-        </p>
-      </div>
-    </section>
   </div>
 </template>
 
@@ -469,34 +459,6 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
   font-size: var(--groesse-h3);
 }
 
-/* ---------- Plenum ---------- */
-.dash__plenum {
-  max-width: calc(var(--inhaltsbreite) + 2 * var(--seitenrand));
-  margin-inline: auto;
-  padding: var(--abstand-xl) var(--seitenrand) var(--abstand-sektion);
-}
-
-.dash__plenum-innen {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--abstand-m);
-  margin-top: var(--abstand-xl);
-}
-
-.dash__plenum-titel {
-  margin: 0;
-  font-size: var(--groesse-h2);
-  line-height: 1.1;
-  color: var(--farbe-lila);
-}
-
-.dash__plenum-text {
-  margin: 0;
-  font-size: var(--groesse-hand-m);
-  color: var(--farbe-orange-text);
-}
 
 @media (max-width: 56rem) {
   .dash__hero-innen {

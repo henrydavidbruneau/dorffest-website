@@ -12,6 +12,13 @@ if (!artikel.value) {
   throw createError({ statusCode: 404, statusMessage: 'Artikel nicht gefunden', fatal: true })
 }
 
+// Angemeldet im Vereinsheim? Dann „Bearbeiten“ zeigen. Nur im Browser über den lesbaren
+// Hinweis-Cookie – abgelaufene Sitzung landet beim Klick einfach am Login.
+const angemeldet = ref(false)
+onMounted(() => {
+  angemeldet.value = document.cookie.split('; ').some(c => c.startsWith('vh_angemeldet='))
+})
+
 const { data: neueste } = await useDorfanzeiger({ mitInterviews: true, limit: 12 })
 
 // Kopfzeile: Ressort und Monat
@@ -70,7 +77,10 @@ useSeoMeta({
       <span>{{ kopfzeile }}</span>
     </div>
 
-    <NuxtLink to="/dorfanzeiger" class="beitrag__zurueck handlink">← zum Dorfanzeiger</NuxtLink>
+    <div class="beitrag__leiste">
+      <NuxtLink to="/dorfanzeiger" class="beitrag__zurueck handlink">← zum Dorfanzeiger</NuxtLink>
+      <BasisKnopf v-if="angemeldet" :to="`/vereinsheim/dorfanzeiger/artikel/${artikel.id}`" groesse="klein">Bearbeiten</BasisKnopf>
+    </div>
 
     <ZeitungArtikel :artikel="artikel" :dachzeile="dachzeile" />
 
@@ -137,9 +147,17 @@ useSeoMeta({
   text-decoration: underline;
 }
 
+.beitrag__leiste {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--abstand-s);
+  margin-top: var(--abstand-m);
+}
+
 .beitrag__zurueck {
   display: inline-block;
-  margin-top: var(--abstand-m);
   color: var(--farbe-orange-text);
 }
 
