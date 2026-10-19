@@ -58,9 +58,31 @@ function vorkommen(start: Lokal, art: Wiederholung, k: number): Lokal | null {
   const monate = start.m - 1 + k
   const j = start.j + Math.floor(monate / 12)
   const m = (monate % 12) + 1
-  if (art === 'monatlich_datum') return start.d <= tageImMonat(j, m) ? { ...start, j, m } : null // z.B. kein 31. im April
+  if (art === 'monatlich_datum') return { ...start, j, m, d: Math.min(start.d, tageImMonat(j, m)) } // kein 31. im April → 30.
   if (art === 'monatlich_wochentag') return { ...start, j, m, d: nterWochentag(j, m, wochentag(start), welcherWochentag(start)) }
   return k === 0 ? start : null
+}
+
+type TerminZeiten = { beginn: string | null, ende: string | null, wiederholung?: string | null, wiederholung_bis?: string | null }
+
+/** alle Vorkommen der Reihe nacheinander (höchstens 600, endet mit `wiederholung_bis`) */
+function* alleVorkommen(t: TerminZeiten & { beginn: string }): Generator<Vorkommen> {
+  const art = (t.wiederholung ?? 'aus') as Wiederholung
+  if (art === 'aus' || !(art in WIEDERHOLUNGEN)) {
+    yield { beginn: t.beginn, ende: t.ende }
+    return
+  }
+  const dauer = t.ende ? Date.parse(t.ende) - Date.parse(t.beginn) : null
+  // „bis“ gilt einschließlich des ganzen Tages
+  const bis = t.wiederholung_bis ? Date.parse(ortszeitZuIso(`${t.wiederholung_bis.slice(0, 10)}T23:59`)!) : Infinity
+  const start = zerlegen(t.beginn)
+  for (let k = 0; k < 600; k++) {
+    const l = vorkommen(start, art, k)
+    if (!l) continue
+    const beginn = zusammen(l)
+    if (Date.parse(beginn) > bis) return
+    yield { beginn, ende: dauer !== null ? new Date(Date.parse(beginn) + dauer).toISOString() : null }
+  }
 }
 
 export interface Vorkommen {
@@ -72,30 +94,29 @@ export interface Vorkommen {
  * Das Vorkommen, das gerade läuft oder als nächstes kommt (Ende bzw. Beginn + 1 Tag ≥ jetzt),
  * sonst das letzte. `vorher` ist der Beginn des Vorkommens davor (für Anmeldungen je Termin).
  */
-export function naechstesVorkommen(
-  t: { beginn: string | null, ende: string | null, wiederholung?: string | null, wiederholung_bis?: string | null },
-  jetzt = Date.now(),
-): (Vorkommen & { vorher: string | null }) | null {
+export function naechstesVorkommen(t: TerminZeiten, jetzt = Date.now()): (Vorkommen & { vorher: string | null }) | null {
   if (!t.beginn) return null
-  const art = (t.wiederholung ?? 'aus') as Wiederholung
-  if (art === 'aus' || !(art in WIEDERHOLUNGEN)) return { beginn: t.beginn, ende: t.ende, vorher: null }
-  const dauer = t.ende ? Date.parse(t.ende) - Date.parse(t.beginn) : null
-  // „bis“ gilt einschließlich des ganzen Tages
-  const bis = t.wiederholung_bis ? Date.parse(ortszeitZuIso(`${t.wiederholung_bis.slice(0, 10)}T23:59`)!) : Infinity
-  const start = zerlegen(t.beginn)
   let letztes: Vorkommen | null = null
-  let vorher: string | null = null
-  for (let k = 0; k < 600; k++) {
-    const l = vorkommen(start, art, k)
-    if (!l) continue
-    const beginn = zusammen(l)
-    if (Date.parse(beginn) > bis) break
-    const ende = dauer !== null ? new Date(Date.parse(beginn) + dauer).toISOString() : null
-    if ((ende ? Date.parse(ende) : Date.parse(beginn) + 86_400_000) >= jetzt) return { beginn, ende, vorher }
-    vorher = beginn
-    letztes = { beginn, ende }
+  for (const v of alleVorkommen({ ...t, beginn: t.beginn })) {
+    if ((v.ende ? Date.parse(v.ende) : Date.parse(v.beginn) + 86_400_000) >= jetzt) return { ...v, vorher: letztes?.beginn ?? null }
+    letztes = v
   }
   return letztes ? { ...letztes, vorher: null } : { beginn: t.beginn, ende: t.ende, vorher: null }
+}
+
+/**
+ * Zu welchem Vorkommen gehört eine Anmeldung von `zeit`? Zum ersten, das danach beginnt
+ * (wie auf der Website: Anmeldungen seit dem Beginn des letzten Treffens zählen fürs nächste).
+ * Nach dem Ende der Reihe: das letzte.
+ */
+export function vorkommenFuer(t: TerminZeiten, zeit: number): Vorkommen | null {
+  if (!t.beginn) return null
+  let letztes: Vorkommen | null = null
+  for (const v of alleVorkommen({ ...t, beginn: t.beginn })) {
+    if (Date.parse(v.beginn) > zeit) return v
+    letztes = v
+  }
+  return letztes
 }
 
 /** „jeden 1. Montag im Monat“ … für Terminseite und Vereinsheim */
@@ -105,7 +126,10 @@ export function wiederholungText(art: string | null | undefined, beginn: string 
   const tag = WOCHENTAGE[wochentag(l)]!
   if (art === 'woechentlich') return `jeden ${tag}`
   if (art === 'zweiwoechentlich') return `jeden zweiten ${tag}`
-  if (art === 'monatlich_datum') return `jeden Monat am ${l.d}.`
+  if (art === 'monatlich_datum') {
+    if (l.d === 31) return 'jeden Monat am Monatsletzten'
+    return l.d > 28 ? `jeden Monat am ${l.d}. (sonst am Monatsletzten)` : `jeden Monat am ${l.d}.`
+  }
   if (art === 'monatlich_wochentag') {
     const n = welcherWochentag(l)
     return `jeden ${n >= 5 ? 'letzten' : ORDNUNG[n - 1]} ${tag} im Monat`
@@ -120,7 +144,7 @@ export function wiederholungKurz(art: string | null | undefined, beginn: string 
   const kurz = WOCHENTAGE[wochentag(l)]!.slice(0, 2)
   if (art === 'woechentlich') return `jeden ${kurz}`
   if (art === 'zweiwoechentlich') return `14-tägl. ${kurz}`
-  if (art === 'monatlich_datum') return `am ${l.d}.`
+  if (art === 'monatlich_datum') return l.d === 31 ? 'Monatsletzter' : `am ${l.d}.`
   if (art === 'monatlich_wochentag') {
     const n = welcherWochentag(l)
     return `${n >= 5 ? 'letzter' : `${n}.`} ${kurz}`
@@ -136,7 +160,11 @@ export function wiederholungRrule(art: string | null | undefined, beginn: string
   const ende = bis ? `;UNTIL=${bis.slice(0, 10).replace(/-/g, '')}T235959Z` : ''
   if (art === 'woechentlich') return `RRULE:FREQ=WEEKLY${ende}`
   if (art === 'zweiwoechentlich') return `RRULE:FREQ=WEEKLY;INTERVAL=2${ende}`
-  if (art === 'monatlich_datum') return `RRULE:FREQ=MONTHLY;BYMONTHDAY=${l.d}${ende}`
+  if (art === 'monatlich_datum') {
+    // ab dem 29.: in kürzeren Monaten der Monatsletzte (BYMONTHDAY=28,…,d + letzter Treffer)
+    if (l.d > 28) return `RRULE:FREQ=MONTHLY;BYMONTHDAY=${Array.from({ length: l.d - 27 }, (_, i) => 28 + i).join(',')};BYSETPOS=-1${ende}`
+    return `RRULE:FREQ=MONTHLY;BYMONTHDAY=${l.d}${ende}`
+  }
   if (art === 'monatlich_wochentag') {
     const n = welcherWochentag(l)
     return `RRULE:FREQ=MONTHLY;BYDAY=${n >= 5 ? -1 : n}${tag}${ende}`

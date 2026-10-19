@@ -10,8 +10,10 @@ export default defineEventHandler(async (event) => {
 
   const termin = await directusPerson<{ titel: string } | null>(event, `/items/termine/${id}`, { query: { fields: 'titel' } })
   if (!termin) throw fail(404, 'termin', 'Termin nicht gefunden')
+  // regelmäßige Termine: nur die Anmeldungen der gewählten Runde (IDs aus der Liste)
+  const ids = Array.isArray(body.ids) ? body.ids.map(Number).filter(Number.isInteger) : null
   const anmeldungen = await directusPerson<{ name: string, email: string }[]>(event, '/items/anmeldungen', {
-    query: { fields: 'name,email', filter: { termin: { _eq: id }, status: { _eq: 'angemeldet' } }, limit: -1 },
+    query: { fields: 'name,email', filter: { termin: { _eq: id }, status: { _eq: 'angemeldet' }, ...(ids ? { id: { _in: ids.length ? ids : [0] } } : {}) }, limit: -1 },
   })
   // jede Adresse nur einmal
   const empfaenger = [...new Map(anmeldungen.filter(a => a.email).map(a => [a.email.toLowerCase(), a])).values()]

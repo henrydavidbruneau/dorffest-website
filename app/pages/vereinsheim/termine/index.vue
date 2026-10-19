@@ -12,23 +12,27 @@ const { data, refresh, status } = useAsyncData('vh-termine', async () => {
   const [termine, summen] = await Promise.all([
     // `*`: auch `wiederholung`, sobald es angelegt ist (fehlende Felder brechen so nichts)
     vh.liste<TerminZeile>('termine', { fields: '*', sort: 'beginn' }),
-    vh.liste<{ termin: number, sum: { personen: string | number | null } }>('anmeldungen', {
-      'aggregate[sum]': 'personen', 'groupBy[]': 'termin', 'filter': { status: { _eq: 'angemeldet' } },
+    vh.liste<{ termin: number, personen: number | null, date_created: string }>('anmeldungen', {
+      fields: 'termin,personen,date_created', filter: { status: { _eq: 'angemeldet' } },
     }).catch(() => []),
   ])
-  const angemeldet = Object.fromEntries(summen.map(s => [s.termin, Number(s.sum.personen ?? 0)]))
-  // regelmäßige Termine mit ihrem nächsten Datum zeigen (und danach sortieren)
+  // regelmäßige Termine mit ihrem nächsten Datum zeigen (und danach sortieren);
+  // angemeldet zählen dort nur die Anmeldungen seit dem letzten Treffen (wie auf der Website)
   const jetzt = Date.now()
   return termine
     .map((t) => {
       const regelmaessig = !!t.wiederholung && t.wiederholung !== 'aus'
       const naechstes = regelmaessig ? naechstesVorkommen(t, jetzt) : null
+      const seit = naechstes?.vorher ? Date.parse(naechstes.vorher) : -Infinity
+      const angemeldet = summen
+        .filter(a => a.termin === t.id && Date.parse(a.date_created) > seit)
+        .reduce((n, a) => n + (Number(a.personen) || 0), 0)
       return {
         ...t,
         beginn: naechstes?.beginn ?? t.beginn,
         ende: naechstes?.ende ?? t.ende,
         rhythmus: regelmaessig ? wiederholungText(t.wiederholung, t.beginn) : '',
-        angemeldet: angemeldet[t.id] ?? 0,
+        angemeldet,
       }
     })
     .sort((a, b) => (Date.parse(a.beginn ?? '') || Infinity) - (Date.parse(b.beginn ?? '') || Infinity))

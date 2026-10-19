@@ -7,7 +7,7 @@ useSeoMeta({ title: 'Anmeldungen · Vereinsheim', robots: 'noindex, nofollow' })
 interface Anmeldung { id: number, status: string, name: string, email: string, personen: number, nachricht: string | null, mitbringen: string | null, date_created: string }
 interface Beitrag { id: number, name: string, was: string, email: string | null, date_created: string }
 interface Rundmail { id: number, betreff: string, empfaenger_anzahl: number | null, gesendet_am: string | null, user_created: { first_name: string | null } | null }
-interface Termin { id: number, titel: string, beginn: string | null, plaetze: number | null, mitbringen_frage?: string | null }
+interface Termin { id: number, titel: string, beginn: string | null, ende: string | null, plaetze: number | null, mitbringen_frage?: string | null, wiederholung?: string | null, wiederholung_bis?: string | null }
 
 const route = useRoute()
 const id = Number(route.params.id)
@@ -24,12 +24,28 @@ const { data, refresh } = useAsyncData(`vh-anmeldungen-${id}`, async () => {
   return { termin, anmeldungen, beitraege, rundmails }
 }, { server: false })
 
-const angemeldet = computed(() => data.value?.anmeldungen.filter(a => a.status === 'angemeldet') ?? [])
+// Regelmäßige Termine: Anmeldungen je Runde (wie auf der Website: seit dem letzten Treffen
+// zählen sie fürs nächste). Standard ist die nächste Runde, ältere lassen sich auswählen.
+const regelmaessig = computed(() => !!data.value?.termin.wiederholung && data.value.termin.wiederholung !== 'aus')
+const rundeVon = (zeit: string) => (data.value ? vorkommenFuer(data.value.termin, Date.parse(zeit))?.beginn ?? '' : '')
+const naechsteRunde = computed(() => (data.value ? naechstesVorkommen(data.value.termin)?.beginn ?? '' : ''))
+const runde = ref('')
+const gewaehlt = computed(() => runde.value || naechsteRunde.value)
+const runden = computed(() => {
+  if (!regelmaessig.value || !data.value) return []
+  const alle = new Set([naechsteRunde.value, ...[...data.value.anmeldungen, ...data.value.beitraege].map(a => rundeVon(a.date_created))])
+  return [...alle].filter(Boolean).sort((a, b) => Date.parse(b) - Date.parse(a))
+})
+const inRunde = (zeit: string) => !regelmaessig.value || rundeVon(zeit) === gewaehlt.value
+
+const anmeldungen = computed(() => data.value?.anmeldungen.filter(a => inRunde(a.date_created)) ?? [])
+const angemeldet = computed(() => anmeldungen.value.filter(a => a.status === 'angemeldet'))
 const personen = computed(() => angemeldet.value.reduce((s, a) => s + (a.personen || 0), 0))
 const mitbringen = computed(() => [
   ...angemeldet.value.filter(a => a.mitbringen).map(a => ({ name: a.name, was: a.mitbringen! })),
-  ...(data.value?.beitraege ?? []).map(b => ({ name: b.name, was: b.was })),
+  ...(data.value?.beitraege ?? []).filter(b => inRunde(b.date_created)).map(b => ({ name: b.name, was: b.was })),
 ])
+const kopfDatum = computed(() => (regelmaessig.value ? gewaehlt.value : data.value?.termin.beginn) || null)
 
 async function umschalten(a: Anmeldung) {
   try {
@@ -58,7 +74,7 @@ const drucken = () => window.print()
 
 function csv() {
   csvHerunterladen(`anmeldungen-${id}.csv`, ['Name', 'E-Mail', 'Personen', data.value?.termin.mitbringen_frage || 'Mitbringen', 'Nachricht', 'Status', 'Angemeldet am'],
-    (data.value?.anmeldungen ?? []).map(a => [a.name, a.email, a.personen, a.mitbringen, a.nachricht, a.status, datumLang(a.date_created)]))
+    anmeldungen.value.map(a => [a.name, a.email, a.personen, a.mitbringen, a.nachricht, a.status, datumLang(a.date_created)]))
 }
 
 // Rundmail
@@ -68,7 +84,7 @@ async function rundmail() {
   if (!window.confirm(`Mail an ${angemeldet.value.length} Angemeldete schicken?`)) return
   sendet.value = true
   try {
-    const r = await $fetch<{ gesendet: number }>(`/api/vereinsheim/termine/${id}/rundmail`, { method: 'POST', body: { ...mail } })
+    const r = await $fetch<{ gesendet: number }>(`/api/vereinsheim/termine/${id}/rundmail`, { method: 'POST', body: { ...mail, ids: angemeldet.value.map(a => a.id) } })
     zeige(`Ab in die Post: ${r.gesendet} Mails verschickt.`)
     mail.betreff = ''
     mail.text = ''
@@ -87,12 +103,20 @@ watch(() => data.value?.termin, (t) => {
 
 <template>
   <div class="anm">
-    <VereinsheimKopf :titel="data?.termin.titel ?? 'Anmeldungen'" :zusatz="`Anmeldungen${data?.termin.beginn ? ` · ${datumAusgeschrieben(data.termin.beginn)}` : ''}`" :zurueck="{ to: `/vereinsheim/termine/${id}`, text: 'Zum Termin' }">
+    <VereinsheimKopf :titel="data?.termin.titel ?? 'Anmeldungen'" :zusatz="`Anmeldungen${kopfDatum ? ` · ${datumAusgeschrieben(kopfDatum)}` : ''}`" :zurueck="{ to: `/vereinsheim/termine/${id}`, text: 'Zum Termin' }">
       <BasisKnopf variante="outline" groesse="klein" @click="csv">CSV</BasisKnopf>
       <BasisKnopf variante="outline" groesse="klein" @click="drucken">Liste drucken</BasisKnopf>
     </VereinsheimKopf>
 
     <div class="anm__blatt">
+      <label v-if="runden.length > 1" class="anm__runde">
+        Treffen
+        <select v-model="runde">
+          <option value="">{{ datumAusgeschrieben(naechsteRunde) }} (nächstes)</option>
+          <option v-for="r in runden.filter(r => r !== naechsteRunde)" :key="r" :value="r">{{ datumAusgeschrieben(r) }}</option>
+        </select>
+      </label>
+      <p v-else-if="regelmaessig" class="anm__runde">Regelmäßiger Termin: hier stehen die Anmeldungen fürs nächste Treffen.</p>
       <p class="anm__summe">
         <span class="anm__striche" aria-hidden="true">
           <span v-for="n in Math.min(Math.floor(personen / 5), 20)" :key="n" class="anm__fuenf">||||</span>{{ '|'.repeat(personen % 5) }}
@@ -101,13 +125,13 @@ watch(() => data.value?.termin, (t) => {
         · {{ angemeldet.length }} Anmeldungen
       </p>
 
-      <div v-if="data?.anmeldungen.length" class="anm__scroll">
+      <div v-if="anmeldungen.length" class="anm__scroll">
       <table class="anm__tabelle">
         <thead>
           <tr><th>Name</th><th>Pers.</th><th>{{ data?.termin.mitbringen_frage ? 'Antwort' : 'Mitbringen' }}</th><th>Nachricht</th><th class="anm__nicht-drucken">E-Mail</th><th class="anm__nicht-drucken"><span class="nur-screenreader">Aktionen</span></th><th class="anm__nur-drucken">da?</th></tr>
         </thead>
         <tbody>
-          <tr v-for="a in data.anmeldungen" :key="a.id" :class="{ 'anm__ab': a.status !== 'angemeldet' }">
+          <tr v-for="a in anmeldungen" :key="a.id" :class="{ 'anm__ab': a.status !== 'angemeldet' }">
             <td>{{ a.name }}</td>
             <td>{{ a.personen }}</td>
             <td>{{ a.mitbringen }}</td>
@@ -170,6 +194,33 @@ watch(() => data.value?.termin, (t) => {
   border-radius: var(--vh-radius);
   background: var(--farbe-weiss);
   box-shadow: var(--vh-schatten);
+}
+
+.anm__runde {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 var(--abstand-m);
+  font-size: var(--groesse-xs);
+  color: var(--vh-gedaempft);
+}
+
+.anm__runde select {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--vh-rand);
+  border-radius: 0.4rem;
+  background: var(--farbe-weiss);
+  font: inherit;
+  font-size: var(--groesse-s);
+  color: var(--farbe-schwarz);
+}
+
+@media print {
+  .anm__runde select {
+    border: 0;
+    appearance: none;
+  }
 }
 
 .anm__summe {
