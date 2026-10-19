@@ -34,7 +34,7 @@ export default defineNuxtConfig({
     brevoNewsletterListe: '',
     // Absender bei Brevo (Domain muss dort verifiziert sein)
     mailVon: 'kontakt@koenigsdorf-rueckt-zusammen.de',
-    mailVonName: 'Königsdorf rückt zusammen',
+    mailVonName: 'Rückt Zusammen e.V.',
     turnstileSecretKey: '',
     // Schlüssel für signierte Bestätigungs-/Abmeldelinks (Plenum-Erinnerung)
     linkSecret: '',
