@@ -8,7 +8,11 @@ export const RUNDBRIEF_TAG = 'rundbrief'
 export function rundbriefKonfig() {
   const { brevoApiKey, brevoNewsletterListe } = useRuntimeConfig()
   const liste = Number(brevoNewsletterListe)
-  return { schluessel: brevoApiKey, liste, eingerichtet: !!brevoApiKey && Number.isInteger(liste) && liste > 0 }
+  const fehlt = [
+    ...(brevoApiKey ? [] : ['NUXT_BREVO_API_KEY']),
+    ...(Number.isInteger(liste) && liste > 0 ? [] : ['NUXT_BREVO_NEWSLETTER_LISTE (Zahl, z.B. 3)']),
+  ]
+  return { schluessel: brevoApiKey, liste, eingerichtet: !fehlt.length, fehlt }
 }
 
 function brevo<T>(pfad: string, optionen: { method?: 'GET' | 'POST', body?: Record<string, unknown>, query?: Record<string, unknown> } = {}) {

@@ -15,7 +15,8 @@ export default defineEventHandler(async (event) => {
     await sendeMail({ an, betreff: `[Test] ${betreff}`, text: rundbriefText(inhalt), tags: ['rundbrief-test'], rubrik: 'Rundbrief', grosserGruss: true })
     return { ok: true, an }
   }
-  if (!rundbriefKonfig().eingerichtet) throw fail(409, 'brevo', 'Brevo ist noch nicht eingerichtet (NUXT_BREVO_API_KEY und NUXT_BREVO_NEWSLETTER_LISTE auf Netlify).')
+  const { eingerichtet, fehlt } = rundbriefKonfig()
+  if (!eingerichtet) throw fail(409, 'brevo', `Brevo ist noch nicht eingerichtet – auf Netlify fehlt: ${fehlt.join(', ')}.`)
   const id = await rundbriefVerschicken(betreff, inhalt).catch((e) => {
     console.error('[rundbrief]', e?.data ?? e)
     throw fail(502, 'brevo', `Brevo hat abgelehnt: ${e?.data?.message ?? 'unbekannter Fehler'}`)

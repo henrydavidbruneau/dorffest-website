@@ -5,7 +5,7 @@ definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
 useSeoMeta({ title: 'Rundbrief · Vereinsheim', robots: 'noindex, nofollow' })
 
 interface Verschickt { id: number, betreff: string, am: string | null, zugestellt: number | null, geoeffnet: number | null }
-interface Stand { eingerichtet: boolean, abonnenten: number, verschickt: Verschickt[] }
+interface Stand { eingerichtet: boolean, fehlt?: string[], abonnenten: number, verschickt: Verschickt[] }
 
 const { zeige, fehler } = useVereinsheimMeldung()
 const { data, refresh } = useAsyncData('vh-rundbrief', () => $fetch<Stand>('/api/vereinsheim/rundbrief'), { server: false })
@@ -51,8 +51,8 @@ async function schicken(test: boolean) {
     <VereinsheimKopf titel="Neuer" hervorhebung="Rundbrief" :zusatz="data?.eingerichtet ? `an ${data.abonnenten} Abonnent*innen des Newsletters` : 'an alle, die den Newsletter bestätigt haben'" :zurueck="{ to: '/vereinsheim/post', text: 'Zur Post' }" />
 
     <div v-if="data && !data.eingerichtet" class="vh-karte rb__fehlt">
-      Brevo ist noch nicht eingerichtet: Auf Netlify fehlen <code>NUXT_BREVO_API_KEY</code> oder <code>NUXT_BREVO_NEWSLETTER_LISTE</code>.
-      Einen Test an dich kannst du trotzdem schicken.
+      Brevo ist noch nicht eingerichtet. Auf Netlify fehlt: <code>{{ data.fehlt?.join(', ') }}</code>.
+      (Nach dem Eintragen einmal neu deployen.) Einen Test an dich kannst du trotzdem schicken.
     </div>
 
     <div class="rb__raster">
