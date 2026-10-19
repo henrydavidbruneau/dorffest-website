@@ -115,8 +115,8 @@ Nav: Startseite · Termine · Neuigkeiten · Über uns · [Button „Mitmachen"]
 | `/satzung`, `/impressum`, `/datenschutz` | Texte in `app/inhalte/*.md` | Textseiten über `<BasisTextseite>` (Markdown). Keine Kontaktseite: „Kontakt“ im Fuß ist ein Mail-Link. Datenschutz ist ein Entwurf (Stand Oktober 2026) – bei Brevo/Turnstile/Directus anpassen. |
 | `/mitmachen` | von Bruno beschrieben | Intro (offene Gruppe, Plenum + Orga-WhatsApp nur für Mitglieder), 4 Wege, **Plenum** groß mit Erinnerungs-Anmeldung (`/api/plenum-erinnerung`), Dorffest-2027-Aufruf (07.09.2027) mit Ideen-Formular (`/api/vorschlaege`), **Ideenwand** „Was fehlt dir in Königsdorf?“ (`/api/ideen`), Kontakt-Mail |
 | `/mitglied-werden` | von Bruno beschrieben | Fördermitglied (Standard; 3/5/10 € im Monat, steuerlich absetzbar) oder reguläres Mitglied (24 €+ / ermäßigt 12 € im Jahr; Voraussetzung: mind. einmal beim Plenum, wird abgefragt). Beiträge zentral in `shared/utils/mitgliedschaft.ts`. POST `/api/mitgliedsantrag`. Name kommt aus dem Ausweis (`?name=`). |
-| `/gastbeitrag/[schluessel]` | von Bruno beschrieben | Privater Link für externe Gastbeiträge (Layout `schlicht`: keine Navigation, nur „zur Startseite“; `noindex`, `no-referrer`). Text, Rubrik, optional Foto (im Browser verkleinert) → POST multipart `/api/gastbeitrag/:schluessel`. Landet im Vereinsheim, ein Mitglied nimmt an/lehnt ab (siehe `DIRECTUS.md`). Test-Links: `beispiel-einladung`, `beispiel-schon-eingereicht`. |
-| `/vereinsheim` | – | Admin-Bereich (bei uns „Vereinsheim“, im DPAT-Vorbild `admin`/„Hinterzimmer“), **letzte Phase** (nach Directus). Route ist reserviert. |
+| `/gastbeitrag/[schluessel]` | von Bruno beschrieben | Privater Link für externe Gastbeiträge (Layout `schlicht`: keine Navigation, nur „zur Startseite“; `noindex`, `no-referrer`). Text, Rubrik, optional Foto (im Browser verkleinert) → POST multipart `/api/gastbeitrag/:schluessel`. Landet im Vereinsheim, ein Mitglied nimmt an/lehnt ab (siehe `DIRECTUS.md`). Links erstellt das Vereinsheim (Dorfanzeiger → Gastbeiträge). |
+| `/vereinsheim` | von Bruno gewünscht: „gemütliches Vereinsheim“ | Admin-Bereich (nur im Browser, `ssr: false`). Holzleiste + Karteireiter + Korkwand (Layout `vereinsheim`). `/vereinsheim/tuer` Login (Benutzername oder E-Mail) · Schwarzes Brett (Zettel mit roten Stickern) · Termine (Klemmbrett, Anmeldungen als Strichliste, CSV, Druck, Rundmail) · Dorfanzeiger (Redaktionstisch, Ausgaben, Kleinanzeigen, Leserbriefe, Gastbeitrag-Links + Posteingang) · Mitmachen · Über uns · Kassenbuch · Mitglieder (Vorstand) · Konto. Bearbeiten über `<VereinsheimFormularSeite>` + Feldlisten in `app/utils/vereinsheimFelder.ts`. |
 | 404 | – | eigene Fehlerseite im Stil der Seite |
 
 Footer-Links: Über uns · Satzung · Mitglied werden · Termine ·
@@ -211,7 +211,8 @@ Nach jeder Phase: committen, pushen, Bruno kurz zeigen.
 7. ✅ **Formulare**: Anmeldung/Mitbringen, Mitgliedsantrag, Plenum-Erinnerung, Ideen, Leserbriefe, Ideenwand (POST-Routen prüfen + loggen). Newsletter-Anmeldung und „Kleinanzeige aufgeben“ entfallen vorerst (Newsletter-Box ist nur Oberfläche).
 8. Rechtliche Seiten, 404, SEO, Feinschliff Mobile.
 
-→ Danach: Directus aufsetzen (separat), Server-Routen umstellen, Vereinsheim (Admin) bauen.
+9. ✅ **Directus** eingerichtet und angebunden (`DIRECTUS.md`).
+10. ✅ **Vereinsheim** (siehe Seiten-Tabelle und `DIRECTUS.md` → „Vereinsheim“).
 
 ## Regeln
 

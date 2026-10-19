@@ -4,3 +4,6 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # Die Directus-Adresse ist kein Geheimnis (steht in DIRECTUS.md, .env.example, Skripten).
+  # Der Secret-Scan soll sie nicht als Leck melden; Tokens und Schlüssel prüft er weiter.
+  SECRETS_SCAN_OMIT_KEYS = "NUXT_DIRECTUS_URL"

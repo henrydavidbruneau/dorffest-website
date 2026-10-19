@@ -7,7 +7,7 @@ dort `DIRECTUS.md`, `scripts/directus-setup.mjs`, `server/utils/adminSession.ts`
 Stand: 18.10.2026. **Directus ist eingerichtet und die Website angebunden** (Collections, Rechte,
 Rollen, Flows, Startinhalte – siehe „Einrichtung“ unten). Lesen und Formulare laufen über
 `server/utils/*` mit dem Server-Token. Die Typen in `shared/types/*.ts` entsprechen den Collections
-unten. Noch offen: das Vereinsheim.
+unten. Das Vereinsheim unter `/vereinsheim` nutzt dieselben Collections mit den persönlichen Konten.
 
 Server: `https://api.xn--knigsdorf-rckt-zusammen-7kc4n.de` (= `api.königsdorf-rückt-zusammen.de`,
 in Konfigurationen immer Punycode), Directus 12.5.0, Lizenz: Open Innovation Grant.
@@ -456,12 +456,28 @@ Jede*r braucht trotzdem eine E-Mail (Directus-Pflicht, Passwort vergessen).
 - **Achtung:** Directus prüft „Pflichtfeld“ (`required`) bei API-Anlagen nicht zuverlässig – die
   Website validiert selbst, das Vereinsheim muss es auch tun.
 
+### Vereinsheim (technisch)
+
+- Nur im Browser (`routeRules`: `ssr: false`, `X-Robots-Tag: noindex`). Route-Middleware `vereinsheim`
+  schickt ohne Anmeldung zur Tür (`/vereinsheim/tuer`); `/vereinsheim/mitglieder` nur mit `vorstand`.
+- **Login** `POST /api/vereinsheim/login`: Benutzername → E-Mail (Server-Token), dann `/auth/login`.
+  Access-/Refresh-Token in httpOnly-Cookies `vh_at`/`vh_rt` (`server/utils/vereinsheim.ts`, Muster DPAT).
+  Server-Middleware erneuert abgelaufene Tokens und lehnt Schreibzugriffe fremder Herkunft ab.
+- **Daten:** `/api/vereinsheim/d/<pfad>` reicht an Directus durch – mit dem Token der Person, nur
+  für die Collections des Vereins, `files`, `folders`, `users` (Positivliste). Rechte = Policies.
+  Im Browser: `vh.liste/eins/anlegen/aendern/loeschen/hochladen` (`app/composables/useVereinsheim.ts`).
+- **Sonderrouten** (mehrere Schritte oder Mails): Rundmail, Gastbeitrag annehmen/ablehnen,
+  Mitgliedsantrag annehmen/ablehnen, Passwort, Konto, Markdown-Vorschau, Bilder
+  (`/api/vereinsheim/bild/:id` – zeigt auch Gastbeitrags-Fotos und eigene Belege).
+- **Vorstand?** = darf `mitglieder` lesen (Policy `Vorstand`).
+- Lokal testen: `vh_at`-Cookie auf einen statischen Token setzen.
+
 ### Noch offen
 
+- „Dein Beitrag ist erschienen“-Mail an Gastautor*innen, Erinnerungsmails ans Plenum verschicken.
 - `verein` (Singleton) wird noch nicht gelesen – Kontakt/Konto stehen weiter in
   `shared/utils/kontakt.ts`, der Infochannel in `app/navigation.ts`.
-- Newsletter (Box ist nur Oberfläche), Erinnerungsmails ans Plenum verschicken.
-- Vereinsheim.
+- Newsletter (Box ist nur Oberfläche).
 
 ## Startinhalte
 
@@ -487,4 +503,4 @@ Porträt-Feldern, Kleinanzeigen, FAQ, Stimmen, Singleton `verein`).
 3. ✅ `server/utils/*.ts` von `server/data` auf Directus umstellen – Routen, Composables und
    Seiten bleiben unverändert (außer den beiden markierten Code-Anpassungen).
 4. ✅ POST-Routen speichern statt loggen, Turnstile + Brevo anbinden.
-5. Vereinsheim bauen.
+5. ✅ Vereinsheim bauen.
