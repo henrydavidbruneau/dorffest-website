@@ -62,6 +62,12 @@ wo wir gerade sind und was als Nächstes kommt.
 - **Login ohne E-Mail:** Konten ohne Mail bekommen beim ersten Login einen Platzhalter (siehe `DIRECTUS.md` →
   Login mit Benutzernamen). Setup-Skript ist dafür gelaufen. Betrifft derzeit `brunobalscheit` und `vivienfuhs`.
 
+- **Plenum-Erinnerung automatisch** (3 Tage vorher, Netlify Scheduled Function – läuft nur auf dem Produktions-Deploy);
+  Abos stehen in der Anmeldeliste des Plenums. Anmeldung ohne „Nachricht an uns“.
+- **Mails im Website-Look** (HTML-Vorlage, Knöpfe, Logo), Absender „Rückt Zusammen e.V.“; Vorschau bei Rundmails.
+- **Rundbrief** an die Newsletter-Liste unter Post (Brevo-Kampagne, Test an mich). Zum ersten Mal mit „Test an mich“
+  ausprobieren; der Brevo-Schlüssel braucht Kampagnen-Rechte.
+
 ## Offen / als Nächstes
 
 1. **Phase 8:** Mobil-Feinschliff weiter Seite für Seite. Impressum: Schreibweise „Vivian/Vivien Fuhs“ und

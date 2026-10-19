@@ -111,7 +111,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
         <BasisKnopf groesse="klein" @click="neueMail">+ Neue Mail</BasisKnopf>
         <BasisKnopf variante="outline" groesse="klein" :disabled="laedtListe" @click="frischHolen">{{ laedtListe ? 'Schaut nach …' : 'Aktualisieren' }}</BasisKnopf>
       </template>
-      <BasisKnopf v-if="data?.webmail" :to="data.webmail" target="_blank" variante="outline" groesse="klein">Webmail ↗</BasisKnopf>
+      <BasisKnopf to="/vereinsheim/post/rundbrief" variante="outline" groesse="klein">+ Neuer Rundbrief</BasisKnopf>
     </VereinsheimKopf>
 
     <div v-if="data && !data.eingerichtet" class="vh-karte post__fehlt">

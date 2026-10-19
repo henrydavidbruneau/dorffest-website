@@ -49,7 +49,7 @@ Bestätigungen (z. B. nach einer Anmeldung oder einem Mitgliedsantrag), Erinneru
 
 ### Newsletter
 
-Wenn du dich für unseren Newsletter einträgst, schicken wir dir zuerst eine Mail mit einem Bestätigungslink. Erst wenn du ihn anklickst, kommt deine E-Mail-Adresse auf unsere Newsletter-Liste bei Brevo (Double-Opt-in). Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Abmelden kannst du dich jederzeit über den Link in jeder Mail oder per Mail an uns; dann löschen wir deine Adresse von der Liste.
+Wenn du dich für unseren Newsletter einträgst, schicken wir dir zuerst eine Mail mit einem Bestätigungslink. Erst wenn du ihn anklickst, kommt deine E-Mail-Adresse auf unsere Newsletter-Liste bei Brevo (Double-Opt-in). Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Brevo zählt dabei, wie viele den Newsletter geöffnet und welche Links sie angeklickt haben; wir sehen davon nur die Gesamtzahlen. Abmelden kannst du dich jederzeit über den Link in jeder Mail oder per Mail an uns; dann löschen wir deine Adresse von der Liste.
 
 ### Wenn du uns schreibst
 
