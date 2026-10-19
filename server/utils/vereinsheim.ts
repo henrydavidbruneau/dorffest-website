@@ -125,7 +125,12 @@ function alsFehler(e: unknown): never {
   const status = err.status ?? 502
   const meldung = err.data?.errors?.[0]?.message
   if (status === 401) throw nichtAngemeldet()
-  if (status === 403) throw createError({ statusCode: 403, statusMessage: 'Dafür fehlen dir die Rechte. Frag im Vorstand nach.', data: { code: 'rechte' } })
+  if (status === 403) {
+    // Directus meldet ein Feld, das es (noch) nicht gibt, ebenfalls als fehlendes Recht
+    const feld = meldung?.match(/field "([^"]+)"/)?.[1]
+    if (feld) throw createError({ statusCode: 409, statusMessage: `Das Feld „${feld}“ gibt es in Directus noch nicht (oder es fehlt das Recht dafür). Bitte einmal scripts/directus-setup.mjs ausführen.`, data: { code: 'feld_fehlt' } })
+    throw createError({ statusCode: 403, statusMessage: 'Dafür fehlen dir die Rechte. Frag im Vorstand nach.', data: { code: 'rechte' } })
+  }
   if (status === 404) throw createError({ statusCode: 404, statusMessage: 'Nicht gefunden.', data: { code: 'nicht_gefunden' } })
   console.error('[vereinsheim] Directus:', status, meldung ?? e)
   // Meldungen aus Flows (z.B. max. 4 Kleinanzeigen) und Validierung weitergeben

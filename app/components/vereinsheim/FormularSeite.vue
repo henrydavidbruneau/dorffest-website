@@ -49,12 +49,17 @@ async function laden() {
 }
 watch(() => props.id, laden, { immediate: true })
 
+// Felder, die Directus beim Laden nicht mitliefert, gibt es dort noch nicht (oder sie sind nicht lesbar) –
+// ausblenden und nicht mitschicken, sonst scheitert das ganze Speichern
+const fehlendeFelder = computed(() => (neu.value || status.value === 'laedt' ? [] : props.felder.filter(f => !(f.feld in original.value)).map(f => f.feld)))
+const sichtbareFelder = computed(() => props.felder.filter(f => !fehlendeFelder.value.includes(f.feld)))
+
 const titel = computed(() => String(daten.value[props.titelFeld] || (neu.value ? `Neu: ${props.art}` : props.art)))
 
 // Abschnitte mit ihren Feldern; eingeklappte gehen auf, wenn schon etwas drinsteht
 const abschnitte = computed(() => (props.gruppen ?? [])
   .filter(g => !g.wenn || g.wenn(daten.value, props.beziehungen))
-  .map(g => ({ ...g, felder: props.felder.filter(f => f.gruppe === g.key) }))
+  .map(g => ({ ...g, felder: sichtbareFelder.value.filter(f => f.gruppe === g.key) }))
   .filter(g => g.felder.length))
 const haupt = computed(() => abschnitte.value.filter(g => g.seite === 'haupt'))
 const rand = computed(() => abschnitte.value.filter(g => g.seite === 'rand'))
@@ -73,7 +78,7 @@ async function speichern(neuerStatus?: string) {
   if (daten.value.slug === '' || (daten.value.slug == null && props.felder.some(f => f.feld === 'slug'))) {
     daten.value = { ...daten.value, slug: slugAus(String(daten.value[props.titelFeld] ?? '')) }
   }
-  fehlend.value = props.felder
+  fehlend.value = sichtbareFelder.value
     .filter(f => f.pflicht && (!f.wenn || f.wenn(daten.value)))
     .filter(f => daten.value[f.feld] === null || daten.value[f.feld] === undefined || daten.value[f.feld] === '')
     .map(f => f.label)
@@ -81,7 +86,7 @@ async function speichern(neuerStatus?: string) {
   if (props.vorbereiten) daten.value = props.vorbereiten(daten.value, neuerStatus)
 
   status.value = 'speichert'
-  const erlaubt = new Set(props.felder.map(f => f.feld).concat(['status', 'sort']))
+  const erlaubt = new Set(sichtbareFelder.value.map(f => f.feld).concat(['status', 'sort']))
   const geaendert = Object.fromEntries(Object.entries({ ...daten.value, ...(neuerStatus ? { status: neuerStatus } : {}) })
     .filter(([k, v]) => erlaubt.has(k) && (neu.value || JSON.stringify(v) !== JSON.stringify(original.value[k]))))
   try {
@@ -133,6 +138,11 @@ defineExpose({ daten, speichern, ungespeichert })
 
     <p v-if="status === 'laedt'" class="vh-leer">Wird geladen …</p>
     <template v-else>
+      <p v-if="fehlendeFelder.length" class="formular-seite__hinweis" role="note">
+        Noch nicht eingerichtet: {{ felder.filter(f => fehlendeFelder.includes(f.feld)).map(f => `„${f.label}“`).join(', ') }}.
+        Diese Felder gibt es in Directus noch nicht – sobald <code>scripts/directus-setup.mjs</code> gelaufen ist, erscheinen sie hier.
+      </p>
+
       <form novalidate @submit.prevent="speichern()">
         <!-- zweispaltig in Abschnitten -->
         <div v-if="abschnitte.length" class="formular-seite__raster">
@@ -169,7 +179,7 @@ defineExpose({ daten, speichern, ungespeichert })
 
         <!-- einfach -->
         <div v-else class="vh-karte">
-          <VereinsheimEditor v-model="daten" :felder="felder" :beziehungen="beziehungen" />
+          <VereinsheimEditor v-model="daten" :felder="sichtbareFelder" :beziehungen="beziehungen" />
           <slot :daten="daten" />
         </div>
 
@@ -222,6 +232,15 @@ defineExpose({ daten, speichern, ungespeichert })
 
 
 
+
+.formular-seite__hinweis {
+  margin: 0 0 var(--abstand-m);
+  padding: var(--abstand-xs) var(--abstand-s);
+  border-left: 4px solid var(--farbe-orange);
+  border-radius: 0.4rem;
+  background: var(--farbe-pfirsich);
+  font-size: var(--groesse-xs);
+}
 
 .formular-seite__raster {
   display: grid;

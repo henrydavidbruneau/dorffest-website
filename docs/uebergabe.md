@@ -37,8 +37,7 @@ wo wir gerade sind und was als Nächstes kommt.
 
 - **Tour + Profil:** Tour durchs Vereinsheim (Vorschlag auf dem Dashboard, im Profil wiederholbar), Profil-Knopf mit
   rundem Profilbild neben „Tschüss“, Profilbild-Upload unter „Mein Profil“.
-  **Bruno: `node scripts/directus-setup.mjs` einmal ausführen** (legt `tour_erledigt_am`, Ordner `profilbilder` und die
-  Rechte an) – bis dahin merkt sich nur der Browser die Tour.
+  Setup-Skript ist gelaufen (siehe unten).
 
 - **Dorfanzeiger ohne Ausgaben:** neuester Artikel groß, drei in der Reihe, weitere in der Seitenspalte bis sie voll
   ist, Archiv unter `/dorfanzeiger/archiv`. Reihenfolge = `veroeffentlicht_am`. **Achtung:** „Wir sind jetzt ein Verein“
@@ -50,8 +49,7 @@ wo wir gerade sind und was als Nächstes kommt.
 - **Regelmäßige Termine:** Wiederholen (jede Woche, alle zwei Wochen, monatlich gleicher Wochentag/gleiches Datum,
   optional bis) im Termin-Formular; Website zeigt das nächste Datum. Leserbrief: eigene Überschrift, breiterer Zettel.
   Artikel-Editor: Abschnitt „Porträt“ nur im Ressort Porträts.
-  **Bruno: `node scripts/directus-setup.mjs` ausführen** (legt `wiederholung`, `wiederholung_bis`, `leserbriefe.anrede`
-  und die Rechte an). Bis dahin läuft alles weiter, nur Wiederholen und eigene Überschriften werden noch nicht gespeichert.
+  `scripts/directus-setup.mjs` ist am 19.10.2026 gelaufen (Wiederholung, Anrede, Tour, Profilbilder + Rechte).
 
 ## Offen / als Nächstes
 

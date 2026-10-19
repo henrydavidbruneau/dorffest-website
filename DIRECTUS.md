@@ -373,10 +373,11 @@ node scripts/directus-seed.mjs              # Startinhalte
 `directus-setup.mjs` ist der Bauplan in Code: Neue Felder/Rechte dort ergänzen und erneut
 ausführen. An vorhandene Rechte werden neue Felder angehängt; sonstige Abweichungen meldet das
 Skript nur. Stand 18.10.2026: 21 Collections, 5 Ordner, 3 Policies, 2 Rollen, 2 Flows, alles angelegt.
-**Neu seit 19.10.2026 (noch ausführen):** Ordner `profilbilder`, Feld `directus_users.tour_erledigt_am` und die
+**Neu seit 19.10.2026 (ausgeführt am 19.10.2026, jetzt 281 Einträge):** Ordner `profilbilder`, Feld `directus_users.tour_erledigt_am` und die
 Rechte dafür (Mitglied: lesen + eigenes Konto ändern); `termine.wiederholung` + `wiederholung_bis`;
 `leserbriefe.anrede` (Server: anlegen + lesen); Server liest bei `anmeldungen` zusätzlich `date_created`
-(Plätze bei regelmäßigen Terminen je Runde). Bis dahin läuft alles ohne diese Felder weiter.
+(Plätze bei regelmäßigen Terminen je Runde). Fehlt ein Feld einmal, blendet das Vereinsheim es im Formular aus
+und nennt es; Directus meldet unbekannte Felder als „fehlendes Recht“ – die Meldung sagt dann, welches Feld fehlt.
 
 ### Was angelegt ist
 
