@@ -44,3 +44,10 @@ export function monatKurz(iso: string) {
 export function monatJahr(iso: string) {
   return format(iso, { month: 'long', year: 'numeric' })
 }
+
+/** Stunde 0–23 in Ortszeit (für Begrüßungen). formatToParts, weil `format` auf Deutsch „18 Uhr“ liefert. */
+export function stunde(datum: Date = new Date()) {
+  const teil = new Intl.DateTimeFormat('de-DE', { timeZone: ZEITZONE, hour: 'numeric', hourCycle: 'h23' })
+    .formatToParts(datum).find(t => t.type === 'hour')
+  return Number(teil?.value ?? 0)
+}

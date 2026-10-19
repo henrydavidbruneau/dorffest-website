@@ -71,14 +71,14 @@ const jetzt = new Date()
 const datum = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Berlin' }).format(jetzt)
 const begruessung = computed(() => {
   const name = ich.value?.first_name || ich.value?.benutzername || 'du'
-  const stunde = Number(new Intl.DateTimeFormat('de-DE', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Europe/Berlin' }).format(jetzt))
+  const h = stunde(jetzt)
   const sonntag = new Intl.DateTimeFormat('de-DE', { weekday: 'long', timeZone: 'Europe/Berlin' }).format(jetzt) === 'Sonntag'
-  if (stunde < 5) return { vor: 'Noch wach,', name, nach: '?', satz: 'Die Stühle stehen schon auf den Tischen – aber für dich machen wir das Licht nochmal an.' }
-  if (stunde < 11) return { vor: 'Moin', name, nach: '!', satz: 'Kaffee steht in der Küche. Die Milch ist im Kühlschrank, zweites Fach.' }
-  if (stunde < 14) return { vor: 'Mahlzeit,', name, nach: '!', satz: 'Schön, dass du in der Mittagspause vorbeischaust.' }
-  if (stunde < 18) return { vor: 'Hallo', name, nach: '!', satz: sonntag ? 'Schönen Sonntag! Kuchen ist noch da.' : 'Es gibt noch Kuchen von gestern. Bedien dich.' }
-  if (stunde < 22) return { vor: 'N’Abend', name, nach: '!', satz: 'Mach’s dir gemütlich – wer zuletzt geht, macht das Licht aus.' }
-  return { vor: 'Noch spät dran,', name, nach: '?', satz: 'Die Heizung läuft noch. Nicht zu lange bleiben!' }
+  if (h < 5) return { vor: 'Noch wach,', name, nach: '?', satz: 'Die Stühle stehen schon auf den Tischen – aber für dich machen wir das Licht nochmal an.' }
+  if (h < 11) return { vor: 'Moin', name, nach: '!', satz: 'Kaffee steht in der Küche. Die Milch ist im Kühlschrank, zweites Fach.' }
+  if (h < 14) return { vor: 'Mahlzeit,', name, nach: '!', satz: 'Schön, dass du in der Mittagspause vorbeischaust.' }
+  if (h < 18) return { vor: 'Hallo', name, nach: '!', satz: sonntag ? 'Schönen Sonntag! Kuchen ist noch da.' : 'Es gibt noch Kuchen von gestern. Bedien dich.' }
+  if (h < 22) return { vor: 'N’Abend', name, nach: '!', satz: 'Mach’s dir gemütlich – wer zuletzt geht, macht das Licht aus.' }
+  return { vor: 'Noch spät dran,', name, nach: '?', satz: 'Schön, dass du noch reinschaust. Mach nicht mehr zu lange – morgen ist auch noch ein Tag.' }
 })
 
 function seit(iso: string) {
