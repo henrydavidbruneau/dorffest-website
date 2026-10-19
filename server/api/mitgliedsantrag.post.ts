@@ -56,8 +56,10 @@ export default defineEventHandler(async (event) => {
     an: antrag.email,
     betreff: 'Dein Mitgliedsantrag ist da',
     tags: ['mitgliedsantrag'],
+    rubrik: 'Mitgliedsantrag',
     text: [
       `Hallo ${antrag.vorname},`,
+      '# Dein Antrag ist ==da!==',
       `danke für deinen Antrag – du willst ${artText} bei Königsdorf rückt zusammen e.V. werden. Wie schön!`,
       'Der Vorstand schaut sich den Antrag an und meldet sich bei dir, sobald er entschieden hat.',
       `Dein Beitrag: ${betrag}\nKonto: ${konto.kontoinhaber}\nIBAN: ${konto.iban}\nVerwendungszweck: ${zweck}`,

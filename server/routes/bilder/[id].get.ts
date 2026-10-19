@@ -1,6 +1,6 @@
 // GET /bilder/:id?width=…&height=…&format=webp&quality=80&fit=cover
 // Bilder aus Directus über den Server-Token ausliefern (öffentlich hat Directus keine Rechte).
-// Directus transformiert (Größe/Format), Netlify cacht die Antwort. Nur Ordner termine/artikel/stimmen
+// Directus transformiert (Größe/Format), Netlify cacht die Antwort. Nur Ordner termine/artikel/stimmen/rundbrief (Bilder in Mails)
 // sind für den Server-Token lesbar – alles andere endet hier mit 404.
 
 const ERLAUBT = ['width', 'height', 'quality', 'format', 'fit'] as const

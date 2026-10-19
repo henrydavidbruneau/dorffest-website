@@ -16,14 +16,17 @@ export interface Mail {
   tags?: string[]
   /** Abmelde-Link im Fuß der Mail */
   abmelden?: string
+  /** rechts in der Kopfzeile der Mail, z.B. „Anmeldung“ */
+  rubrik?: string
 }
 
-/** Adresse der Website für Logo und Links in Mails (Punycode – Umlaut-Domains machen in Mails Ärger) */
+/** Adresse der Website für Logo, Schriften und Links in Mails (Punycode – Umlaut-Domains machen in Mails Ärger) */
 export function mailBasis() {
-  return new URL(useRuntimeConfig().public.siteUrl).origin
+  const { mailBasis, public: { siteUrl } } = useRuntimeConfig()
+  return new URL(mailBasis || siteUrl).origin
 }
 
-export async function sendeMail({ an, betreff, text, antwortAn, tags, abmelden }: Mail): Promise<void> {
+export async function sendeMail({ an, betreff, text, antwortAn, tags, abmelden, rubrik }: Mail): Promise<void> {
   const { brevoApiKey, mailVon, mailVonName } = useRuntimeConfig()
   if (!brevoApiKey) {
     console.info(`[mail] Kein NUXT_BREVO_API_KEY – nicht gesendet.\n  An: ${an}\n  Betreff: ${betreff}\n-----\n${mailText(text)}${abmelden ? `\n\nAbmelden: ${abmelden}` : ''}\n-----`)
@@ -37,7 +40,7 @@ export async function sendeMail({ an, betreff, text, antwortAn, tags, abmelden }
       to: [{ email: an }],
       subject: betreff,
       textContent: mailText(text) + (abmelden ? `\n\nAbmelden: ${abmelden}` : ''),
-      htmlContent: mailHtml(text, { basis: mailBasis(), abmelden }),
+      htmlContent: mailHtml(text, { basis: mailBasis(), abmelden, rubrik, vorschau: betreff }),
       ...(antwortAn ? { replyTo: { email: antwortAn } } : {}),
       ...(tags?.length ? { tags } : {}),
     },
@@ -55,5 +58,5 @@ export async function sendeMailStill(mail: Mail) {
 /** Hinweis an den Verein (Kontakt-Postfach) */
 export async function mailAnVerein(betreff: string, text: string, antwortAn?: string) {
   const { kontakt_email } = await ladeVerein()
-  return sendeMailStill({ an: kontakt_email || KONTAKT_MAIL, betreff, text, antwortAn, tags: ['hinweis'] })
+  return sendeMailStill({ an: kontakt_email || KONTAKT_MAIL, betreff, text, antwortAn, tags: ['hinweis'], rubrik: 'Fürs Vereinsheim' })
 }

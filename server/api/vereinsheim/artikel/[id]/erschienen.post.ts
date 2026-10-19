@@ -12,8 +12,10 @@ export default defineEventHandler(async (event) => {
       an: b.email,
       betreff: `Dein Beitrag ist erschienen: „${artikel.titel}“`,
       tags: ['gastbeitrag-erschienen'],
+      rubrik: 'Dorfanzeiger',
       text: [
         `Hallo ${b.autor_in},`,
+        '# Dein Beitrag ist ==erschienen!==',
         'dein Beitrag steht jetzt im Königsdorfer Dorfanzeiger – danke, dass du mitgeschrieben hast!',
         `[Zum Artikel](${seitenUrl(event)}/dorfanzeiger/${artikel.slug})`,
         'Erzähl’s gern weiter. Und wenn du wieder etwas zu erzählen hast: Wir freuen uns.',

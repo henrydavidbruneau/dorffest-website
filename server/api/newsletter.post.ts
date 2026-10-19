@@ -17,8 +17,10 @@ export default defineEventHandler(async (event) => {
     an: mail,
     betreff: 'Bitte bestätigen: Neuigkeiten aus Königsdorf',
     tags: ['newsletter-doi'],
+    rubrik: 'Newsletter',
     text: [
       'Hallo!',
+      '# Noch ein ==Klick!==',
       'Schön, dass du von uns hören willst. Bitte bestätige kurz deine Adresse – dann bekommst du neue Termine und Neuigkeiten aus dem Dorf:',
       `[Ja, ich will Post](${link})`,
       'Du hast dich nicht eingetragen? Dann ignorier diese Mail einfach.',

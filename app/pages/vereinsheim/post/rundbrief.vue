@@ -10,12 +10,14 @@ interface Stand { eingerichtet: boolean, abonnenten: number, verschickt: Verschi
 const { zeige, fehler } = useVereinsheimMeldung()
 const { data, refresh } = useAsyncData('vh-rundbrief', () => $fetch<Stand>('/api/vereinsheim/rundbrief'), { server: false })
 
-const brief = reactive({ betreff: '', text: 'Hallo liebe Nachbar*innen,\n\n' })
+const VORLAGE = 'Hallo liebe Nachbar*innen,\n\n# Neues aus dem ==Dorf!==\n\n'
+const brief = reactive({ betreff: '', text: VORLAGE })
 const sendet = ref<'' | 'test' | 'alle'>('')
 
 // Vorschau = dasselbe HTML wie beim Versand (Logo von dieser Seite, Abmelde-Link nur angedeutet)
 const vorschau = computed(() => mailHtml(`${brief.text.trim() || '…'}\n\n${GRUSS}`, {
   basis: import.meta.client ? window.location.origin : '',
+  rubrik: 'Rundbrief',
   abmelden: '#',
 }))
 
@@ -32,7 +34,7 @@ async function schicken(test: boolean) {
     else {
       zeige('Ab in die Post! Brevo verschickt den Rundbrief jetzt.')
       brief.betreff = ''
-      brief.text = 'Hallo liebe Nachbar*innen,\n\n'
+      brief.text = VORLAGE
       await refresh()
     }
   }
@@ -55,14 +57,13 @@ async function schicken(test: boolean) {
     <div class="rb__raster">
       <form class="vh-karte rb__form" @submit.prevent="schicken(false)">
         <BasisFeld v-model="brief.betreff" label="Betreff" name="betreff" required :maxlength="200" />
-        <BasisFeld
+        <VereinsheimMarkdownFeld
           v-model="brief.text"
           label="Text"
-          name="text"
-          required
-          mehrzeilig
-          :zeilen="16"
-          hinweis="Leerzeile = neuer Absatz. **fett** · [Knopftext](https://…) allein in einer Zeile wird ein Knopf. Gruß und Abmelde-Link kommen automatisch dazu."
+          art="mail"
+          bild-ordner="rundbrief"
+          pflicht
+          hinweis="erste Zeile „Hallo …“ wird handschriftlich · # Überschrift · ==Hervorhebung== · Gruß und Abmelde-Link kommen automatisch dazu."
         />
         <div class="rb__aktionen">
           <BasisKnopf variante="outline" groesse="klein" :disabled="!fertig || !!sendet" @click="schicken(true)">{{ sendet === 'test' ? 'Schickt …' : 'Test an mich' }}</BasisKnopf>

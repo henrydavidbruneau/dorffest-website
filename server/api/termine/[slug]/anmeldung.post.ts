@@ -25,7 +25,14 @@ export default defineEventHandler(async (event) => {
   }
 
   await pruefeTurnstile(event, body)
-  await directusAnlegen('anmeldungen', { termin: termin.id, name, email: mail, personen, mitbringen })
+  const neu = await directusAnlegen<{ id?: number }>('anmeldungen', { termin: termin.id, name, email: mail, personen, mitbringen })
+  const austragen = neu?.id && linkSchluesselDa()
+    ? `${seitenUrl(event)}/api/termine/austragen?id=${neu.id}&sig=${await signiere('anmeldung-austragen', neu.id)}`
+    : null
+  // zweite Box „über weitere Aktionen informieren“: Bestätigungslink für den Rundbrief gleich mit in die Mail (Double-Opt-in)
+  const rundbrief = body.rundbrief === true && linkSchluesselDa()
+    ? `${seitenUrl(event)}/api/newsletter/bestaetigen?email=${encodeURIComponent(mail)}&sig=${await signiere('newsletter', mail)}`
+    : null
 
   const wann = termin.beginn
     ? `${datumAusgeschrieben(termin.beginn)}${termin.uhrzeit_folgt ? ' (Uhrzeit folgt)' : `, ${uhrzeit(termin.beginn)} Uhr`}`
@@ -35,12 +42,15 @@ export default defineEventHandler(async (event) => {
     an: mail,
     betreff: `Du bist angemeldet: ${termin.titel}`,
     tags: ['anmeldung'],
+    rubrik: 'Anmeldung',
     text: [
       `Hallo ${name},`,
+      '# Du bist ==dabei!==',
       `schön, dass du dabei bist! Wir haben dich für „${termin.titel}“ angemeldet${personen > 1 ? ` – mit ${personen} Personen` : ''}.`,
       `Wann: ${wann}\nWo: ${wo}${mitbringen ? `\n${termin.mitbringen_frage ? `Deine Antwort auf „${termin.mitbringen_frage}“` : 'Du bringst mit'}: ${mitbringen}` : ''}`,
-      `[Alle Infos zum Termin](${seitenUrl(event)}/termine/${termin.slug})`,
-      'Du kannst doch nicht? Antworte einfach auf diese Mail, dann geben wir deinen Platz weiter.',
+      termin.beginn ? `[In den Kalender eintragen](${seitenUrl(event)}/api/termine/${termin.slug}/kalender.ics)` : `[Alle Infos zum Termin](${seitenUrl(event)}/termine/${termin.slug})`,
+      austragen ? `Du kannst doch nicht? [Klick hier, um dich wieder auszutragen](${austragen}).` : 'Du kannst doch nicht? Antworte einfach auf diese Mail, dann geben wir deinen Platz weiter.',
+      ...(rundbrief ? ['## Und unser ==Rundbrief?==', 'Du willst auch von weiteren Aktionen hören – schön! Bitte bestätige noch kurz, dass wir dir unseren Rundbrief schicken dürfen:', `[Ja, schickt mir den Rundbrief](${rundbrief})`] : []),
       GRUSS,
     ].join('\n\n'),
   })

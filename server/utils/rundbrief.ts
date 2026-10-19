@@ -47,7 +47,7 @@ export async function rundbriefVerschicken(betreff: string, text: string) {
       replyTo: KONTAKT_MAIL,
       tag: RUNDBRIEF_TAG,
       recipients: { listIds: [liste] },
-      htmlContent: mailHtml(rundbriefText(text), { basis: mailBasis(), abmelden: '{{ unsubscribe }}', vorschau: betreff }),
+      htmlContent: mailHtml(rundbriefText(text), { basis: mailBasis(), rubrik: 'Rundbrief', abmelden: '{{ unsubscribe }}', vorschau: betreff }),
     },
   })
   await brevo(`/emailCampaigns/${kampagne.id}/sendNow`, { method: 'POST' })

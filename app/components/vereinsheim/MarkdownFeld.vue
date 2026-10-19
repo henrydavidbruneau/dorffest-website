@@ -1,7 +1,10 @@
 <script setup lang="ts">
-// Markdown schreiben, mit Werkzeugleiste (fett, Überschrift, Link …) und Vorschau wie auf der Website (Server rendert)
+// Markdown schreiben, mit Werkzeugleiste (fett, Überschrift, Link …) und Vorschau wie auf der Website (Server rendert).
+// art="mail": Werkzeuge für Mails (`shared/utils/mailHtml.ts`: Überschrift, Hervorhebung, Knopf, Trennstrich, Bild),
+// Vorschau macht dann die Seite selbst (z.B. Rundbrief), Bilder landen im Ordner `bildOrdner`.
 const wert = defineModel<string | null>()
-defineProps<{ label: string, hinweis?: string, pflicht?: boolean }>()
+const props = defineProps<{ label: string, hinweis?: string, pflicht?: boolean, art?: 'artikel' | 'mail', bildOrdner?: string }>()
+const { fehler } = useVereinsheimMeldung()
 const id = useId()
 const ansicht = ref<'schreiben' | 'vorschau'>('schreiben')
 const html = ref('')
@@ -13,8 +16,19 @@ async function vorschau() {
 }
 
 // Auswahl umschließen (fett, kursiv, Link) oder Zeilenanfang setzen (Überschrift, Zitat, Liste)
-type Werkzeug = { text: string, titel: string, vor: string, nach?: string, zeile?: boolean, platzhalter: string }
-const WERKZEUGE: Werkzeug[] = [
+// block: eigener Absatz an der Cursor-Stelle (Leerzeilen davor/danach)
+type Werkzeug = { text: string, titel: string, vor: string, nach?: string, zeile?: boolean, block?: boolean, platzhalter: string }
+const WERKZEUGE_MAIL: Werkzeug[] = [
+  { text: 'H1', titel: 'Überschrift', vor: '# ', zeile: true, platzhalter: 'Überschrift mit ==Hervorhebung==' },
+  { text: 'H2', titel: 'Zwischenüberschrift', vor: '## ', zeile: true, platzhalter: 'Zwischenüberschrift' },
+  { text: 'B', titel: 'Fett', vor: '**', nach: '**', platzhalter: 'fetter Text' },
+  { text: 'H̲', titel: 'Hervorhebung', vor: '==', nach: '==', platzhalter: 'Wort' },
+  { text: '🔗', titel: 'Link', vor: '[', nach: '](https://)', platzhalter: 'Linktext' },
+  { text: '▭', titel: 'Knopf', vor: '[', nach: '](https://)', block: true, platzhalter: 'Knopftext' },
+  { text: '•', titel: 'Aufzählung', vor: '- ', zeile: true, platzhalter: 'Punkt' },
+  { text: '—', titel: 'Trennstrich', vor: '---', block: true, platzhalter: '' },
+]
+const WERKZEUGE_ARTIKEL: Werkzeug[] = [
   { text: 'B', titel: 'Fett', vor: '**', nach: '**', platzhalter: 'fetter Text' },
   { text: 'I', titel: 'Kursiv', vor: '*', nach: '*', platzhalter: 'kursiver Text' },
   { text: 'H', titel: 'Zwischenüberschrift', vor: '## ', zeile: true, platzhalter: 'Zwischenüberschrift' },
@@ -23,9 +37,28 @@ const WERKZEUGE: Werkzeug[] = [
   { text: '•', titel: 'Aufzählung', vor: '- ', zeile: true, platzhalter: 'Punkt' },
 ]
 
+const werkzeuge = computed(() => (props.art === 'mail' ? WERKZEUGE_MAIL : WERKZEUGE_ARTIKEL))
+
+/** Absatz an der Cursor-Stelle einfügen (mit Leerzeilen drumherum), Platzhalter markieren */
+async function blockEinfuegen(vor: string, platzhalter = '', nach = '') {
+  const el = feld.value
+  if (!el) return
+  const text = wert.value ?? ''
+  const a = el.selectionEnd
+  const davor = text.slice(0, a).replace(/\s*$/, '')
+  const danach = text.slice(a).replace(/^\s*/, '')
+  const anfang = davor ? `${davor}\n\n` : ''
+  wert.value = `${anfang}${vor}${platzhalter}${nach}\n\n${danach}`
+  await nextTick()
+  el.focus()
+  const start = anfang.length + vor.length
+  el.setSelectionRange(start, start + platzhalter.length)
+}
+
 async function anwenden(w: Werkzeug) {
   const el = feld.value
   if (!el) return
+  if (w.block) return blockEinfuegen(w.vor, el.value.slice(el.selectionStart, el.selectionEnd) || w.platzhalter, w.nach)
   const text = wert.value ?? ''
   const [a, b] = [el.selectionStart, el.selectionEnd]
   const auswahl = text.slice(a, b) || w.platzhalter
@@ -50,6 +83,26 @@ async function anwenden(w: Werkzeug) {
   el.focus()
   el.setSelectionRange(start, start + auswahl.length)
 }
+
+// Bild hochladen (im Browser verkleinert) und als eigenen Absatz einfügen
+const bildLaedt = ref(false)
+async function bildHochladen(e: Event) {
+  const datei = (e.target as HTMLInputElement).files?.[0]
+  if (!datei || !props.bildOrdner) return
+  bildLaedt.value = true
+  try {
+    const klein = await fotoVerkleinern(datei, 1600)
+    const id = await vh.hochladen(klein, datei.name.replace(/\.\w+$/, '.jpg'), props.bildOrdner)
+    await blockEinfuegen(`![${datei.name.replace(/\.\w+$/, '')}](/bilder/${id}?width=1200&format=jpg "`, 'Bildunterschrift (oder leer lassen)', '")')
+  }
+  catch (err) {
+    fehler(err)
+  }
+  finally {
+    bildLaedt.value = false;
+    (e.target as HTMLInputElement).value = ''
+  }
+}
 </script>
 
 <template>
@@ -58,11 +111,16 @@ async function anwenden(w: Werkzeug) {
     <div class="md__rahmen">
       <div class="md__leiste">
         <div v-show="ansicht === 'schreiben'" class="md__werkzeuge" role="toolbar" :aria-label="`Formatieren: ${label}`">
-          <button v-for="w in WERKZEUGE" :key="w.titel" type="button" class="md__werkzeug" :title="w.titel" :aria-label="w.titel" @click="anwenden(w)">
+          <button v-for="w in werkzeuge" :key="w.titel" type="button" class="md__werkzeug" :title="w.titel" :aria-label="w.titel" @click="anwenden(w)">
             <span :class="`md__symbol md__symbol--${w.titel.toLowerCase()}`" aria-hidden="true">{{ w.text }}</span>
           </button>
+          <label v-if="bildOrdner" class="md__werkzeug md__bild" :title="bildLaedt ? 'Bild wird hochgeladen …' : 'Bild einfügen'">
+            <span aria-hidden="true">{{ bildLaedt ? '…' : '🖼' }}</span>
+            <span class="nur-screenreader">Bild einfügen</span>
+            <input type="file" accept="image/*" :disabled="bildLaedt" @change="bildHochladen">
+          </label>
         </div>
-        <div class="md__umschalter" role="group" aria-label="Ansicht">
+        <div v-if="art !== 'mail'" class="md__umschalter" role="group" aria-label="Ansicht">
           <button type="button" :aria-pressed="ansicht === 'schreiben'" @click="ansicht = 'schreiben'">Schreiben</button>
           <button type="button" :aria-pressed="ansicht === 'vorschau'" @click="vorschau">Vorschau</button>
         </div>
@@ -129,6 +187,21 @@ async function anwenden(w: Werkzeug) {
 
 .md__werkzeug:hover {
   background: var(--farbe-pfirsich);
+}
+
+.md__bild {
+  position: relative;
+}
+
+.md__bild input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.md__bild:focus-within {
+  outline: 2px solid var(--farbe-lila);
 }
 
 .md__symbol--kursiv {

@@ -188,7 +188,7 @@ const STATUS_PUBLISH = [['published', 'Veröffentlicht'], ['draft', 'Entwurf'], 
 const archive = { archive_field: 'status', archive_value: 'archived', unarchive_value: 'draft', archive_app_filter: true }
 const DOT = 'Nur über den Server-Token anlegbar, nie öffentlich.'
 
-const FOLDERS = ['termine', 'artikel', 'gastbeitraege', 'stimmen', 'belege', 'profilbilder']
+const FOLDERS = ['termine', 'artikel', 'gastbeitraege', 'stimmen', 'belege', 'profilbilder', 'rundbrief']
 
 const COLLECTIONS = [
   /* Termine */
@@ -676,7 +676,9 @@ const PERMISSIONS = {
     { collection: 'termine', action: 'read', fields: ['*'], permissions: PUBLISHED },
     { collection: 'anmeldungen', action: 'create', fields: ['termin', 'name', 'email', 'personen', 'nachricht', 'mitbringen'], validation: { personen: { _between: [1, 10] } } },
     // date_created: Plätze bei regelmäßigen Terminen nur seit dem letzten Termin zählen
-    { collection: 'anmeldungen', action: 'read', fields: ['termin', 'personen', 'status', 'date_created'] },
+    { collection: 'anmeldungen', action: 'read', fields: ['id', 'termin', 'personen', 'status', 'date_created'] },
+    // „Klick hier, um dich wieder auszutragen“ (signierter Link in der Bestätigungsmail): nur auf abgemeldet setzen
+    { collection: 'anmeldungen', action: 'update', fields: ['status'], validation: { status: { _eq: 'abgemeldet' } } },
     { collection: 'beitraege', action: 'create', fields: ['termin', 'name', 'was', 'email'] },
     { collection: 'ressorts', action: 'read', fields: ['*'] },
     { collection: 'ausgaben', action: 'read', fields: ['*'] },
@@ -705,7 +707,7 @@ const PERMISSIONS = {
     { collection: 'directus_users', action: 'update', fields: ['email'], permissions: { _and: [{ benutzername: { _nnull: true } }, { email: { _null: true } }] }, validation: { email: { _ends_with: '@ohne-mail.koenigsdorf-rueckt-zusammen.de' } } },
     // Dateien: Bilder veröffentlichter Inhalte lesen (Ordner termine/artikel/stimmen),
     // Fotos von Gastbeiträgen hochladen (nur in den Ordner gastbeitraege)
-    { collection: 'directus_files', action: 'read', fields: ['*'], permissions: { folder: { name: { _in: ['termine', 'artikel', 'stimmen'] } } } },
+    { collection: 'directus_files', action: 'read', fields: ['*'], permissions: { folder: { name: { _in: ['termine', 'artikel', 'stimmen', 'rundbrief'] } } }, aktualisieren: true },
     { collection: 'directus_files', action: 'create', fields: ['*'], presets: { folder: '$folder:gastbeitraege' }, validation: { folder: { _eq: '$folder:gastbeitraege' } } },
   ],
   Mitglied: [
@@ -874,7 +876,13 @@ async function main() {
             api('PATCH', `/permissions/${have.id}`, { fields: missing.includes('*') ? ['*'] : [...hf, ...missing] }))
         }
         else skipped.push(`${label} – schon vorhanden`)
-        const differs = !sameJson([...new Set([...hf, ...missing])].sort(), [...want.fields].sort()) || !sameJson(filterOrNull(have.permissions), filterOrNull(want.permissions))
+        const filterAnders = !sameJson(filterOrNull(have.permissions), filterOrNull(want.permissions))
+        // `aktualisieren: true` im Bauplan: Filter darf angeglichen werden (z.B. neuer Bild-Ordner)
+        if (filterAnders && want.aktualisieren) {
+          await step(`${label} – Filter aktualisiert`, () => api('PATCH', `/permissions/${have.id}`, { permissions: want.permissions || null }))
+          continue
+        }
+        const differs = !sameJson([...new Set([...hf, ...missing])].sort(), [...want.fields].sort()) || filterAnders
         if (differs && !missing.includes('*')) warnings.push(`${label} weicht vom Bauplan ab (nicht geändert)`)
         continue
       }

@@ -25,6 +25,9 @@ const wann = computed(() => {
   return `${wochentag} · ${zeit}`
 })
 
+// zurück aus dem Austragen-Link der Anmeldebestätigung
+const ausgetragen = computed(() => route.query.ausgetragen === '1')
+
 const seitenUrl = useRequestURL()
 useSeoMeta({
   title: () => termin.value?.titel,
@@ -78,6 +81,10 @@ useHead(() => ({
                 </li>
               </ul>
             </div>
+
+            <p v-if="ausgetragen" class="plakat__hinweis" role="status">
+              Du bist ausgetragen, dein Platz ist wieder frei. Schade – vielleicht beim nächsten Mal!
+            </p>
 
             <div class="plakat__knoepfe">
               <BasisKnopf v-if="termin.anmeldung_aktiv && !termin.vergangen" to="#anmeldung" variante="hell">Anmelden</BasisKnopf>
@@ -204,6 +211,15 @@ useHead(() => ({
   font-size: clamp(1.125rem, 1.6vw, 1.4rem);
   line-height: 1.2;
   text-transform: uppercase;
+}
+
+.plakat__hinweis {
+  margin: var(--abstand-s) 0 0;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-m, 0.6rem);
+  background: var(--farbe-pfirsich);
+  color: var(--farbe-lila);
+  font-weight: var(--gewicht-text-mittel);
 }
 
 .plakat__knoepfe {

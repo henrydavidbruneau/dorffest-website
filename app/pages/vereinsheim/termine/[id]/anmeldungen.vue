@@ -73,7 +73,7 @@ async function erinnerungLoeschen(e: Erinnerung) {
 // Vorschau der Rundmail, so wie sie bei der ersten Person ankommt
 const vorschauAn = computed(() => angemeldet.value[0] ?? nurErinnerung.value[0] ?? null)
 const vorschauText = computed(() => [`Hallo ${vorschauAn.value?.name || 'du'},`, mail.text.trim() || '…', GRUSS].join('\n\n'))
-const vorschauHtml = computed(() => mailHtml(vorschauText.value, { basis: window.location.origin }))
+const vorschauHtml = computed(() => mailHtml(vorschauText.value, { basis: window.location.origin, rubrik: data.value?.termin.titel }))
 
 const kopfDatum = computed(() => (regelmaessig.value ? gewaehlt.value : data.value?.termin.beginn) || null)
 

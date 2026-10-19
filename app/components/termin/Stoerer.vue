@@ -9,7 +9,7 @@ const props = defineProps<{ termin: TerminDetail }>()
 const anmeldung = useFormular(() => `/api/termine/${props.termin.slug}/anmeldung`)
 const beitrag = useFormular(() => `/api/termine/${props.termin.slug}/beitrag`)
 
-const form = reactive({ name: '', email: '', personen: 1, mitbringen: '', einwilligung: false, website: '', turnstile: '' })
+const form = reactive({ name: '', email: '', personen: 1, mitbringen: '', einwilligung: false, rundbrief: false, website: '', turnstile: '' })
 const seite = ref<1 | 2>(1)
 const pruefFehler = ref('')
 const zettel = ref<HTMLElement>()
@@ -142,6 +142,10 @@ async function absenden() {
         <label v-if="mitAnmeldung && (!zweiSeiten || seite === 2)" class="stoerer__einwilligung">
           <input v-model="form.einwilligung" type="checkbox" required>
           <span>Ich bin einverstanden, dass ihr meine Angaben für diesen Termin speichert und mich dazu per Mail kontaktiert. Mehr in der <NuxtLink to="/datenschutz">Datenschutzerklärung</NuxtLink>.</span>
+        </label>
+        <label v-if="mitAnmeldung && (!zweiSeiten || seite === 2)" class="stoerer__einwilligung">
+          <input v-model="form.rundbrief" type="checkbox">
+          <span>Haltet mich auch über weitere Aktionen auf dem Laufenden – mit eurem Rundbrief (Newsletter).</span>
         </label>
 
         <p v-if="fehler" class="stoerer__fehler" role="alert">{{ fehler }}</p>

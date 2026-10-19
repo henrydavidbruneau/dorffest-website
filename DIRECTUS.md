@@ -529,6 +529,12 @@ Ohne echte E-Mail gibt es kein „Passwort vergessen“ – dann setzt ein Admin
   Antwort an die Kontakt-Adresse) und schickt sie sofort; `test: true` schickt nur an die eigene Adresse.
   `GET /api/vereinsheim/rundbrief` liefert Abonnent*innen-Zahl und die letzten Rundbriefe (aus Brevo).
   Der API-Schlüssel braucht in Brevo die Rechte für Kampagnen und Kontakte; der Absender muss verifiziert sein.
+- **Austragen aus der Anmeldung:** Bestätigungsmail enthält `GET /api/termine/austragen?id=…&sig=…`
+  (signiert mit `NUXT_LINK_SECRET`); Server-Policy darf `anmeldungen.status` nur auf `abgemeldet` setzen.
+  Zurück zum Termin mit Hinweis (`?ausgetragen=1`). Kreuzt man „Rundbrief (Newsletter)“ an, steht der
+  Newsletter-Bestätigungsknopf gleich mit in der Mail.
+- **Rundbrief-Bilder:** Upload im Vereinsheim in den Ordner `rundbrief`; die Server-Policy darf ihn lesen,
+  in der Mail als `/bilder/<id>?width=1200&format=jpg`.
 - **Mail-Design:** alle Mails (außer den persönlichen aus „Post“) kommen als HTML im Website-Look
   (`shared/utils/mailHtml.ts`, Logo `public/mail/logo.png` von `siteUrl`); dieselbe Funktion zeigt die
   Vorschau im Vereinsheim (Rundmail, Rundbrief).

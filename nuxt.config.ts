@@ -35,6 +35,9 @@ export default defineNuxtConfig({
     // Absender bei Brevo (Domain muss dort verifiziert sein)
     mailVon: 'kontakt@koenigsdorf-rueckt-zusammen.de',
     mailVonName: 'Rückt Zusammen e.V.',
+    // Adresse für Logo, Schriften und Bilder in Mails: die Seite, die Netlify gerade ausliefert
+    // (Netlify setzt URL beim Build; nach dem Domain-Umzug ist das die Domain). Sonst siteUrl.
+    mailBasis: process.env.URL ?? '',
     turnstileSecretKey: '',
     // Schlüssel für signierte Bestätigungs-/Abmeldelinks (Plenum-Erinnerung)
     linkSecret: '',
@@ -59,6 +62,8 @@ export default defineNuxtConfig({
   // Es gibt keine eigene Terminübersicht – alle Termine stehen auf der Startseite unter "Was kommt"
   routeRules: {
     '/termine': { redirect: '/#was-kommt' },
+    // Logo + Schriften für Mails: von Mailprogrammen aus anderer Herkunft geladen → CORS erlauben
+    '/mail/**': { headers: { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=604800' } },
     // Vereinsheim: nur im Browser (Session über httpOnly-Cookies), nie in Suchmaschinen
     '/vereinsheim/**': { ssr: false, headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
     '/vereinsheim': { ssr: false, headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
