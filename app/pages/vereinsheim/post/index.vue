@@ -107,11 +107,9 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
 <template>
   <div class="post">
     <VereinsheimKopf titel="Die" hervorhebung="Post" :zusatz="`Kontakt-Postfach ${verein.kontakt_email}`">
-      <template v-if="data?.eingerichtet">
-        <BasisKnopf groesse="klein" @click="neueMail">+ Neue Mail</BasisKnopf>
-        <BasisKnopf variante="outline" groesse="klein" :disabled="laedtListe" @click="frischHolen">{{ laedtListe ? 'Schaut nach …' : 'Aktualisieren' }}</BasisKnopf>
-      </template>
-      <BasisKnopf to="/vereinsheim/post/rundbrief" variante="outline" groesse="klein">+ Neuer Rundbrief</BasisKnopf>
+      <BasisKnopf v-if="data?.eingerichtet" variante="outline" groesse="klein" :disabled="laedtListe" @click="frischHolen">{{ laedtListe ? 'Schaut nach …' : 'Aktualisieren' }}</BasisKnopf>
+      <BasisKnopf v-if="data?.eingerichtet" groesse="klein" @click="neueMail">+ Neue Mail</BasisKnopf>
+      <BasisKnopf to="/vereinsheim/post/rundbrief" groesse="klein">+ Neuer Rundbrief</BasisKnopf>
     </VereinsheimKopf>
 
     <div v-if="data && !data.eingerichtet" class="vh-karte post__fehlt">

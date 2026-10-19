@@ -23,20 +23,45 @@ function brevo<T>(pfad: string, optionen: { method?: 'GET' | 'POST', body?: Reco
 /** Text des Rundbriefs: eigener Text + Gruß (wie bei allen Mails) */
 export const rundbriefText = (text: string) => `${text.trim()}\n\n${GRUSS}`
 
+/** Status bei Brevo in Worten (Brevo prüft neue Konten/Kampagnen teils erst, bevor es rausgeht) */
+const BREVO_STATUS: Record<string, string> = {
+  sent: 'verschickt',
+  queued: 'in der Warteschlange bei Brevo',
+  in_process: 'wird gerade verschickt',
+  suspended: 'von Brevo angehalten – bitte im Brevo-Konto nachsehen',
+  draft: 'bei Brevo nicht abgeschickt',
+  archive: 'archiviert',
+}
+
+export interface BrevoKampagne { id: number, betreff: string, am: string | null, status: string, statusText: string, zugestellt: number | null, geoeffnet: number | null, bounces: number | null }
+
+interface BrevoRoh { id: number, name?: string, subject: string, status: string, sentDate?: string, scheduledAt?: string, createdAt?: string, statistics?: { globalStats?: { delivered?: number, uniqueViews?: number, hardBounces?: number, softBounces?: number } } }
+
 export async function rundbriefStand() {
   const { liste } = rundbriefKonfig()
   const [infos, kampagnen] = await Promise.all([
     brevo<{ uniqueSubscribers?: number, totalSubscribers?: number }>(`/contacts/lists/${liste}`),
-    brevo<{ campaigns?: { id: number, name?: string, subject: string, sentDate?: string, statistics?: { globalStats?: { delivered?: number, uniqueViews?: number } } }[] }>('/emailCampaigns', {
-      query: { type: 'classic', status: 'sent', limit: 50, sort: 'desc', statistics: 'globalStats' },
+    brevo<{ campaigns?: BrevoRoh[] }>('/emailCampaigns', {
+      query: { type: 'classic', limit: 50, sort: 'desc', statistics: 'globalStats' },
     }).catch(() => ({ campaigns: [] })),
   ])
   return {
     abonnenten: infos.uniqueSubscribers ?? infos.totalSubscribers ?? 0,
-    verschickt: (kampagnen.campaigns ?? [])
+    kampagnen: (kampagnen.campaigns ?? [])
       .filter(k => k.name?.startsWith(NAME_ANFANG))
-      .slice(0, 10)
-      .map(k => ({ id: k.id, betreff: k.subject, am: k.sentDate ?? null, zugestellt: k.statistics?.globalStats?.delivered ?? null, geoeffnet: k.statistics?.globalStats?.uniqueViews ?? null })),
+      .map((k): BrevoKampagne => {
+        const st = k.statistics?.globalStats
+        return {
+          id: k.id,
+          betreff: k.subject,
+          am: k.sentDate ?? k.scheduledAt ?? k.createdAt ?? null,
+          status: k.status,
+          statusText: BREVO_STATUS[k.status] ?? k.status,
+          zugestellt: st?.delivered ?? null,
+          geoeffnet: st?.uniqueViews ?? null,
+          bounces: st ? (st.hardBounces ?? 0) + (st.softBounces ?? 0) : null,
+        }
+      }),
   }
 }
 

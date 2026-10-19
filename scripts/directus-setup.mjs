@@ -271,6 +271,20 @@ const COLLECTIONS = [
     ],
     relations: [{ field: 'termin', related_collection: 'termine', schema: { on_delete: 'CASCADE' } }],
   },
+  {
+    collection: 'rundbriefe',
+    meta: { icon: 'campaign', note: 'Rundbriefe (Newsletter) aus dem Vereinsheim: Entwürfe und verschickte, zum Ansehen und Duplizieren. Versand über Brevo.', display_template: '{{betreff}}' },
+    fields: [
+      idField(),
+      select('status', [['entwurf', 'Entwurf'], ['verschickt', 'Verschickt']], { def: 'entwurf' }),
+      str('betreff', { required: true, max: 200 }),
+      markdown('text', { required: true, note: 'Mail-Text wie im Vereinsheim (Begrüßung, # Überschrift, ==Hervorhebung==, Bilder …)' }),
+      timestamp('verschickt_am'),
+      int('empfaenger_anzahl'),
+      int('brevo_kampagne', { note: 'ID der Kampagne in Brevo (für Zustell-/Öffnungszahlen)' }),
+      ...systemFields(),
+    ],
+  },
 
   /* Dorfanzeiger */
   {

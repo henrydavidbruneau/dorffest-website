@@ -533,6 +533,9 @@ Ohne echte E-Mail gibt es kein „Passwort vergessen“ – dann setzt ein Admin
   (signiert mit `NUXT_LINK_SECRET`); Server-Policy darf `anmeldungen.status` nur auf `abgemeldet` setzen.
   Zurück zum Termin mit Hinweis (`?ausgetragen=1`). Kreuzt man „Rundbrief (Newsletter)“ an, steht der
   Newsletter-Bestätigungsknopf gleich mit in der Mail.
+- **Rundbriefe** (`rundbriefe`: `status` entwurf/verschickt, `betreff`, `text`, `verschickt_am`, `empfaenger_anzahl`,
+  `brevo_kampagne`): Entwürfe speichert das Vereinsheim direkt (nur Vorstand), nach dem Versand schreibt die Route
+  den Eintrag fort. Die Liste zeigt den Brevo-Status je Kampagne – „angehalten“ heißt: im Brevo-Konto nachsehen.
 - **Rundbrief-Bilder:** Upload im Vereinsheim in den Ordner `rundbrief`; die Server-Policy darf ihn lesen,
   in der Mail als `/bilder/<id>?width=1200&format=jpg`.
 - **Mail-Design:** alle Mails (außer den persönlichen aus „Post“) kommen als HTML im Website-Look

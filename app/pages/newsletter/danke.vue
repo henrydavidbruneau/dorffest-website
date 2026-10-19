@@ -9,36 +9,38 @@ const ungueltig = computed(() => route.query.link === 'ungueltig')
 useSeoMeta({ title: () => (ungueltig.value ? 'Link ungültig' : 'Du bist dabei'), robots: 'noindex' })
 
 const WEGE = [
-  { titel: 'Komm zum Plenum', text: 'Einmal im Monat entscheiden wir gemeinsam, was als Nächstes passiert. Jede*r kann dazukommen.', to: '/mitmachen#plenum', linktext: 'Zum Plenum', farbe: 'pfirsich', drehung: -2 },
-  { titel: 'Schau, was kommt', text: 'Feste, Treffen, Kleidertausch – alle Termine auf einen Blick.', to: '/#was-kommt', linktext: 'Zu den Terminen', farbe: 'gelb', drehung: 1.5 },
-  { titel: 'Infochannel', text: 'Kurze Infos aufs Handy, wenn es mal schnell gehen muss.', to: links.infochannel, linktext: 'Zum WhatsApp-Kanal', farbe: 'weiss', drehung: -1 },
-  { titel: 'Werd Mitglied', text: 'Schon ab 3 € im Monat machst du möglich, dass Königsdorf zusammenrückt.', to: links.mitgliedWerden, linktext: 'Mitglied werden', farbe: 'pfirsich', drehung: 2 },
+  { titel: 'Komm zum Plenum', text: 'Einmal im Monat entscheiden wir gemeinsam, was als Nächstes passiert. Jede*r kann dazukommen.', to: '/mitmachen#plenum', linktext: 'Zum Plenum', farbe: 'pfirsich', drehung: 0 },
+  { titel: 'Schau, was kommt', text: 'Feste, Treffen, Kleidertausch – alle Termine auf einen Blick.', to: '/#was-kommt', linktext: 'Zu den Terminen', farbe: 'gelb', drehung: 0 },
+  { titel: 'Infochannel', text: 'Kurze Infos aufs Handy, wenn es mal schnell gehen muss.', to: links.infochannel, linktext: 'Zum WhatsApp-Kanal', farbe: 'weiss', drehung: 0 },
+  { titel: 'Werd Mitglied', text: 'Fördermitgliedschaften helfen uns enorm dabei, unsere Feste und Aktionen möglich zu machen.', to: links.mitgliedWerden, linktext: 'Mitglied werden', farbe: 'pfirsich', drehung: 0 },
 ] as const
 </script>
 
 <template>
-  <div class="danke inhalt">
-    <section class="danke__kopf">
-      <BasisNotizzettel farbe="pfirsich" tape="mitte" tape-farbe="flieder" :drehung="-2" class="danke__zettel">
-        <p class="danke__gross">{{ ungueltig ? 'Hm…' : 'Geklappt!' }}</p>
-        <p class="danke__zusatz handschrift">{{ ungueltig ? 'der Link passt leider nicht' : 'ab jetzt kommt Post aus dem Dorf' }}</p>
-      </BasisNotizzettel>
+  <div class="danke">
+    <div class="danke__band">
+      <section class="danke__kopf inhalt">
+        <BasisNotizzettel farbe="pfirsich" tape="mitte" tape-farbe="flieder" :drehung="-2" class="danke__zettel">
+          <p class="danke__gross">{{ ungueltig ? 'Hm…' : 'Geklappt!' }}</p>
+          <p class="danke__zusatz handschrift">{{ ungueltig ? 'der Link passt leider nicht' : 'ab jetzt kommt Post aus dem Dorf' }}</p>
+        </BasisNotizzettel>
 
-      <div>
-        <h1 class="danke__titel">
-          <template v-if="ungueltig">Der Link hat nicht <BasisHervorhebung>geklappt</BasisHervorhebung></template>
-          <template v-else>Du bist <BasisHervorhebung>dabei!</BasisHervorhebung></template>
-        </h1>
-        <p class="danke__text">
-          {{ ungueltig
-            ? 'Vielleicht ist er unvollständig angekommen. Trag dich einfach noch mal ein – dann schicken wir dir einen neuen.'
-            : 'Danke, dass du deine Adresse bestätigt hast. Unser Rundbrief kommt, wenn es Neues aus dem Dorf gibt – versprochen nicht zu oft. Abmelden geht jederzeit über den Link in jeder Mail.' }}
-        </p>
-        <BasisNewsletterBox v-if="ungueltig" class="danke__neu" label="Deine E-Mail-Adresse" />
-      </div>
-    </section>
+        <div>
+          <h1 class="danke__titel">
+            <template v-if="ungueltig">Der Link hat nicht <BasisHervorhebung>geklappt</BasisHervorhebung></template>
+            <template v-else>Du bist <BasisHervorhebung>dabei!</BasisHervorhebung></template>
+          </h1>
+          <p class="danke__text">
+            {{ ungueltig
+              ? 'Vielleicht ist er unvollständig angekommen. Trag dich einfach noch mal ein – dann schicken wir dir einen neuen.'
+              : 'Danke, dass du deine Adresse bestätigt hast. Abmelden geht jederzeit über den Link in jeder Mail.' }}
+          </p>
+          <BasisNewsletterBox v-if="ungueltig" class="danke__neu" variante="lila" />
+        </div>
+      </section>
+    </div>
 
-    <section class="danke__wege" aria-labelledby="wege-titel">
+    <section class="danke__wege inhalt" aria-labelledby="wege-titel">
       <h2 id="wege-titel" class="danke__wege-titel">Wie du sonst noch <BasisHervorhebung>mitmachen</BasisHervorhebung> kannst</h2>
       <ul class="danke__liste">
         <li v-for="w in WEGE" :key="w.titel">
@@ -55,10 +57,18 @@ const WEGE = [
 
 <style scoped>
 .danke {
-  padding-block: clamp(2.5rem, 5vw, 4.5rem) var(--abstand-sektion);
+  padding-bottom: var(--abstand-sektion);
+}
+
+/* oberer Teil auf Lila wie das Kopfband der Terminseiten */
+.danke__band {
+  --farbe-fokus: var(--farbe-gelb);
+  background: var(--farbe-lila);
+  color: var(--farbe-creme);
 }
 
 .danke__kopf {
+  padding-block: clamp(2.5rem, 5vw, 4.5rem) clamp(3rem, 6vw, 5.5rem);
   display: grid;
   gap: var(--abstand-xl);
   align-items: center;
@@ -90,6 +100,7 @@ const WEGE = [
 
 .danke__titel {
   font-size: var(--groesse-h2);
+  color: var(--farbe-pfirsich);
 }
 
 .danke__text {

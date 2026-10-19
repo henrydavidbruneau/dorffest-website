@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Seiten mit lila Kopfbereich bekommen die Navigation im lila Farbschema
 const route = useRoute()
-const dunkel = computed(() => route.path.startsWith('/termine/'))
+// lila Navigation über lila Kopfband (Terminseiten, Newsletter-Danke)
+const dunkel = computed(() => route.path.startsWith('/termine/') || route.path.startsWith('/newsletter/'))
 // Startseite: Navigation fährt beim ersten Laden von oben herein (Teil der Aufbau-Animation)
 const nuxtApp = useNuxtApp()
 const einfahren = route.path === '/' && (import.meta.server || nuxtApp.isHydrating)
