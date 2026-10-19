@@ -5,3 +5,6 @@ export function textAbsaetze(markdown: string): string[] {
     .map(a => a.trim())
     .filter(a => a && !/^(#|>|!\[)/.test(a))
 }
+
+/** Überschrift eines Leserbriefs, wenn niemand eine eigene schreibt */
+export const ANREDE_STANDARD = 'Liebe Nachbar*innen,'

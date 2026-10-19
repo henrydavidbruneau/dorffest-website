@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Leserbriefe: angepinnte Zeitungsschnipsel + Zettel zum Selberschreiben
 const { eintraege, status, fehler, neuId, anpinnen } = usePinnwand<Leserbrief>('/api/leserbriefe')
-const form = reactive({ name: '', text: '', website: '', turnstile: '' })
+const form = reactive({ anrede: ANREDE_STANDARD, name: '', text: '', website: '', turnstile: '' })
 
 // leichte, feste Unregelmäßigkeit je Brief
 const drehung = (i: number) => [-1.6, 1.2, -0.6, 1.8, -1.2, 0.8][i % 6]
@@ -9,6 +9,7 @@ const drehung = (i: number) => [-1.6, 1.2, -0.6, 1.8, -1.2, 0.8][i % 6]
 async function absenden() {
   if (await anpinnen({ ...form })) {
     form.text = ''
+    form.anrede = ANREDE_STANDARD
   }
 }
 </script>
@@ -22,6 +23,15 @@ async function absenden() {
       <li class="brief brief--formular">
         <form class="brief__formular" novalidate @submit.prevent="absenden">
           <p class="brief__zusatz handschrift">dein Leserbrief</p>
+          <label class="nur-screenreader" for="leserbrief-anrede">Überschrift deines Briefs</label>
+          <input
+            id="leserbrief-anrede"
+            v-model="form.anrede"
+            name="anrede"
+            maxlength="80"
+            class="brief__eingabe brief__eingabe--anrede"
+            title="Überschrift – kannst du ändern"
+          >
           <label class="nur-screenreader" for="leserbrief-text">Dein Leserbrief</label>
           <textarea
             id="leserbrief-text"
@@ -29,7 +39,7 @@ async function absenden() {
             name="text"
             rows="5"
             maxlength="600"
-            placeholder="Liebe Nachbar*innen, …"
+            placeholder="Was möchtest du loswerden? …"
             class="brief__eingabe brief__eingabe--text"
           />
           <label class="nur-screenreader" for="leserbrief-name">Dein Name</label>
@@ -61,7 +71,7 @@ async function absenden() {
         :style="{ '--drehung': `${drehung(i)}deg` }"
       >
         <span class="brief__pin" aria-hidden="true" />
-        <p class="brief__anrede">Liebe Nachbar*innen,</p>
+        <p class="brief__anrede">{{ b.anrede || ANREDE_STANDARD }}</p>
         <p class="brief__text">{{ b.text }}</p>
         <p class="brief__name">– {{ b.name }}</p>
       </li>
@@ -145,7 +155,7 @@ async function absenden() {
   }
 }
 
-/* Formular-Zettel */
+/* Formular-Zettel: breiter (zwei Spalten), damit der Bot-Schutz in voller Größe hineinpasst */
 .brief--formular {
   min-width: 0;
   border: 2px dashed var(--farbe-lila);
@@ -178,6 +188,16 @@ async function absenden() {
   color: var(--farbe-schwarz);
 }
 
+/* Überschrift zum Ändern: sieht aus wie die Anrede auf den angepinnten Briefen */
+.brief__eingabe--anrede {
+  border-bottom-style: dashed;
+  border-bottom-width: 1.5px;
+  font-family: var(--schrift-display);
+  font-weight: var(--gewicht-display);
+  font-size: 1.05rem;
+  text-transform: uppercase;
+}
+
 .brief__eingabe--text {
   resize: vertical;
   background-image: repeating-linear-gradient(transparent 0 1.78rem, rgb(122 42 126 / 0.25) 1.78rem 1.82rem);
@@ -200,6 +220,12 @@ async function absenden() {
 
 .brief__formular :deep(.knopf) {
   justify-self: start;
+}
+
+@media (min-width: 48rem) {
+  .brief--formular {
+    grid-column: span 2;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

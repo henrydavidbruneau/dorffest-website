@@ -2,6 +2,8 @@ import type { DirectusEintrag } from './directus'
 
 /** Directus-Collection `leserbriefe` (Dorfanzeiger) */
 export interface Leserbrief extends DirectusEintrag {
+  /** eigene Überschrift; leer = ANREDE_STANDARD */
+  anrede?: string | null
   name: string
   text: string
 }
