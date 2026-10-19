@@ -27,9 +27,6 @@ const website = ref('')
 const turnstile = ref('')
 const { status, fehler, senden } = useFormular('/api/newsletter')
 
-// Rückkehr vom Bestätigungslink (?newsletter=bestaetigt)
-const route = useRoute()
-const bestaetigt = computed(() => route.query.newsletter === 'bestaetigt')
 
 function absenden() {
   return senden({ email: email.value, website: website.value, turnstile: turnstile.value })
@@ -48,10 +45,7 @@ function absenden() {
       <p v-if="text" class="newsletter__text">{{ text }}</p>
     </div>
 
-    <p v-if="bestaetigt" class="newsletter__danke" role="status">
-      <span class="handschrift">Du bist dabei!</span> Ab jetzt bekommst du unsere Neuigkeiten.
-    </p>
-    <p v-else-if="status === 'fertig'" class="newsletter__danke" role="status">
+    <p v-if="status === 'fertig'" class="newsletter__danke" role="status">
       <span class="handschrift">Fast geschafft!</span> Bitte klick noch auf den Link in der Mail, die wir dir gerade geschickt haben.
     </p>
     <form v-else class="newsletter__formular" @submit.prevent="absenden">
@@ -184,6 +178,11 @@ function absenden() {
 
 .newsletter--lila .newsletter__infochannel {
   color: var(--farbe-pfirsich);
+}
+
+/* nach dem Absenden so breit wie vorher das Formular – sonst schiebt der Text die Überschrift zusammen */
+.newsletter--lila .newsletter__danke {
+  max-width: 27rem;
 }
 
 @media (min-width: 48rem) {
