@@ -49,6 +49,9 @@ export default defineNuxtConfig({
   // Es gibt keine eigene Terminübersicht – alle Termine stehen auf der Startseite unter "Was kommt"
   routeRules: {
     '/termine': { redirect: '/#was-kommt' },
+    // Vereinsheim: nur im Browser (Session über httpOnly-Cookies), nie in Suchmaschinen
+    '/vereinsheim/**': { ssr: false, headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
+    '/vereinsheim': { ssr: false, headers: { 'X-Robots-Tag': 'noindex, nofollow' } },
   },
 
   // Schriften aus Figma, von @nuxt/fonts heruntergeladen und lokal ausgeliefert
