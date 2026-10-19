@@ -127,3 +127,11 @@ export const FELDER_AUSLAGE: FeldDef[] = [
   { feld: 'iban', label: 'IBAN', typ: 'text' },
   { feld: 'notiz', label: 'Notiz', typ: 'mehrzeilig', breit: true },
 ]
+
+export const FELDER_VEREIN: FeldDef[] = [
+  { feld: 'kontakt_email', label: 'Kontakt-Mail', typ: 'email', pflicht: true, hinweis: 'ohne Umlaute – steht auf der Website und bekommt die Hinweis-Mails' },
+  { feld: 'infochannel_url', label: 'Link zum Infochannel', typ: 'text', pflicht: true, breit: true },
+  { feld: 'kontoinhaber', label: 'Kontoinhaber', typ: 'text', pflicht: true },
+  { feld: 'iban', label: 'IBAN', typ: 'text', pflicht: true },
+  { feld: 'naechstes_dorffest', label: 'Nächstes Dorffest', typ: 'datum' },
+]

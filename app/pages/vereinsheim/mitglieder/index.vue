@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Mitglieder (nur Vorstand): Anträge entscheiden, Mitgliederliste mit Beiträgen
+// Mitglieder (nur Vorstand): Anträge entscheiden, Mitgliederliste mit Beiträgen, Vereinsdaten
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
 useSeoMeta({ title: 'Mitglieder · Vereinsheim', robots: 'noindex, nofollow' })
 
@@ -51,6 +51,31 @@ function csv() {
     data.value.mitglieder.map(m => [m.nachname, m.vorname, m.art, m.status, m.email, m.telefon, m.strasse, m.plz, m.ort, m.mitglied_seit, m.beitrag_jahr, m.beitrag_bezahlt_bis]))
 }
 
+// Vereinsdaten (Singleton `verein`): Kontakt, Konto, Infochannel – erscheinen auf der Website
+const verein = ref<Record<string, unknown>>({})
+const vereinOriginal = ref('')
+onMounted(async () => {
+  try {
+    verein.value = await vh.einzel<Record<string, unknown>>('verein', { fields: FELDER_VEREIN.map(f => f.feld).join(',') }) ?? {}
+    vereinOriginal.value = JSON.stringify(verein.value)
+  }
+  catch (e) {
+    fehler(e)
+  }
+})
+async function vereinSpeichern() {
+  const fehlt = FELDER_VEREIN.filter(f => f.pflicht && !verein.value[f.feld]).map(f => f.label)
+  if (fehlt.length) return fehler({ statusMessage: `Da fehlt noch was: ${fehlt.join(', ')}` })
+  try {
+    await vh.einzelAendern('verein', Object.fromEntries(FELDER_VEREIN.map(f => [f.feld, verein.value[f.feld] ?? null])))
+    vereinOriginal.value = JSON.stringify(verein.value)
+    zeige('Ab ins Fach! Die Website zeigt es in ein paar Minuten.')
+  }
+  catch (e) {
+    fehler(e)
+  }
+}
+
 const ART: Record<string, string> = { foerder: 'Fördermitglied', regulaer: 'regulär', stimmberechtigt: 'stimmberechtigt' }
 </script>
 
@@ -62,7 +87,7 @@ const ART: Record<string, string> = { foerder: 'Fördermitglied', regulaer: 'reg
         <BasisKnopf groesse="klein" to="/vereinsheim/mitglieder/neu">+ Mitglied</BasisKnopf>
       </template>
     </VereinsheimKopf>
-    <VereinsheimReiter v-model="reiter" :reiter="[{ key: 'antraege', text: 'Anträge', anzahl: offen.length }, { key: 'liste', text: `Mitgliederliste (${aktive.length})` }]" />
+    <VereinsheimReiter v-model="reiter" :reiter="[{ key: 'antraege', text: 'Anträge', anzahl: offen.length }, { key: 'liste', text: `Mitgliederliste (${aktive.length})` }, { key: 'verein', text: 'Vereinsdaten' }]" />
 
     <div v-if="reiter === 'antraege'">
       <p v-if="!offen.length" class="handschrift mitglieder__leer">Keine offenen Anträge. Der Vorstand darf Kuchen essen.</p>
@@ -92,6 +117,14 @@ const ART: Record<string, string> = { foerder: 'Fördermitglied', regulaer: 'reg
         </ul>
       </details>
     </div>
+
+    <BasisNotizzettel v-else-if="reiter === 'verein'" farbe="creme" tape="mitte" :drehung="-0.4" class="vereinsdaten">
+      <p>Diese Angaben stehen auf der Website (Fuß, Kontakt, Mitglied werden) und in den Mails.</p>
+      <form @submit.prevent="vereinSpeichern">
+        <VereinsheimEditor v-model="verein" :felder="FELDER_VEREIN" />
+        <BasisKnopf type="submit" :disabled="JSON.stringify(verein) === vereinOriginal">Ab ins Fach (speichern)</BasisKnopf>
+      </form>
+    </BasisNotizzettel>
 
     <div v-else class="liste">
       <table class="liste__tabelle">
@@ -180,6 +213,21 @@ const ART: Record<string, string> = { foerder: 'Fördermitglied', regulaer: 'reg
 .mitglieder__erledigt summary {
   cursor: pointer;
   text-decoration: underline;
+}
+
+.vereinsdaten {
+  padding: var(--abstand-l);
+}
+
+.vereinsdaten form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--abstand-m);
+}
+
+.vereinsdaten :deep(.editor) {
+  width: 100%;
 }
 
 .liste {

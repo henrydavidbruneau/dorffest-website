@@ -3,6 +3,7 @@ import { links } from '~/navigation'
 import { texte } from '~/texte'
 
 const t = texte.mitgliedWerden
+const verein = useVerein()
 useSeoMeta({ title: 'Mitglied werden', description: t.meta, ogTitle: 'Mitglied werden – Königsdorf rückt zusammen', ogDescription: t.meta })
 
 // Name aus dem Mitgliedsausweis (Über uns) übernehmen
@@ -64,7 +65,7 @@ function euro(n: number) {
         <p>Dein Antrag ist bei uns angekommen. Wir melden uns per Mail bei dir.</p>
         <p class="danke__konto">
           Deinen Beitrag ({{ euro(Number(form.beitrag_jahr) || (gewaehlt?.monat ?? 0) * 12) }} im Jahr) überweist du bitte an:<br>
-          <strong>{{ KONTO.inhaber }}</strong> · IBAN <strong>{{ KONTO.iban }}</strong><br>
+          <strong>{{ verein.kontoinhaber }}</strong> · IBAN <strong>{{ verein.iban }}</strong><br>
           Verwendungszweck: Mitgliedsbeitrag {{ form.vorname }} {{ form.nachname }}
         </p>
       </BasisNotizzettel>
@@ -161,7 +162,7 @@ function euro(n: number) {
           <div class="konto">
             <p class="konto__titel">So zahlst du</p>
             <p>Bitte überweis deinen Beitrag auf unser Vereinskonto:</p>
-            <p><strong>{{ KONTO.inhaber }}</strong><br>IBAN <strong class="konto__iban">{{ KONTO.iban }}</strong></p>
+            <p><strong>{{ verein.kontoinhaber }}</strong><br>IBAN <strong class="konto__iban">{{ verein.iban }}</strong></p>
             <p>Verwendungszweck: Mitgliedsbeitrag + dein Name. Du kannst auch einen Dauerauftrag einrichten.</p>
           </div>
 

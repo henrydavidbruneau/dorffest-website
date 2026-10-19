@@ -1,17 +1,17 @@
 <script setup lang="ts">
-// Mitmachen: Vorschläge sortieren, Ideenwand moderieren, Plenum-Erinnerungen
+// Ideensammlung: Vorschläge sortieren, Ideenwand moderieren, Plenum-Erinnerungen verschicken
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
-useSeoMeta({ title: 'Mitmachen · Vereinsheim', robots: 'noindex, nofollow' })
+useSeoMeta({ title: 'Ideensammlung · Vereinsheim', robots: 'noindex, nofollow' })
 
 interface Vorschlag { id: number, status: string, name: string, email: string, idee: string, dorffest: boolean, selbst_mitmachen: boolean, notiz: string | null, date_created: string }
-interface Erinnerung { id: number, name: string | null, email: string, wie: string, bestaetigt: boolean, abgemeldet_am: string | null, date_created: string }
+interface Erinnerung { id: number, name: string | null, email: string, wie: string, bestaetigt: boolean, abgemeldet_am: string | null, zuletzt_erinnert_am: string | null, date_created: string }
 
 const reiter = ref('vorschlaege')
 const { zeige, fehler } = useVereinsheimMeldung()
 const STATUS = { neu: 'neu', in_planung: 'in Planung', umgesetzt: 'umgesetzt', abgelehnt: 'abgelehnt' }
 
 const { data: vorschlaege, refresh: neuLaden } = useAsyncData('vh-vorschlaege', () => vh.liste<Vorschlag>('vorschlaege', { fields: '*', sort: '-date_created' }), { server: false, default: () => [] })
-const { data: erinnerungen, refresh: erinnerungenLaden } = useAsyncData('vh-plenum', () => vh.liste<Erinnerung>('plenum_erinnerungen', { fields: 'id,name,email,wie,bestaetigt,abgemeldet_am,date_created', sort: '-date_created' }), { server: false, default: () => [] })
+const { data: erinnerungen, refresh: erinnerungenLaden } = useAsyncData('vh-plenum', () => vh.liste<Erinnerung>('plenum_erinnerungen', { fields: 'id,name,email,wie,bestaetigt,abgemeldet_am,zuletzt_erinnert_am,date_created', sort: '-date_created' }), { server: false, default: () => [] })
 
 const neue = computed(() => vorschlaege.value.filter(v => v.status === 'neu').length)
 const aktiveErinnerungen = computed(() => erinnerungen.value.filter(e => e.bestaetigt && !e.abgemeldet_am))
@@ -44,6 +44,25 @@ async function erinnerungLoeschen(e: Erinnerung) {
   }
 }
 
+const zuletztErinnert = computed(() => erinnerungen.value.map(e => e.zuletzt_erinnert_am).filter(Boolean).sort().at(-1) ?? null)
+const zusatz = ref('')
+const sendet = ref(false)
+
+async function erinnern() {
+  if (!window.confirm(`Erinnerung ans nächste Plenum an ${aktiveErinnerungen.value.length} Leute schicken?${zuletztErinnert.value ? ` (Zuletzt verschickt: ${datumLang(zuletztErinnert.value)})` : ''}`)) return
+  sendet.value = true
+  try {
+    const r = await $fetch<{ gesendet: number }>('/api/vereinsheim/plenum/erinnern', { method: 'POST', body: { zusatz: zusatz.value } })
+    zeige(`Ab in die Post: ${r.gesendet} Erinnerungen verschickt.`)
+    zusatz.value = ''
+    await erinnerungenLaden()
+  }
+  catch (e) {
+    fehler(e)
+  }
+  sendet.value = false
+}
+
 async function adressenKopieren() {
   const liste = aktiveErinnerungen.value.map(e => e.email).join(', ')
   try {
@@ -58,7 +77,7 @@ async function adressenKopieren() {
 
 <template>
   <div class="mit">
-    <VereinsheimKopf titel="Mitmachen" zusatz="Ideen, Angebote und das Plenum" />
+    <VereinsheimKopf titel="Ideensammlung" zusatz="Ideen, Angebote und das Plenum" />
     <VereinsheimReiter
       v-model="reiter"
       :reiter="[
@@ -96,6 +115,11 @@ async function adressenKopieren() {
           <p><strong>{{ aktiveErinnerungen.length }}</strong> möchten ans Plenum erinnert werden (bestätigt).</p>
           <BasisKnopf v-if="aktiveErinnerungen.length" groesse="klein" variante="outline" @click="adressenKopieren">Adressen kopieren (BCC)</BasisKnopf>
         </div>
+        <form v-if="aktiveErinnerungen.length" class="plenum-liste__senden" @submit.prevent="erinnern">
+          <BasisFeld v-model="zusatz" label="Ein paar Worte dazu (optional)" name="zusatz" mehrzeilig :zeilen="3" hinweis="z.B. was auf der Tagesordnung steht. Datum, Ort und Link kommen automatisch dazu." />
+          <BasisKnopf type="submit" :disabled="sendet">{{ sendet ? 'Wird eingeworfen …' : 'Erinnerung ans nächste Plenum verschicken' }}</BasisKnopf>
+          <p v-if="zuletztErinnert" class="plenum-liste__zuletzt">Zuletzt verschickt am {{ datumLang(zuletztErinnert) }}.</p>
+        </form>
         <table v-if="erinnerungen.length" class="plenum-liste__tabelle">
           <thead><tr><th>Name</th><th>E-Mail</th><th>Wie oft</th><th>Stand</th><th><span class="nur-screenreader">Aktion</span></th></tr></thead>
           <tbody>
@@ -198,6 +222,26 @@ async function adressenKopieren() {
   align-items: center;
   justify-content: space-between;
   gap: var(--abstand-s);
+}
+
+.plenum-liste__senden {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--abstand-s);
+  margin-top: var(--abstand-m);
+  padding: var(--abstand-m);
+  background: var(--farbe-pfirsich);
+  border-radius: var(--radius-m);
+}
+
+.plenum-liste__senden :deep(.feld) {
+  width: 100%;
+}
+
+.plenum-liste__zuletzt {
+  margin: 0;
+  font-size: var(--groesse-xs);
 }
 
 .plenum-liste__tabelle {

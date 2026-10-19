@@ -39,6 +39,9 @@ export const vh = {
   anlegen: <T>(collection: string, daten: Abfrage) => anfrage<T>(`items/${collection}`, { method: 'POST', body: daten }),
   aendern: <T>(collection: string, id: number | string, daten: Abfrage) => anfrage<T>(`items/${collection}/${id}`, { method: 'PATCH', body: daten }),
   loeschen: (collection: string, id: number | string) => anfrage<null>(`items/${collection}/${id}`, { method: 'DELETE' }),
+  /** Singletons (z.B. `verein`): lesen und ändern ohne ID */
+  einzel: <T>(collection: string, query: Abfrage = {}) => anfrage<T>(`items/${collection}`, { query }),
+  einzelAendern: <T>(collection: string, daten: Abfrage) => anfrage<T>(`items/${collection}`, { method: 'PATCH', body: daten }),
   /** Anzahl Einträge zu einem Filter */
   anzahl: async (collection: string, filter: Abfrage = {}) => {
     const [zeile] = await anfrage<{ count: { id: number | string } }[]>(`items/${collection}`, { query: { 'aggregate[count]': 'id', filter } })

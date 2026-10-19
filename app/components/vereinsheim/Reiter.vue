@@ -1,6 +1,10 @@
 <script setup lang="ts">
 // Unter-Reiter einer Vereinsheim-Seite (z.B. Artikel · Kleinanzeigen · …); merkt sich den Reiter in der Adresse (?reiter=)
-const props = defineProps<{ reiter: { key: string, text: string, anzahl?: number }[] }>()
+const props = defineProps<{
+  reiter: { key: string, text: string, anzahl?: number }[]
+  /** zeitung = wie der Ressort-Filter im Dorfanzeiger */
+  stil?: 'knoepfe' | 'zeitung'
+}>()
 const route = useRoute()
 const aktiv = defineModel<string>({ required: true })
 
@@ -12,7 +16,7 @@ watch(aktiv, key => navigateTo({ query: { ...route.query, reiter: key } }, { rep
 </script>
 
 <template>
-  <div class="unterreiter" role="tablist">
+  <div class="unterreiter" :class="{ 'unterreiter--zeitung': stil === 'zeitung' }" role="tablist">
     <button
       v-for="r in reiter"
       :key="r.key"
@@ -67,5 +71,26 @@ watch(aktiv, key => navigateTo({ query: { ...route.query, reiter: key } }, { rep
   background: #d8342a;
   color: var(--farbe-weiss);
   font-size: 0.8rem;
+}
+.unterreiter--zeitung {
+  justify-content: center;
+  gap: 0.25rem clamp(1rem, 2.2vw, 2rem);
+  margin: 0;
+  padding: 0.8rem 0 0.5rem;
+}
+
+.unterreiter--zeitung .unterreiter__knopf {
+  padding: 0 0 0.2rem;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font-size: clamp(1rem, 1.39vw, 1.25rem);
+}
+
+.unterreiter--zeitung .unterreiter__knopf[aria-selected='true'] {
+  border-bottom-color: var(--farbe-orange);
+  color: var(--farbe-lila);
 }
 </style>

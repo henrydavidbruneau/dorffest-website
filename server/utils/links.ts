@@ -29,6 +29,12 @@ export async function pruefeSignatur(zweck: string, id: unknown, sig: unknown): 
   return gleich(await signiere(zweck, String(id)), sig)
 }
 
+/** wie pruefeSignatur, aber für einen beliebigen Wert (z.B. eine E-Mail-Adresse) */
+export async function pruefeSignaturWert(zweck: string, wert: unknown, sig: unknown): Promise<boolean> {
+  if (!linkSchluesselDa() || typeof sig !== 'string' || typeof wert !== 'string' || !wert || wert.length > 254) return false
+  return gleich(await signiere(zweck, wert), sig)
+}
+
 /** absolute Adresse der Seite (für Links in Mails) */
 export function seitenUrl(event: Parameters<typeof getRequestURL>[0]) {
   return getRequestURL(event, { xForwardedHost: true }).origin

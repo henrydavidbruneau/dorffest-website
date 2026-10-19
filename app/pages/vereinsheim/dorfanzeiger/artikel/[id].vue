@@ -1,10 +1,11 @@
 <script setup lang="ts">
+// Artikel schreiben – mit Vorschau genau so, wie er im Dorfanzeiger erscheint (<ZeitungArtikel>)
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
 useSeoMeta({ title: 'Artikel · Vereinsheim', robots: 'noindex, nofollow' })
 
 const route = useRoute()
 const id = computed(() => String(route.params.id))
-const { zeige } = useVereinsheimMeldung()
+const { zeige, fehler } = useVereinsheimMeldung()
 const JAHRESZEIT: Record<string, string> = { fruehling: 'Frühling', sommer: 'Sommer', herbst: 'Herbst', winter: 'Winter' }
 
 const { data: beziehungen } = useAsyncData('vh-artikel-beziehungen', async () => {
@@ -18,8 +19,11 @@ const { data: beziehungen } = useAsyncData('vh-artikel-beziehungen', async () =>
   }
 }, { server: false })
 
+// Neue Artikel: Name der angemeldeten Person als Autor*in vorausgefüllt (änderbar)
+const { ich } = useVereinsheimIch()
 const vorlage = computed(() => ({
   status: 'draft', titelgeschichte: false, hervorgehoben: false,
+  autor_in: [ich.value?.first_name, ich.value?.last_name].filter(Boolean).join(' ') || null,
   ausgabe: route.query.ausgabe ? Number(route.query.ausgabe) : null,
 }))
 
@@ -29,39 +33,137 @@ function vorbereiten(daten: Record<string, unknown>) {
   return { ...daten, lesedauer_minuten: Math.max(1, Math.round(String(daten.inhalt).split(/\s+/).length / 200)) }
 }
 
-// Höchstens eine Titelgeschichte je Ausgabe: die bisherige wird zur normalen Geschichte
 async function gespeichert(daten: Record<string, unknown>) {
-  if (!daten.titelgeschichte || !daten.ausgabe) return
-  const andere = await vh.liste<{ id: number, titel: string }>('artikel', {
-    fields: 'id,titel',
-    filter: { titelgeschichte: { _eq: true }, ausgabe: { _eq: daten.ausgabe }, id: { _neq: daten.id ?? id.value } },
-  })
-  for (const a of andere) await vh.aendern('artikel', a.id, { titelgeschichte: false })
-  if (andere.length) zeige(`„${andere[0]!.titel}“ ist jetzt keine Titelgeschichte mehr.`)
+  const artikelId = daten.id ?? id.value
+  // Höchstens eine Titelgeschichte je Ausgabe: die bisherige wird zur normalen Geschichte
+  if (daten.titelgeschichte && daten.ausgabe) {
+    const andere = await vh.liste<{ id: number, titel: string }>('artikel', {
+      fields: 'id,titel',
+      filter: { titelgeschichte: { _eq: true }, ausgabe: { _eq: daten.ausgabe }, id: { _neq: artikelId } },
+    })
+    for (const a of andere) await vh.aendern('artikel', a.id, { titelgeschichte: false })
+    if (andere.length) zeige(`„${andere[0]!.titel}“ ist jetzt keine Titelgeschichte mehr.`)
+  }
+  // Gastbeitrag erschienen? Dann bekommt die Autor*in Bescheid (einmalig, prüft der Server)
+  if (daten.status === 'published') {
+    const r = await $fetch<{ gesendet: boolean }>(`/api/vereinsheim/artikel/${artikelId}/erschienen`, { method: 'POST' }).catch(() => ({ gesendet: false }))
+    if (r.gesendet) zeige('Die Gastautor*in hat eine „Dein Beitrag ist erschienen“-Mail bekommen.')
+  }
 }
+
+// ---------- Vorschau ----------
+const formular = ref<{ daten: Record<string, unknown> } | null>(null)
+const ansicht = ref<'schreiben' | 'vorschau'>('schreiben')
+const vorschauHtml = ref('')
+
+async function zurVorschau() {
+  ansicht.value = 'vorschau'
+  const inhalt = String(formular.value?.daten.inhalt ?? '')
+  try {
+    vorschauHtml.value = (await $fetch<{ html: string }>('/api/vereinsheim/vorschau', { method: 'POST', body: { markdown: inhalt } })).html
+  }
+  catch (e) {
+    fehler(e)
+  }
+  window.scrollTo({ top: 0 })
+}
+
+const vorschau = computed(() => {
+  const d = formular.value?.daten ?? {}
+  const text = (k: string) => (d[k] as string | null) ?? null
+  return {
+    titel: text('titel') ?? 'Ohne Titel',
+    teaser: text('teaser') ?? '',
+    autor_in: text('autor_in'),
+    autor_in_bild: text('autor_in_bild'),
+    veroeffentlicht_am: text('veroeffentlicht_am'),
+    datum_text: text('datum_text'),
+    lesedauer_minuten: (d.lesedauer_minuten as number | null) ?? (d.inhalt ? Math.max(1, Math.round(String(d.inhalt).split(/\s+/).length / 200)) : null),
+    bild: text('bild'),
+    bild_alt: text('bild_alt'),
+    bildunterschrift: text('bildunterschrift'),
+    inhalt_html: vorschauHtml.value,
+    aufruf_titel: text('aufruf_titel'),
+    aufruf_text: text('aufruf_text'),
+    aufruf_knopf: text('aufruf_knopf'),
+    aufruf_link: text('aufruf_link'),
+  }
+})
+const dachzeile = computed(() => {
+  const d = formular.value?.daten ?? {}
+  const ressort = beziehungen.value?.ressort[String(d.ressort ?? '')] ?? ''
+  return `${d.titelgeschichte ? 'Titelgeschichte · ' : ''}${ressort}`
+})
 </script>
 
 <template>
-  <VereinsheimFormularSeite
-    :id="id"
-    collection="artikel"
-    :felder="FELDER_ARTIKEL"
-    :beziehungen="beziehungen ?? undefined"
-    :vorlage="vorlage"
-    :vorbereiten="vorbereiten"
-    zurueck="/vereinsheim/dorfanzeiger/artikel"
-    art="Artikel"
-    @gespeichert="gespeichert"
-  >
-    <template #oben="{ daten }">
-      <p v-if="daten.status === 'published'" class="artikel-link">
-        <a :href="`/dorfanzeiger/${daten.slug}`" target="_blank" rel="noopener">→ im Dorfanzeiger ansehen ↗</a>
-      </p>
-    </template>
-  </VereinsheimFormularSeite>
+  <div>
+    <div class="umschalter" role="group" aria-label="Ansicht">
+      <button type="button" :aria-pressed="ansicht === 'schreiben'" @click="ansicht = 'schreiben'">✎ Schreiben</button>
+      <button type="button" :aria-pressed="ansicht === 'vorschau'" @click="zurVorschau">👀 So sieht’s im Dorfanzeiger aus</button>
+    </div>
+
+    <div v-show="ansicht === 'schreiben'">
+      <VereinsheimFormularSeite
+        :id="id"
+        ref="formular"
+        collection="artikel"
+        :felder="FELDER_ARTIKEL"
+        :beziehungen="beziehungen ?? undefined"
+        :vorlage="vorlage"
+        :vorbereiten="vorbereiten"
+        zurueck="/vereinsheim/dorfanzeiger/artikel"
+        art="Artikel"
+        @gespeichert="gespeichert"
+      >
+        <template #oben="{ daten }">
+          <p v-if="daten.status === 'published'" class="artikel-link">
+            <a :href="`/dorfanzeiger/${daten.slug}`" target="_blank" rel="noopener">→ im Dorfanzeiger ansehen ↗</a>
+          </p>
+        </template>
+      </VereinsheimFormularSeite>
+    </div>
+
+    <div v-if="ansicht === 'vorschau'" class="vorschau">
+      <p class="vorschau__hinweis handschrift">Vorschau – noch nicht gespeichert? Erst zurück zum Schreiben und „Ab ins Fach“.</p>
+      <article class="vorschau__blatt">
+        <BasisKlebeband position="links" farbe="gelb" :drehung="-3" :breite="6" />
+        <BasisKlebeband position="rechts" farbe="flieder" :drehung="3" :breite="6" />
+        <p class="vorschau__kopf">Der Königsdorfer Dorfanzeiger</p>
+        <ZeitungArtikel :artikel="vorschau" :dachzeile="dachzeile" />
+      </article>
+    </div>
+  </div>
 </template>
 
 <style scoped>
+.umschalter {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--abstand-2xs);
+  max-width: 62rem;
+  margin: 0 auto var(--abstand-l);
+}
+
+.umschalter button {
+  padding: 0.5rem 1.1rem;
+  border: 2px solid var(--farbe-lila);
+  border-radius: var(--radius-m);
+  background: var(--farbe-weiss);
+  color: var(--farbe-lila);
+  font-family: var(--schrift-display);
+  font-weight: var(--gewicht-display);
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.umschalter button[aria-pressed='true'] {
+  background: var(--farbe-lila);
+  color: var(--farbe-creme);
+}
+
 .artikel-link {
   margin: 0 0 var(--abstand-l);
   font-family: var(--schrift-hand);
@@ -70,5 +172,40 @@ async function gespeichert(daten: Record<string, unknown>) {
 
 .artikel-link a {
   color: var(--farbe-orange-text);
+}
+
+.vorschau {
+  margin-inline: calc(-1 * var(--seitenrand));
+  padding: var(--abstand-l) var(--seitenrand) var(--abstand-xl);
+  background: var(--farbe-lila);
+}
+
+.vorschau__hinweis {
+  max-width: 47rem;
+  margin: 0 auto var(--abstand-m);
+  font-size: var(--groesse-hand-s);
+  color: var(--farbe-pfirsich);
+  text-align: center;
+}
+
+/* wie das schmale Blatt auf der Artikelseite */
+.vorschau__blatt {
+  position: relative;
+  max-width: 47rem;
+  margin-inline: auto;
+  padding: clamp(1.25rem, 3.9vw, 3.5rem);
+  border-radius: var(--radius-xl);
+  background: var(--farbe-zeitungspapier);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.25);
+}
+
+.vorschau__kopf {
+  margin: 0;
+  padding-bottom: 0.45rem;
+  border-bottom: 4px double var(--farbe-schwarz);
+  font-family: var(--schrift-display);
+  font-weight: var(--gewicht-display);
+  font-size: 1.15rem;
+  text-transform: uppercase;
 }
 </style>

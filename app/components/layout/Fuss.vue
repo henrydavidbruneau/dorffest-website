@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { fussnavigation } from '~/navigation'
 import { texte } from '~/texte'
+
+// Kontakt und Infochannel kommen aus den Vereinsdaten (Directus); dazu dezent der Weg ins Vereinsheim
+const verein = useVerein()
+const spalten = computed(() => fussnavigation.map(spalte => ({
+  ...spalte,
+  links: spalte.links.map((link) => {
+    if (link.text === 'Kontakt') return { ...link, to: `mailto:${verein.value.kontakt_email}` }
+    if (link.text === 'Infochannel') return { ...link, to: verein.value.infochannel_url }
+    return link
+  }),
+})))
 </script>
 
 <template>
@@ -23,7 +34,7 @@ import { texte } from '~/texte'
           <img src="/logo-mobil.svg" alt="Königsdorf rückt zusammen – zur Startseite" width="512" height="245" loading="lazy">
         </NuxtLink>
         <nav class="fuss__nav" aria-label="Fußnavigation">
-          <div v-for="spalte in fussnavigation" :key="spalte.titel" class="fuss__spalte">
+          <div v-for="spalte in spalten" :key="spalte.titel" class="fuss__spalte">
             <h2 class="fuss__spaltentitel">{{ spalte.titel }}</h2>
             <ul>
               <li v-for="link in spalte.links" :key="link.text">
@@ -34,6 +45,7 @@ import { texte } from '~/texte'
           </div>
         </nav>
       </div>
+      <p class="fuss__vereinsheim"><NuxtLink to="/vereinsheim">Vereinsheim</NuxtLink></p>
     </div>
   </footer>
 </template>
@@ -125,5 +137,19 @@ import { texte } from '~/texte'
   .fuss__nav {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+.fuss__vereinsheim {
+  margin: var(--abstand-l) 0 0;
+  font-size: var(--groesse-xs);
+  text-align: right;
+}
+
+.fuss__vereinsheim a {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.fuss__vereinsheim a:hover {
+  opacity: 1;
 }
 </style>

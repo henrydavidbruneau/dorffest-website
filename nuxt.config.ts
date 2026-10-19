@@ -30,6 +30,8 @@ export default defineNuxtConfig({
     directusUrl: '',
     directusToken: '',
     brevoApiKey: '',
+    // Brevo-Liste für den Newsletter (Zahl aus Brevo → Kontakte → Listen)
+    brevoNewsletterListe: '',
     // Absender bei Brevo (Domain muss dort verifiziert sein)
     mailVon: 'kontakt@koenigsdorf-rueckt-zusammen.de',
     mailVonName: 'Königsdorf rückt zusammen',

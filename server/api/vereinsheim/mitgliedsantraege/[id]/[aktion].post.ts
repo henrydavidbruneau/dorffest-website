@@ -1,7 +1,6 @@
 // POST /api/vereinsheim/mitgliedsantraege/:id/annehmen|ablehnen (nur Vorstand – prüft Directus)
 // Annehmen: Datensatz in `mitglieder` anlegen, Antrag verknüpfen, Willkommens-Mail.
 // Ablehnen: braucht keine Begründung (Satzung), keine automatische Mail.
-import { KONTO } from '#shared/utils/kontakt'
 
 interface AntragRoh {
   status: string
@@ -49,6 +48,7 @@ export default defineEventHandler(async (event) => {
     },
   })
   await directusPerson(event, `/items/mitgliedsantraege/${id}`, { method: 'PATCH', body: { status: 'angenommen', mitglied: mitglied.id, ...entschieden } })
+  const konto = await ladeVerein()
   await sendeMailStill({
     an: antrag.email,
     betreff: 'Willkommen bei Königsdorf rückt zusammen!',
@@ -57,7 +57,7 @@ export default defineEventHandler(async (event) => {
     text: [
       `Hallo ${antrag.vorname},`,
       `der Vorstand hat deinen Antrag angenommen – du bist jetzt ${antrag.art === 'regulaer' ? 'stimmberechtigtes Mitglied' : 'Fördermitglied'} bei Königsdorf rückt zusammen e.V. Herzlich willkommen!`,
-      `Falls noch nicht geschehen: Dein Beitrag geht an ${KONTO.inhaber}, IBAN ${KONTO.iban}, Verwendungszweck „Mitgliedsbeitrag ${antrag.vorname} ${antrag.nachname}“.`,
+      `Falls noch nicht geschehen: Dein Beitrag geht an ${konto.kontoinhaber}, IBAN ${konto.iban}, Verwendungszweck „Mitgliedsbeitrag ${antrag.vorname} ${antrag.nachname}“.`,
       'Wir freuen uns, dich beim nächsten Plenum oder Fest zu sehen.',
       GRUSS,
     ].join('\n\n'),

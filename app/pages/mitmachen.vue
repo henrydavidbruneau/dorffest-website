@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { links } from '~/navigation'
 import { texte } from '~/texte'
+
+const verein = useVerein()
 
 const t = texte.mitmachen
 useSeoMeta({ title: 'Mitmachen', description: t.meta, ogTitle: 'Mitmachen – Königsdorf rückt zusammen', ogDescription: t.meta })
@@ -82,7 +83,7 @@ const drehungen = [-1.5, 1, -1, 1.5]
     <section class="kontakt inhalt" aria-label="Kontakt">
       <p>
         {{ t.kontakt }}
-        <a :href="`mailto:${links.kontaktMail}`" class="kontakt__mail">{{ links.kontaktMail }}</a>
+        <a :href="`mailto:${verein.kontakt_email}`" class="kontakt__mail">{{ verein.kontakt_email }}</a>
       </p>
     </section>
   </div>

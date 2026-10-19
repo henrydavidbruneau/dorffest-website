@@ -345,6 +345,7 @@ Sichtbar nur für die Policy `Vorstand`. Der Server-Token darf nur **anlegen**, 
 | `NUXT_DIRECTUS_URL` | z.B. `https://api.königsdorf-rückt-zusammen.de` (Punycode-Domain) |
 | `NUXT_DIRECTUS_TOKEN` | statischer Token des Server-Users |
 | `NUXT_BREVO_API_KEY` | Mails (Anmeldebestätigung, Rundmails, Anträge) |
+| `NUXT_BREVO_NEWSLETTER_LISTE` | ID der Newsletter-Liste in Brevo |
 | `NUXT_TURNSTILE_SECRET_KEY` / `NUXT_PUBLIC_TURNSTILE_SITE_KEY` | Bot-Schutz für Formulare |
 | `NUXT_LINK_SECRET` | Schlüssel für signierte Bestätigungslinks (Newsletter, Plenum-Erinnerung; bei DPAT `NUXT_NEWSLETTER_SECRET`). Kommt mit dem Double-Opt-in. Das Vereinsheim braucht keinen eigenen Session-Schlüssel (Directus-Tokens im httpOnly-Cookie, wie DPAT). |
 
@@ -467,17 +468,19 @@ Jede*r braucht trotzdem eine E-Mail (Directus-Pflicht, Passwort vergessen).
   für die Collections des Vereins, `files`, `folders`, `users` (Positivliste). Rechte = Policies.
   Im Browser: `vh.liste/eins/anlegen/aendern/loeschen/hochladen` (`app/composables/useVereinsheim.ts`).
 - **Sonderrouten** (mehrere Schritte oder Mails): Rundmail, Gastbeitrag annehmen/ablehnen,
-  Mitgliedsantrag annehmen/ablehnen, Passwort, Konto, Markdown-Vorschau, Bilder
+  „Dein Beitrag ist erschienen“ (`artikel/:id/erschienen`, einmalig über `gastbeitraege.erschienen_mail_am`),
+  Plenum-Erinnerung verschicken (`plenum/erinnern`: an alle Bestätigten, „nur das nächste“ wird danach
+  abgemeldet, `zuletzt_erinnert_am`), Mitgliedsantrag annehmen/ablehnen, Passwort, Konto,
+  Markdown-Vorschau, Bilder
   (`/api/vereinsheim/bild/:id` – zeigt auch Gastbeitrags-Fotos und eigene Belege).
 - **Vorstand?** = darf `mitglieder` lesen (Policy `Vorstand`).
 - Lokal testen: `vh_at`-Cookie auf einen statischen Token setzen.
 
-### Noch offen
-
-- „Dein Beitrag ist erschienen“-Mail an Gastautor*innen, Erinnerungsmails ans Plenum verschicken.
-- `verein` (Singleton) wird noch nicht gelesen – Kontakt/Konto stehen weiter in
-  `shared/utils/kontakt.ts`, der Infochannel in `app/navigation.ts`.
-- Newsletter (Box ist nur Oberfläche).
+- **Vereinsdaten** (`verein`): Website liest sie über `/api/verein` (`useVerein()`, 5 Min. Cache),
+  Mails über `ladeVerein()`; Ersatzwerte in `shared/utils/kontakt.ts`. Bearbeiten: Vereinsheim →
+  Mitglieder → Vereinsdaten (Vorstand).
+- **Newsletter** (Double-Opt-in): `POST /api/newsletter` → signierter Link →
+  `/api/newsletter/bestaetigen` → Brevo-Liste `NUXT_BREVO_NEWSLETTER_LISTE`. Ohne Key/Liste nur Log.
 
 ## Startinhalte
 

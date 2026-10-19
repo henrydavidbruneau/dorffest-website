@@ -65,7 +65,7 @@ async function loeschen(a: ArtikelZeile) {
 <template>
   <div class="tisch">
     <aside class="tisch__ausgaben">
-      <BasisNotizzettel farbe="gelb" befestigung="pin" :drehung="-1" class="tisch__ausgaben-zettel">
+      <div class="tisch__ausgaben-zettel">
         <h2>Ausgaben</h2>
         <ul>
           <li v-for="a in data.ausgaben" :key="a.id">
@@ -80,7 +80,7 @@ async function loeschen(a: ArtikelZeile) {
           </li>
         </ul>
         <NuxtLink to="/vereinsheim/dorfanzeiger/ausgabe/neu" class="tisch__neu handschrift">+ neue Ausgabe</NuxtLink>
-      </BasisNotizzettel>
+      </div>
     </aside>
 
     <section class="tisch__artikel" aria-label="Artikel der Ausgabe">
@@ -118,19 +118,34 @@ async function loeschen(a: ArtikelZeile) {
 <style scoped>
 .tisch {
   display: grid;
-  grid-template-columns: 17rem 1fr;
+  grid-template-columns: 1fr 17rem;
   gap: var(--abstand-l);
-  max-width: var(--inhaltsbreite);
-  margin-inline: auto;
 }
 
+.tisch__artikel {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.tisch__ausgaben {
+  grid-column: 2;
+}
+
+/* wie der Terminkalender im Dorfanzeiger */
 .tisch__ausgaben-zettel {
-  padding: 2.6rem var(--abstand-m) var(--abstand-m);
+  padding: 1.2rem 1.3rem 1.3rem;
+  border: 4px solid var(--farbe-schwarz);
+  border-radius: var(--radius-l);
+  background: var(--farbe-gelb);
+  box-shadow: 0 0 0 5px var(--farbe-gelb);
 }
 
 .tisch__ausgaben h2 {
   margin: 0 0 var(--abstand-xs);
-  font-size: var(--groesse-h4);
+  padding-bottom: 0.5rem;
+  border-bottom: 2px dashed rgb(0 0 0 / 0.35);
+  font-size: clamp(1.375rem, 1.8vw, 1.625rem);
+  color: var(--farbe-schwarz);
 }
 
 .tisch__ausgaben ul {
@@ -155,6 +170,7 @@ async function loeschen(a: ArtikelZeile) {
   border-radius: var(--radius-s);
   background: none;
   font: inherit;
+  font-weight: var(--gewicht-text-normal);
   text-align: left;
   cursor: pointer;
 }
@@ -180,15 +196,14 @@ async function loeschen(a: ArtikelZeile) {
   align-items: center;
   justify-content: space-between;
   gap: var(--abstand-s);
-  margin-bottom: var(--abstand-m);
+  margin-bottom: var(--abstand-s);
 }
 
 .tisch__hinweis,
 .tisch__leer {
   margin: 0;
-  padding: 0.1rem 0.6rem;
-  background: rgb(255 253 247 / 0.85);
   font-size: var(--groesse-hand-s);
+  color: var(--farbe-orange-text);
 }
 
 .tisch__leer {
@@ -196,26 +211,19 @@ async function loeschen(a: ArtikelZeile) {
 }
 
 .tisch__liste {
-  display: flex;
-  flex-direction: column;
-  gap: var(--abstand-m);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/* Manuskript: liniertes Blatt mit Rand */
+/* eine Zeile im Inhaltsverzeichnis der Ausgabe */
 .manuskript {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: start;
   gap: var(--abstand-m);
-  padding: var(--abstand-m);
-  background:
-    linear-gradient(90deg, transparent 3.2rem, rgb(232 130 12 / 0.35) 3.2rem 3.3rem, transparent 3.3rem),
-    var(--farbe-weiss);
-  box-shadow: var(--schatten-zettel);
-  rotate: var(--drehung);
+  padding: var(--abstand-m) 0;
+  border-top: 1px solid var(--farbe-spaltenlinie);
 }
 
 .manuskript__pfeile {
@@ -229,7 +237,7 @@ async function loeschen(a: ArtikelZeile) {
   height: 2rem;
   border: 1.5px solid var(--farbe-schwarz);
   border-radius: var(--radius-s);
-  background: var(--farbe-creme);
+  background: var(--farbe-weiss);
   font: inherit;
   cursor: pointer;
 }
@@ -251,11 +259,15 @@ async function loeschen(a: ArtikelZeile) {
 .manuskript__titel {
   font-family: var(--schrift-display);
   font-weight: var(--gewicht-display);
-  font-size: var(--groesse-h4);
-  line-height: 1.1;
+  font-size: var(--groesse-h3);
+  line-height: 1.05;
   color: var(--farbe-lila);
   text-transform: uppercase;
   text-decoration: none;
+}
+
+.manuskript__titel:hover {
+  text-decoration: underline;
 }
 
 .manuskript__autor {
@@ -289,6 +301,12 @@ async function loeschen(a: ArtikelZeile) {
 @media (max-width: 800px) {
   .tisch {
     grid-template-columns: 1fr;
+  }
+
+  .tisch__artikel,
+  .tisch__ausgaben {
+    grid-column: 1;
+    grid-row: auto;
   }
 
   .manuskript {

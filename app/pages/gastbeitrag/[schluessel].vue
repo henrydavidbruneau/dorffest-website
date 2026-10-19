@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Gastbeitrag für den Dorfanzeiger über einen privaten Link (/gastbeitrag/:schluessel).
 // Ohne Hauptnavigation; der Beitrag landet im Vereinsheim und erscheint erst nach dem Okay eines Mitglieds.
-import { links } from '~/navigation'
+
+const verein = useVerein()
 
 definePageMeta({ layout: 'schlicht' })
 
@@ -83,7 +84,7 @@ function absenden() {
         <template v-if="einladung?.grund === 'eingereicht'">Über diesen Link wurde schon ein Beitrag eingereicht. Wir schauen ihn uns an und melden uns.</template>
         <template v-else>Vielleicht ist er abgelaufen oder hat einen Tippfehler.</template>
         Du willst trotzdem etwas für den Dorfanzeiger schreiben? Schreib uns an
-        <a :href="`mailto:${links.kontaktMail}`" class="gast__mail">{{ links.kontaktMail }}</a>.
+        <a :href="`mailto:${verein.kontakt_email}`" class="gast__mail">{{ verein.kontakt_email }}</a>.
       </p>
       <BasisKnopf to="/">Zur Startseite</BasisKnopf>
     </div>

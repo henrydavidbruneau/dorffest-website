@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { links } from '~/navigation'
+
+const verein = useVerein()
 
 const props = withDefaults(
   defineProps<{
@@ -22,9 +23,17 @@ const huelle = computed(() => (props.variante === 'zettel' ? Notizzettel : 'div'
 
 const feldId = useId()
 const email = ref('')
+const website = ref('')
+const turnstile = ref('')
+const { status, fehler, senden } = useFormular('/api/newsletter')
 
-// Absenden folgt in Phase 7 (POST /api/newsletter)
-function absenden() {}
+// Rückkehr vom Bestätigungslink (?newsletter=bestaetigt)
+const route = useRoute()
+const bestaetigt = computed(() => route.query.newsletter === 'bestaetigt')
+
+function absenden() {
+  return senden({ email: email.value, website: website.value, turnstile: turnstile.value })
+}
 </script>
 
 <template>
@@ -39,7 +48,13 @@ function absenden() {}
       <p v-if="text" class="newsletter__text">{{ text }}</p>
     </div>
 
-    <form class="newsletter__formular" @submit.prevent="absenden">
+    <p v-if="bestaetigt" class="newsletter__danke" role="status">
+      <span class="handschrift">Du bist dabei!</span> Ab jetzt bekommst du unsere Neuigkeiten.
+    </p>
+    <p v-else-if="status === 'fertig'" class="newsletter__danke" role="status">
+      <span class="handschrift">Fast geschafft!</span> Bitte klick noch auf den Link in der Mail, die wir dir gerade geschickt haben.
+    </p>
+    <form v-else class="newsletter__formular" @submit.prevent="absenden">
       <label
         :for="feldId"
         class="newsletter__label"
@@ -59,12 +74,18 @@ function absenden() {}
         <BasisKnopf
           type="submit"
           :variante="variante === 'lila' ? 'hell' : 'gefuellt'"
+          :disabled="status === 'sendet'"
           class="newsletter__knopf"
         >
-          Eintragen
+          {{ status === 'sendet' ? '…' : 'Eintragen' }}
         </BasisKnopf>
       </div>
-      <a :href="links.infochannel" target="_blank" rel="noopener" class="newsletter__infochannel handlink">→ lieber zum Infochannel</a>
+      <div class="nur-screenreader" aria-hidden="true">
+        <label>Website <input v-model="website" type="text" name="website" tabindex="-1" autocomplete="off"></label>
+      </div>
+      <BasisTurnstile v-model="turnstile" />
+      <p v-if="status === 'fehler'" class="newsletter__fehler" role="alert">{{ fehler }}</p>
+      <a :href="verein.infochannel_url" target="_blank" rel="noopener" class="newsletter__infochannel handlink">→ lieber zum Infochannel</a>
     </form>
   </component>
 </template>
@@ -197,5 +218,18 @@ function absenden() {}
 .newsletter--zettel .newsletter__knopf {
   min-height: 3.75rem;
   font-size: var(--groesse-knopf);
+}
+.newsletter__danke {
+  margin: 0;
+  font-size: var(--groesse-s);
+}
+
+.newsletter__danke .handschrift {
+  font-size: var(--groesse-hand-m);
+}
+
+.newsletter__fehler {
+  margin: 0;
+  font-size: var(--groesse-xs);
 }
 </style>

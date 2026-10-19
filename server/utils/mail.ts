@@ -56,8 +56,9 @@ export async function sendeMailStill(mail: Mail) {
 }
 
 /** Hinweis an den Verein (Kontakt-Postfach) */
-export function mailAnVerein(betreff: string, text: string, antwortAn?: string) {
-  return sendeMailStill({ an: KONTAKT_MAIL, betreff, text, antwortAn, tags: ['hinweis'] })
+export async function mailAnVerein(betreff: string, text: string, antwortAn?: string) {
+  const { kontakt_email } = await ladeVerein()
+  return sendeMailStill({ an: kontakt_email || KONTAKT_MAIL, betreff, text, antwortAn, tags: ['hinweis'] })
 }
 
 /** Gruß unter Mails an Nachbar*innen */

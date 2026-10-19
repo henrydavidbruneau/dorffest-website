@@ -399,6 +399,7 @@ const COLLECTIONS = [
       bool('rechte_bestaetigt', { note: 'Pflicht' }),
       m2o('geprueft_von', 'directus_users', { type: 'uuid', note: 'Wer angenommen/abgelehnt hat', template: '{{first_name}} {{last_name}}' }),
       m2o('artikel', 'artikel', { note: 'Nach dem Annehmen', template: '{{titel}}' }),
+      timestamp('erschienen_mail_am', { note: '„Dein Beitrag ist erschienen“-Mail verschickt' }),
       ...systemFields(),
     ],
     relations: [
@@ -474,6 +475,7 @@ const COLLECTIONS = [
       select('wie', [['jedes', 'Jedes Plenum'], ['naechstes', 'Nur das nächste']], { required: true, def: 'jedes' }),
       bool('bestaetigt', { note: 'Double-Opt-in' }),
       timestamp('abgemeldet_am'),
+      timestamp('zuletzt_erinnert_am'),
       ...systemFields(),
     ],
   },
@@ -712,6 +714,8 @@ const PERMISSIONS = {
     ...all('ideen', ['read', 'update', 'delete']),
     ...all('vorschlaege', ['read', 'update']),
     ...all('plenum_erinnerungen', ['read', 'delete']),
+    // Erinnerungen verschicken: „nur das nächste“ danach abmelden, Versand vermerken
+    { collection: 'plenum_erinnerungen', action: 'update', fields: ['abgemeldet_am', 'zuletzt_erinnert_am'] },
     { collection: 'auslagen', action: 'create', fields: ['titel', 'betrag', 'datum', 'termin', 'belege', 'kontoinhaber_in', 'iban', 'notiz'] },
     { collection: 'auslagen', action: 'read', fields: ['*'], permissions: OWN },
     { collection: 'auslagen', action: 'update', fields: ['titel', 'betrag', 'datum', 'termin', 'belege', 'kontoinhaber_in', 'iban', 'notiz'], permissions: { _and: [OWN, { status: { _eq: 'eingereicht' } }] } },

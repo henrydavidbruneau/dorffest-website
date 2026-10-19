@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { links } from '~/navigation'
+
+const verein = useVerein()
 
 definePageMeta({ layout: 'zeitung' })
 
@@ -118,7 +119,7 @@ useSeoMeta({
 
     <p class="beitrag__impressum">
       Der Dorfanzeiger · Rückt Zusammen e.V. · Baumschulenstraße 28, 50226 Frechen<br>
-      Leserbriefe: <a :href="`mailto:${links.kontaktMail}`">{{ links.kontaktMail }}</a>
+      Leserbriefe: <a :href="`mailto:${verein.kontakt_email}`">{{ verein.kontakt_email }}</a>
     </p>
   </ZeitungBlatt>
 </template>

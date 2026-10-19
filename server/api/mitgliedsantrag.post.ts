@@ -1,7 +1,6 @@
 // POST /api/mitgliedsantrag – Mitgliedsantrag.
 // Speichert in Directus `mitgliedsantraege` (Status `eingereicht`), schickt eine Eingangsbestätigung
 // mit Beitrag und Konto und gibt dem Vorstand Bescheid.
-import { KONTO } from '#shared/utils/kontakt'
 export default defineEventHandler(async (event) => {
   rateLimit(event, 'mitgliedsantrag', 3)
   const body = await leseBody(event)
@@ -49,6 +48,7 @@ export default defineEventHandler(async (event) => {
   // Satzung gilt mit dem Antrag als anerkannt (§ 4) – Zeitpunkt als Textform-Nachweis
   await directusAnlegen('mitgliedsantraege', { ...antrag, satzung_anerkannt_am: new Date().toISOString() })
 
+  const konto = await ladeVerein()
   const artText = art === 'foerder' ? 'Fördermitglied' : 'reguläres Mitglied'
   const betrag = beitrag.art === 'foerder' ? `${beitrag.monat} € im Monat (${beitragJahr} € im Jahr)` : `${beitragJahr} € im Jahr`
   const zweck = `Mitgliedsbeitrag ${antrag.vorname} ${antrag.nachname}`
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
       `Hallo ${antrag.vorname},`,
       `danke für deinen Antrag – du willst ${artText} bei Königsdorf rückt zusammen e.V. werden. Wie schön!`,
       'Der Vorstand schaut sich den Antrag an und meldet sich bei dir, sobald er entschieden hat.',
-      `Dein Beitrag: ${betrag}\nKonto: ${KONTO.inhaber}\nIBAN: ${KONTO.iban}\nVerwendungszweck: ${zweck}`,
+      `Dein Beitrag: ${betrag}\nKonto: ${konto.kontoinhaber}\nIBAN: ${konto.iban}\nVerwendungszweck: ${zweck}`,
       'Am einfachsten richtest du einen Dauerauftrag ein. Fragen? Antworte einfach auf diese Mail.',
       GRUSS,
     ].join('\n\n'),
