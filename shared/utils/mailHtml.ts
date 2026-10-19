@@ -6,6 +6,7 @@
 //   ## Zwischenüberschrift
 //   **fett** · *kursiv* · [Linktext](https://…)
 //   [Knopftext](https://…)     allein im Absatz = lila Knopf
+//   [A](…) · [B](…) · [C](…)   allein im Absatz = Reihe kleiner Knöpfe (z.B. Google · Outlook · .ics)
 //   ![Beschreibung](/bilder/… "Bildunterschrift")   allein im Absatz = Bild
 //   - Punkt                    Aufzählung
 //   ---                        gestrichelte Trennlinie
@@ -74,6 +75,12 @@ function knopf(text: string, url: string) {
     + '</td></tr></table>'
 }
 
+/** Reihe kleiner Knöpfe mit Rahmen (z.B. „Zum Kalender hinzufügen“: Google · Outlook · Apple) */
+function knopfReihe(knoepfe: [string, string][]) {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px"><tr>${knoepfe.map(([text, url]) =>
+    `<td style="padding:0 8px 8px 0"><a href="${esc(url)}" style="display:inline-block;padding:8px 14px;border:2px solid ${LILA};border-radius:8px;font-family:${DISPLAY};font-size:15px;font-weight:900;text-transform:uppercase;color:${LILA};text-decoration:none">${esc(text)}</a></td>`).join('')}</tr></table>`
+}
+
 function absatzHtml(roh: string, basis: string, erster: boolean): string {
   const a = roh.trim()
   if (erster && ANREDE.test(a)) {
@@ -92,6 +99,8 @@ function absatzHtml(roh: string, basis: string, erster: boolean): string {
   }
   const k = a.match(KNOPF)
   if (k) return knopf(k[1]!, absolut(k[2]!, basis))
+  const reihe = a.split(/\s+·\s+/).map(teil => teil.match(KNOPF))
+  if (reihe.length > 1 && reihe.every(Boolean)) return knopfReihe(reihe.map(m => [m![1]!, absolut(m![2]!, basis)]))
   if (/^https?:\/\/\S+$/.test(a)) return knopf('Link öffnen', a)
   const zeilen = a.split('\n')
   if (zeilen.every(z => /^[-•]\s+/.test(z))) {

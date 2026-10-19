@@ -38,6 +38,7 @@ export default defineEventHandler(async (event) => {
     ? `${datumAusgeschrieben(termin.beginn)}${termin.uhrzeit_folgt ? ' (Uhrzeit folgt)' : `, ${uhrzeit(termin.beginn)} Uhr`}`
     : (termin.datum_text ?? 'Datum folgt')
   const wo = [termin.ort, termin.adresse].filter(Boolean).join(', ') || 'Ort folgt'
+  const kalender = kalenderLinks(termin, seitenUrl(event))
   await sendeMailStill({
     an: mail,
     betreff: `Du bist angemeldet: ${termin.titel}`,
@@ -48,7 +49,9 @@ export default defineEventHandler(async (event) => {
       '# Du bist ==dabei!==',
       `schön, dass du dabei bist! Wir haben dich für „${termin.titel}“ angemeldet${personen > 1 ? ` – mit ${personen} Personen` : ''}.`,
       `Wann: ${wann}\nWo: ${wo}${mitbringen ? `\n${termin.mitbringen_frage ? `Deine Antwort auf „${termin.mitbringen_frage}“` : 'Du bringst mit'}: ${mitbringen}` : ''}`,
-      termin.beginn ? `[In den Kalender eintragen](${seitenUrl(event)}/api/termine/${termin.slug}/kalender.ics)` : `[Alle Infos zum Termin](${seitenUrl(event)}/termine/${termin.slug})`,
+      ...(kalender.ics
+        ? ['**Zum Kalender hinzufügen:**', `[Google](${kalender.google}) · [Outlook](${kalender.outlook}) · [Apple / .ics](${kalender.ics})`]
+        : [`[Alle Infos zum Termin](${seitenUrl(event)}/termine/${termin.slug})`]),
       austragen ? `Du kannst doch nicht? [Klick hier, um dich wieder auszutragen](${austragen}).` : 'Du kannst doch nicht? Antworte einfach auf diese Mail, dann geben wir deinen Platz weiter.',
       ...(rundbrief ? ['## Und unser ==Rundbrief?==', 'Du willst auch von weiteren Aktionen hören – schön! Bitte bestätige noch kurz, dass wir dir unseren Rundbrief schicken dürfen:', `[Ja, schickt mir den Rundbrief](${rundbrief})`] : []),
       GRUSS,

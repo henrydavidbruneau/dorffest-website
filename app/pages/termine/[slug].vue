@@ -29,6 +29,7 @@ const wann = computed(() => {
 const ausgetragen = computed(() => route.query.ausgetragen === '1')
 
 const seitenUrl = useRequestURL()
+const kalender = computed(() => kalenderLinks(termin.value!, seitenUrl.origin))
 useSeoMeta({
   title: () => termin.value?.titel,
   description: () => termin.value?.kurzbeschreibung ?? undefined,
@@ -88,9 +89,14 @@ useHead(() => ({
 
             <div class="plakat__knoepfe">
               <BasisKnopf v-if="termin.anmeldung_aktiv && !termin.vergangen" to="#anmeldung" variante="hell">Anmelden</BasisKnopf>
-              <a v-if="termin.beginn && !termin.vergangen" :href="`/api/termine/${termin.slug}/kalender.ics`" class="plakat__kalender" download>
-                <span aria-hidden="true">+</span> In den Kalender
-              </a>
+              <details v-if="kalender.ics && !termin.vergangen" class="kalender">
+                <summary class="plakat__kalender"><span aria-hidden="true">+</span> Zum Kalender hinzufügen</summary>
+                <ul class="kalender__liste">
+                  <li><a :href="kalender.google!" target="_blank" rel="noopener">Google Kalender</a></li>
+                  <li><a :href="kalender.outlook!" target="_blank" rel="noopener">Outlook</a></li>
+                  <li><a :href="kalender.ics" download>Apple / andere (.ics)</a></li>
+                </ul>
+              </details>
             </div>
           </div>
 
@@ -248,6 +254,53 @@ useHead(() => ({
 
 .plakat__kalender:hover {
   background: rgb(255 255 255 / 0.08);
+}
+
+/* „Zum Kalender hinzufügen“: kleines Menü mit Google, Outlook, .ics */
+.kalender {
+  position: relative;
+}
+
+.kalender summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.kalender summary::-webkit-details-marker {
+  display: none;
+}
+
+.kalender[open] summary {
+  background: rgb(255 255 255 / 0.08);
+}
+
+.kalender__liste {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  min-width: 100%;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  border-radius: var(--radius-m);
+  background: var(--farbe-creme);
+  box-shadow: 0 0.6rem 1.6rem rgb(0 0 0 / 0.25);
+}
+
+.kalender__liste a {
+  display: block;
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.4rem;
+  color: var(--farbe-lila);
+  font-weight: var(--gewicht-text-mittel);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.kalender__liste a:hover,
+.kalender__liste a:focus-visible {
+  background: var(--farbe-pfirsich);
 }
 
 .plakat__bild {
