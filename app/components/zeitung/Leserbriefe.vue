@@ -147,6 +147,7 @@ async function absenden() {
 
 /* Formular-Zettel */
 .brief--formular {
+  min-width: 0;
   border: 2px dashed var(--farbe-lila);
   background: var(--farbe-zeitungspapier);
   box-shadow: none;
@@ -156,6 +157,7 @@ async function absenden() {
 
 .brief__formular {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.6rem;
 }
 

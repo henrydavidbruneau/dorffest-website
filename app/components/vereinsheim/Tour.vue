@@ -6,7 +6,16 @@ const { aktiv, nr, schritt, schritte, vorschlagen } = tour
 const route = useRoute()
 const { zeige } = useVereinsheimMeldung()
 
-const zeigeVorschlag = computed(() => vorschlagen.value && route.path === '/vereinsheim')
+// Vorschlag erst nach einer Sekunde, damit man das Dashboard kurz sieht
+const vorschlagBereit = ref(false)
+const vorschlagKarte = ref<HTMLElement | null>(null)
+onMounted(() => setTimeout(() => (vorschlagBereit.value = true), 1000))
+const zeigeVorschlag = computed(() => vorschlagBereit.value && vorschlagen.value && route.path === '/vereinsheim')
+watch(zeigeVorschlag, async (ja) => {
+  if (!ja) return
+  await nextTick()
+  vorschlagKarte.value?.focus()
+})
 
 // ---------- Lichtkegel ----------
 const rahmen = ref<{ top: number, left: number, width: number, height: number } | null>(null)
@@ -74,6 +83,7 @@ async function zeigen() {
 watch([aktiv, nr, () => route.path], () => aktiv.value && zeigen())
 
 function taste(e: KeyboardEvent) {
+  if (zeigeVorschlag.value && e.key === 'Escape') return tour.spaeter()
   if (!aktiv.value) return
   if (e.key === 'Escape') tour.beenden()
   else if (e.key === 'ArrowRight') weiter()
@@ -104,8 +114,8 @@ async function nein() {
 
 <template>
   <!-- Vorschlag -->
-  <div v-if="zeigeVorschlag" class="tour-vorschlag" role="dialog" aria-modal="false" aria-labelledby="tour-vorschlag-titel">
-    <div class="tour-karte tour-karte--vorschlag">
+  <div v-if="zeigeVorschlag" class="tour-vorschlag" role="dialog" aria-modal="true" aria-labelledby="tour-vorschlag-titel">
+    <div ref="vorschlagKarte" class="tour-karte tour-karte--vorschlag" tabindex="-1">
       <p class="tour-karte__zaehler">Neu hier?</p>
       <h2 id="tour-vorschlag-titel" class="tour-karte__titel">Kleine Tour gefällig?</h2>
       <p class="tour-karte__text">In zwei Minuten zeigen wir dir die wichtigsten Ecken im Vereinsheim: Termine, Dorfanzeiger, Kasse und mehr.</p>
@@ -211,18 +221,31 @@ async function nein() {
   color: #6b6259;
 }
 
-/* Vorschlag: unten rechts, ohne den Rest zu blockieren */
+/* Vorschlag: mittig, Hintergrund leicht abgedunkelt */
 .tour-vorschlag {
   position: fixed;
-  right: var(--abstand-m);
-  bottom: var(--abstand-m);
+  inset: 0;
   z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(30 10 35 / 0.45);
+  animation: tour-schleier 0.3s ease-out;
 }
 
 .tour-karte--vorschlag {
   position: static;
-  border: 3px solid var(--farbe-lila);
-  animation: tour-rein 0.4s ease-out;
+  width: min(26rem, 100%);
+  padding: var(--abstand-l);
+  animation: tour-rein 0.35s ease-out;
+}
+
+.tour-karte--vorschlag:focus-visible {
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.3);
+}
+
+@keyframes tour-schleier {
+  from { opacity: 0; }
 }
 
 @keyframes tour-rein {
@@ -244,18 +267,11 @@ async function nein() {
     bottom: auto;
   }
 
-  .tour-vorschlag {
-    right: 1rem;
-    left: 1rem;
-  }
-
-  .tour-karte--vorschlag {
-    width: auto;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .tour__kegel,
+  .tour-vorschlag,
   .tour-karte--vorschlag {
     transition: none;
     animation: none;

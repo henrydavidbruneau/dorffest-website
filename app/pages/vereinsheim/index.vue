@@ -22,9 +22,8 @@ const { data } = useAsyncData('vh-dashboard', async () => {
     return vh.liste<T & { date_created: string }>(c, { fields: `${fields},date_created`, filter, sort: '-date_created', limit: 4 }).catch(() => [])
   }
 
-  const [naechster, plenum, neuIn] = await Promise.all([
+  const [naechster, neuIn] = await Promise.all([
     vh.liste<Termin>('termine', { fields: 'id,titel,slug,beginn,ort', filter: { status: { _eq: 'published' }, beginn: { _gte: '$NOW' } }, sort: 'beginn', limit: 1 }).catch(() => []),
-    vh.liste<Termin>('termine', { fields: 'id,titel,slug,beginn,ort', filter: { slug: { _starts_with: 'plenum' }, beginn: { _gte: '$NOW' } }, sort: 'beginn', limit: 1 }).catch(() => []),
     Promise.all([
       neu('anmeldungen', { date_created: WOCHE }),
       neu('gastbeitraege', { status: { _eq: 'eingereicht' } }),
@@ -63,7 +62,7 @@ const { data } = useAsyncData('vh-dashboard', async () => {
   }
 
   const [anmeldungen, gastbeitraege, leserbriefe, vorschlaege, ideen, kasse, antraege] = neuIn
-  return { naechster: naechster[0] ?? null, plenum: plenum[0] ?? null, post: eingaenge, auslagen, neu: { anmeldungen, gastbeitraege, leserbriefe, vorschlaege, ideen, kasse, antraege } }
+  return { naechster: naechster[0] ?? null, post: eingaenge, auslagen, neu: { anmeldungen, gastbeitraege, leserbriefe, vorschlaege, ideen, kasse, antraege } }
 }, { server: false })
 
 // Begrüßung je nach Tageszeit: Spruch als Überschrift, Name hervorgehoben
@@ -123,7 +122,15 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
 
         <!-- Vorstand: Post · Mitglieder: eigene Einreichungen -->
         <BasisNotizzettel farbe="pfirsich" radius="l" :drehung="1.5" class="dash__karte" data-tour="post">
-          <template v-if="ich?.vorstand && mails">
+          <!-- solange geladen wird: Platzhalter in voller Höhe, damit die Kacheln darunter nicht springen -->
+          <template v-if="!data">
+            <p class="dash__karte-titel"><VereinsheimIcon :name="ich?.vorstand ? 'post' : 'kasse'" class="dash__karte-icon" /> {{ ich?.vorstand ? 'Neue Post' : 'Deine Einreichungen' }}</p>
+            <ul class="dash__post" aria-hidden="true">
+              <li v-for="n in 5" :key="n" class="dash__post-platzhalter" />
+            </ul>
+            <p class="dash__karte-hinweis dash__karte-hinweis--laedt">Wird geladen …</p>
+          </template>
+          <template v-else-if="ich?.vorstand && mails">
             <p class="dash__karte-titel"><VereinsheimIcon name="post" class="dash__karte-icon" /> Neue Post</p>
             <ul v-if="mails.length" class="dash__post">
               <li v-for="m in mails" :key="m.uid">
@@ -205,9 +212,6 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
           Wir sehen uns im <BasisHervorhebung :drehung="-1.5">Plenum!</BasisHervorhebung>
         </h2>
         <p class="dash__plenum-text handschrift">
-          <template v-if="data?.plenum">
-            {{ datumAusgeschrieben(data.plenum.beginn) }}, {{ uhrzeit(data.plenum.beginn) }} Uhr{{ data.plenum.ort ? ` · ${data.plenum.ort}` : '' }}<br>
-          </template>
           Wer zuletzt geht, macht das Licht aus.
         </p>
       </div>
@@ -253,9 +257,18 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
   font-size: var(--groesse-l);
 }
 
+/* feste Mindesthöhe: ob Platzhalter, wenige oder fünf Einträge – die Kacheln darunter bleiben stehen */
 .dash__karte {
+  display: flex;
+  flex-direction: column;
+  min-height: 31rem;
   padding: var(--abstand-l);
   color: var(--farbe-schwarz);
+}
+
+.dash__karte .dash__linie {
+  margin-top: auto;
+  padding-top: var(--abstand-m);
 }
 
 .dash__karte-titel {
@@ -283,6 +296,12 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.dash__post-platzhalter {
+  height: 2.35rem;
+  border-bottom: 1px dashed rgb(0 0 0 / 0.15);
+  background: linear-gradient(90deg, rgb(0 0 0 / 0.06) 0 70%, transparent 70%) left center / 100% 0.8rem no-repeat;
 }
 
 .dash__post-link {

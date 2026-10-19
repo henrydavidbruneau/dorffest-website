@@ -10,8 +10,11 @@ let widgetId: string | undefined
 onMounted(async () => {
   if (!turnstileSiteKey || !box.value) return
   const turnstile = await ladeTurnstile()
+  if (!box.value) return
   widgetId = turnstile.render(box.value, {
     'sitekey': turnstileSiteKey,
+    // das normale Kästchen ist fest 300px breit – in schmalen Spalten (z.B. Leserbrief-Zettel) die kompakte Form
+    'size': box.value.clientWidth < 300 ? 'compact' : 'normal',
     'language': 'de',
     'appearance': 'interaction-only',
     'callback': (t: string) => (token.value = t),
@@ -31,6 +34,10 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.turnstile {
+  max-width: 100%;
+}
+
 .turnstile:empty {
   display: none;
 }
