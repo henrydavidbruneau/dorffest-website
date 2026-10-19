@@ -13,8 +13,9 @@ onMounted(async () => {
   if (!box.value) return
   widgetId = turnstile.render(box.value, {
     'sitekey': turnstileSiteKey,
-    // ab 300px füllt das Kästchen die Breite, darunter die kompakte Form (schmale Zettel)
-    'size': box.value.clientWidth < 300 ? 'compact' : 'flexible',
+    // ab 300px füllt das Kästchen die Breite, darunter die kompakte Form (schmale Zettel).
+    // Gemessen wird der umgebende Platz – das leere Kästchen selbst ist noch ausgeblendet (Breite 0).
+    'size': (box.value.parentElement?.clientWidth ?? 300) < 300 ? 'compact' : 'flexible',
     'language': 'de',
     'appearance': 'interaction-only',
     'callback': (t: string) => (token.value = t),
