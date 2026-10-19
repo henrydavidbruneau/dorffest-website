@@ -1,9 +1,10 @@
 // Rundbrief = Newsletter an die Brevo-Liste (NUXT_BREVO_NEWSLETTER_LISTE), geschrieben im Vereinsheim.
-// Verschickt als Brevo-Kampagne (Tag „rundbrief“), damit Brevo Abmeldungen und Zustellung übernimmt.
+// Verschickt als Brevo-Kampagne, damit Brevo Abmeldungen und Zustellung übernimmt. Erkannt werden unsere
+// Kampagnen am Namen („Rundbrief …“) – Tags erlaubt der Gratis-Tarif von Brevo nicht.
 // HTML wie alle Mails (`mailHtml`), Abmelde-Link = Brevo-Platzhalter `{{ unsubscribe }}`.
 
 const BREVO = 'https://api.brevo.com/v3'
-export const RUNDBRIEF_TAG = 'rundbrief'
+const NAME_ANFANG = 'Rundbrief '
 
 export function rundbriefKonfig() {
   const { brevoApiKey, brevoNewsletterListe } = useRuntimeConfig()
@@ -26,14 +27,14 @@ export async function rundbriefStand() {
   const { liste } = rundbriefKonfig()
   const [infos, kampagnen] = await Promise.all([
     brevo<{ uniqueSubscribers?: number, totalSubscribers?: number }>(`/contacts/lists/${liste}`),
-    brevo<{ campaigns?: { id: number, subject: string, tag?: string, sentDate?: string, statistics?: { globalStats?: { delivered?: number, uniqueViews?: number } } }[] }>('/emailCampaigns', {
+    brevo<{ campaigns?: { id: number, name?: string, subject: string, sentDate?: string, statistics?: { globalStats?: { delivered?: number, uniqueViews?: number } } }[] }>('/emailCampaigns', {
       query: { type: 'classic', status: 'sent', limit: 50, sort: 'desc', statistics: 'globalStats' },
     }).catch(() => ({ campaigns: [] })),
   ])
   return {
     abonnenten: infos.uniqueSubscribers ?? infos.totalSubscribers ?? 0,
     verschickt: (kampagnen.campaigns ?? [])
-      .filter(k => k.tag === RUNDBRIEF_TAG)
+      .filter(k => k.name?.startsWith(NAME_ANFANG))
       .slice(0, 10)
       .map(k => ({ id: k.id, betreff: k.subject, am: k.sentDate ?? null, zugestellt: k.statistics?.globalStats?.delivered ?? null, geoeffnet: k.statistics?.globalStats?.uniqueViews ?? null })),
   }
@@ -45,11 +46,10 @@ export async function rundbriefVerschicken(betreff: string, text: string) {
   const kampagne = await brevo<{ id: number }>('/emailCampaigns', {
     method: 'POST',
     body: {
-      name: `Rundbrief ${datumLang(new Date().toISOString())}: ${betreff}`.slice(0, 250),
+      name: `${NAME_ANFANG}${datumLang(new Date().toISOString())}: ${betreff}`.slice(0, 250),
       subject: betreff,
       sender: { name: mailVonName, email: mailVon },
       replyTo: KONTAKT_MAIL,
-      tag: RUNDBRIEF_TAG,
       recipients: { listIds: [liste] },
       htmlContent: mailHtml(rundbriefText(text), { basis: mailBasis(), rubrik: 'Rundbrief', grosserGruss: true, abmelden: '{{ unsubscribe }}', vorschau: betreff }),
     },

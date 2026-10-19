@@ -525,7 +525,7 @@ Ohne echte E-Mail gibt es kein „Passwort vergessen“ – dann setzt ein Admin
 - **Newsletter** (Double-Opt-in): `POST /api/newsletter` → signierter Link →
   `/api/newsletter/bestaetigen` → Brevo-Liste `NUXT_BREVO_NEWSLETTER_LISTE`. Ohne Key/Liste nur Log.
 - **Rundbrief** (Vereinsheim → Post → „+ Neuer Rundbrief“, nur Vorstand): `POST /api/vereinsheim/rundbrief`
-  legt eine Brevo-Kampagne an die Newsletter-Liste an (Tag `rundbrief`, Abmelde-Link `{{ unsubscribe }}`,
+  legt eine Brevo-Kampagne an die Newsletter-Liste an (Name „Rundbrief …“ – Tags erlaubt der Gratis-Tarif nicht, Abmelde-Link `{{ unsubscribe }}`,
   Antwort an die Kontakt-Adresse) und schickt sie sofort; `test: true` schickt nur an die eigene Adresse.
   `GET /api/vereinsheim/rundbrief` liefert Abonnent*innen-Zahl und die letzten Rundbriefe (aus Brevo).
   Der API-Schlüssel braucht in Brevo die Rechte für Kampagnen und Kontakte; der Absender muss verifiziert sein.
