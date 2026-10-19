@@ -694,8 +694,9 @@ const PERMISSIONS = {
     { collection: 'vorschlaege', action: 'create', fields: ['name', 'email', 'idee', 'dorffest', 'selbst_mitmachen'] },
     { collection: 'plenum_erinnerungen', action: 'create', fields: ['name', 'email', 'wie'] },
     // Double-Opt-in: ID des neuen Eintrags für den signierten Link, dann bestätigen/abmelden
-    { collection: 'plenum_erinnerungen', action: 'read', fields: ['id'] },
-    { collection: 'plenum_erinnerungen', action: 'update', fields: ['bestaetigt', 'abgemeldet_am'] },
+    // … und für die automatische Erinnerung (Netlify-Zeitplan → /api/plenum-erinnerung/automatisch)
+    { collection: 'plenum_erinnerungen', action: 'read', fields: ['id', 'name', 'email', 'wie', 'bestaetigt', 'abgemeldet_am', 'zuletzt_erinnert_am'] },
+    { collection: 'plenum_erinnerungen', action: 'update', fields: ['bestaetigt', 'abgemeldet_am', 'zuletzt_erinnert_am'] },
     { collection: 'mitgliedsantraege', action: 'create', fields: ['art', 'beitrag_stufe', 'beitrag_jahr', 'vorname', 'nachname', 'strasse', 'plz', 'ort', 'email', 'telefon', 'plenum_besucht', 'nachricht', 'satzung_anerkannt_am'] },
     { collection: 'verein', action: 'read', fields: ['*'] },
     // Vereinsheim-Login: Benutzername → E-Mail (nur aktive User mit Benutzernamen)

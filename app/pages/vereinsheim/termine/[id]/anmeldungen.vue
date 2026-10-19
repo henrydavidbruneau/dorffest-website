@@ -7,7 +7,8 @@ useSeoMeta({ title: 'Anmeldungen · Vereinsheim', robots: 'noindex, nofollow' })
 interface Anmeldung { id: number, status: string, name: string, email: string, personen: number, nachricht: string | null, mitbringen: string | null, date_created: string }
 interface Beitrag { id: number, name: string, was: string, email: string | null, date_created: string }
 interface Rundmail { id: number, betreff: string, empfaenger_anzahl: number | null, gesendet_am: string | null, user_created: { first_name: string | null } | null }
-interface Termin { id: number, titel: string, beginn: string | null, ende: string | null, plaetze: number | null, mitbringen_frage?: string | null, wiederholung?: string | null, wiederholung_bis?: string | null }
+interface Erinnerung { id: number, name: string | null, email: string, wie: string, zuletzt_erinnert_am: string | null }
+interface Termin { id: number, slug: string, titel: string, beginn: string | null, ende: string | null, plaetze: number | null, mitbringen_frage?: string | null, wiederholung?: string | null, wiederholung_bis?: string | null }
 
 const route = useRoute()
 const id = Number(route.params.id)
@@ -21,7 +22,11 @@ const { data, refresh } = useAsyncData(`vh-anmeldungen-${id}`, async () => {
     vh.liste<Beitrag>('beitraege', { fields: 'id,name,was,email,date_created', filter: { termin: { _eq: id } }, sort: 'date_created' }),
     vh.liste<Rundmail>('termin_rundmails', { fields: 'id,betreff,empfaenger_anzahl,gesendet_am,user_created.first_name', filter: { termin: { _eq: id } }, sort: '-gesendet_am' }),
   ])
-  return { termin, anmeldungen, beitraege, rundmails }
+  // Plenum: wer erinnert werden will, steht bei jedem Treffen mit auf der Liste
+  const erinnerungen = istPlenum(termin.slug)
+    ? await vh.liste<Erinnerung>('plenum_erinnerungen', { fields: 'id,name,email,wie,zuletzt_erinnert_am', filter: { bestaetigt: { _eq: true }, abgemeldet_am: { _null: true } }, sort: 'name' })
+    : []
+  return { termin, anmeldungen, beitraege, rundmails, erinnerungen }
 }, { server: false })
 
 // Regelmäßige Termine: Anmeldungen je Runde (wie auf der Website: seit dem letzten Treffen
@@ -45,6 +50,30 @@ const mitbringen = computed(() => [
   ...angemeldet.value.filter(a => a.mitbringen).map(a => ({ name: a.name, was: a.mitbringen! })),
   ...(data.value?.beitraege ?? []).filter(b => inRunde(b.date_created)).map(b => ({ name: b.name, was: b.was })),
 ])
+// „Nachricht an uns“ gibt es im Formular nicht mehr – Spalte nur für alte Anmeldungen mit Nachricht
+const mitNachricht = computed(() => anmeldungen.value.some(a => a.nachricht))
+// Erinnerungs-Abos gehören immer zum nächsten Treffen
+const erinnerungen = computed(() => (gewaehlt.value === naechsteRunde.value ? data.value?.erinnerungen ?? [] : []))
+const angemeldeteMails = computed(() => new Set(angemeldet.value.map(a => a.email.toLowerCase())))
+const nurErinnerung = computed(() => erinnerungen.value.filter(e => !angemeldeteMails.value.has(e.email.toLowerCase())))
+const empfaengerAnzahl = computed(() => angemeldet.value.length + nurErinnerung.value.length)
+
+async function erinnerungLoeschen(e: Erinnerung) {
+  if (!window.confirm(`${e.name || e.email} nicht mehr ans Plenum erinnern?`)) return
+  try {
+    await vh.aendern('plenum_erinnerungen', e.id, { abgemeldet_am: new Date().toISOString() })
+    zeige('Abgemeldet – keine Erinnerungen mehr.')
+    await refresh()
+  }
+  catch (err) {
+    fehler(err)
+  }
+}
+
+// Vorschau der Rundmail, so wie sie bei der ersten Person ankommt
+const vorschauAn = computed(() => angemeldet.value[0] ?? nurErinnerung.value[0] ?? null)
+const vorschauText = computed(() => [`Hallo ${vorschauAn.value?.name || 'du'},`, mail.text.trim() || '…', GRUSS].join('\n\n'))
+
 const kopfDatum = computed(() => (regelmaessig.value ? gewaehlt.value : data.value?.termin.beginn) || null)
 
 async function umschalten(a: Anmeldung) {
@@ -81,10 +110,10 @@ function csv() {
 const mail = reactive({ betreff: '', text: '' })
 const sendet = ref(false)
 async function rundmail() {
-  if (!window.confirm(`Mail an ${angemeldet.value.length} Angemeldete schicken?`)) return
+  if (!window.confirm(`Mail an ${empfaengerAnzahl.value} Leute schicken?`)) return
   sendet.value = true
   try {
-    const r = await $fetch<{ gesendet: number }>(`/api/vereinsheim/termine/${id}/rundmail`, { method: 'POST', body: { ...mail, ids: angemeldet.value.map(a => a.id) } })
+    const r = await $fetch<{ gesendet: number }>(`/api/vereinsheim/termine/${id}/rundmail`, { method: 'POST', body: { ...mail, ids: angemeldet.value.map(a => a.id), mitErinnerung: erinnerungen.value.length > 0 } })
     zeige(`Ab in die Post: ${r.gesendet} Mails verschickt.`)
     mail.betreff = ''
     mail.text = ''
@@ -128,14 +157,14 @@ watch(() => data.value?.termin, (t) => {
       <div v-if="anmeldungen.length" class="anm__scroll">
       <table class="anm__tabelle">
         <thead>
-          <tr><th>Name</th><th>Pers.</th><th>{{ data?.termin.mitbringen_frage ? 'Antwort' : 'Mitbringen' }}</th><th>Nachricht</th><th class="anm__nicht-drucken">E-Mail</th><th class="anm__nicht-drucken"><span class="nur-screenreader">Aktionen</span></th><th class="anm__nur-drucken">da?</th></tr>
+          <tr><th>Name</th><th>Pers.</th><th>{{ data?.termin.mitbringen_frage ? 'Antwort' : 'Mitbringen' }}</th><th v-if="mitNachricht">Nachricht</th><th class="anm__nicht-drucken">E-Mail</th><th class="anm__nicht-drucken"><span class="nur-screenreader">Aktionen</span></th><th class="anm__nur-drucken">da?</th></tr>
         </thead>
         <tbody>
           <tr v-for="a in anmeldungen" :key="a.id" :class="{ 'anm__ab': a.status !== 'angemeldet' }">
             <td>{{ a.name }}</td>
             <td>{{ a.personen }}</td>
             <td>{{ a.mitbringen }}</td>
-            <td>{{ a.nachricht }}</td>
+            <td v-if="mitNachricht">{{ a.nachricht }}</td>
             <td class="anm__nicht-drucken"><a :href="`mailto:${a.email}`">{{ a.email }}</a></td>
             <td class="anm__nicht-drucken anm__aktionen">
               <button type="button" @click="umschalten(a)">{{ a.status === 'angemeldet' ? 'abmelden' : 'wieder anmelden' }}</button>
@@ -148,6 +177,19 @@ watch(() => data.value?.termin, (t) => {
       </div>
       <p v-else class="anm__leer">Noch niemand angemeldet. Sag’s im Infochannel weiter!</p>
 
+      <section v-if="erinnerungen.length" class="anm__erinnerung" aria-labelledby="erinnerung-titel">
+        <h2 id="erinnerung-titel">Wollen erinnert werden <span>· {{ erinnerungen.length }}</span></h2>
+        <p class="anm__erinnerung-info">
+          Eingetragen über „Mitmachen“. Die Erinnerung geht automatisch {{ ERINNERUNG_TAGE_VORHER }} Tage vorher raus; „Mail an alle“ unten erreicht sie auch.
+        </p>
+        <ul>
+          <li v-for="e in erinnerungen" :key="e.id">
+            <span><strong>{{ e.name || '–' }}</strong> · {{ e.email }} · {{ e.wie === 'jedes' ? 'jedes Plenum' : 'nur das nächste' }}<template v-if="e.zuletzt_erinnert_am"> · zuletzt erinnert {{ datumLang(e.zuletzt_erinnert_am) }}</template></span>
+            <button type="button" class="anm__weg anm__nicht-drucken" @click="erinnerungLoeschen(e)">nicht mehr erinnern</button>
+          </li>
+        </ul>
+      </section>
+
       <section v-if="mitbringen.length" class="anm__mitbringen">
         <h2>{{ data?.termin.mitbringen_frage || 'Wer bringt was mit?' }}</h2>
         <ul>
@@ -159,11 +201,20 @@ watch(() => data.value?.termin, (t) => {
     <section class="anm__rundmail anm__nicht-drucken" aria-labelledby="rundmail-titel">
       <div class="vh-karte anm__rundmail-zettel">
         <h2 id="rundmail-titel">Mail an alle Angemeldeten</h2>
-        <p>Jede*r bekommt die Mail einzeln mit persönlicher Anrede („Hallo …“) und unserem Gruß darunter.</p>
+        <p>Jede*r bekommt die Mail einzeln mit persönlicher Anrede („Hallo …“) und unserem Gruß darunter.<template v-if="nurErinnerung.length"> Auch an die {{ nurErinnerung.length }}, die ans Plenum erinnert werden wollen (mit Abmelde-Link).</template></p>
         <form class="anm__form" @submit.prevent="rundmail">
           <BasisFeld v-model="mail.betreff" label="Betreff" name="betreff" required :maxlength="200" />
           <BasisFeld v-model="mail.text" label="Text" name="text" required mehrzeilig :zeilen="7" />
-          <BasisKnopf type="submit" :disabled="sendet || !angemeldet.length">{{ sendet ? 'Wird gesendet …' : `An ${angemeldet.length} schicken` }}</BasisKnopf>
+          <div v-if="vorschauAn" class="anm__vorschau" aria-live="polite">
+            <p class="anm__vorschau-titel">Vorschau</p>
+            <dl class="anm__vorschau-kopf">
+              <dt>An</dt><dd>{{ vorschauAn.name || vorschauAn.email }}{{ empfaengerAnzahl > 1 ? ` (und ${empfaengerAnzahl - 1} weitere, jede*r einzeln)` : '' }}</dd>
+              <dt>Betreff</dt><dd>{{ mail.betreff || '…' }}</dd>
+            </dl>
+            <p class="anm__vorschau-text">{{ vorschauText }}</p>
+            <p v-if="nurErinnerung.length" class="anm__vorschau-hinweis">Wer nur ans Plenum erinnert werden will, bekommt vor dem Gruß noch einen Abmelde-Link.</p>
+          </div>
+          <BasisKnopf type="submit" :disabled="sendet || !empfaengerAnzahl">{{ sendet ? 'Wird gesendet …' : `An ${empfaengerAnzahl} schicken` }}</BasisKnopf>
         </form>
         <div v-if="data?.rundmails.length" class="anm__protokoll">
           <h3>Schon verschickt</h3>
@@ -283,7 +334,8 @@ watch(() => data.value?.termin, (t) => {
   white-space: nowrap;
 }
 
-.anm__aktionen button {
+.anm__aktionen button,
+.anm__erinnerung button {
   margin-right: 0.6rem;
   padding: 0;
   border: 0;
@@ -322,6 +374,90 @@ watch(() => data.value?.termin, (t) => {
   display: flex;
   flex-direction: column;
   gap: var(--abstand-s);
+}
+
+.anm__erinnerung h2 {
+  margin: var(--abstand-l) 0 var(--abstand-2xs);
+  font-size: var(--groesse-h4);
+  color: var(--farbe-lila);
+}
+
+.anm__erinnerung h2 span {
+  color: var(--vh-gedaempft);
+}
+
+.anm__erinnerung-info {
+  margin: 0 0 var(--abstand-xs);
+  font-size: var(--groesse-xs);
+  color: var(--vh-gedaempft);
+}
+
+.anm__erinnerung ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.anm__erinnerung li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem var(--abstand-s);
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--vh-rand);
+  font-size: var(--groesse-s);
+}
+
+.anm__erinnerung .anm__weg {
+  color: #a1260d;
+}
+
+/* Rundmail-Vorschau: sieht aus wie eine schlichte Mail */
+.anm__vorschau {
+  padding: var(--abstand-s) var(--abstand-m);
+  border: 1px solid var(--vh-rand);
+  border-radius: var(--vh-radius);
+  background: var(--farbe-creme);
+}
+
+.anm__vorschau-titel {
+  margin: 0 0 var(--abstand-2xs);
+  font-size: var(--groesse-xs);
+  font-weight: var(--gewicht-text-mittel);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vh-gedaempft);
+}
+
+.anm__vorschau-kopf {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem var(--abstand-s);
+  margin: 0;
+  padding-bottom: var(--abstand-xs);
+  border-bottom: 1px solid var(--vh-rand);
+  font-size: var(--groesse-xs);
+}
+
+.anm__vorschau-kopf dt {
+  color: var(--vh-gedaempft);
+}
+
+.anm__vorschau-kopf dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.anm__vorschau-text {
+  margin: var(--abstand-xs) 0 0;
+  font-size: var(--groesse-s);
+  white-space: pre-line;
+}
+
+.anm__vorschau-hinweis {
+  margin: var(--abstand-xs) 0 0;
+  font-size: var(--groesse-xs);
+  color: var(--vh-gedaempft);
 }
 
 .anm__protokoll h3 {

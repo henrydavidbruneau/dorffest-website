@@ -9,7 +9,7 @@ const props = defineProps<{ termin: TerminDetail }>()
 const anmeldung = useFormular(() => `/api/termine/${props.termin.slug}/anmeldung`)
 const beitrag = useFormular(() => `/api/termine/${props.termin.slug}/beitrag`)
 
-const form = reactive({ name: '', email: '', personen: 1, nachricht: '', mitbringen: '', einwilligung: false, website: '', turnstile: '' })
+const form = reactive({ name: '', email: '', personen: 1, mitbringen: '', einwilligung: false, website: '', turnstile: '' })
 const seite = ref<1 | 2>(1)
 const pruefFehler = ref('')
 const zettel = ref<HTMLElement>()
@@ -125,7 +125,6 @@ async function absenden() {
             <BasisFeld v-model="form.email" label="E-Mail" type="email" name="email" autocomplete="email" required />
             <BasisFeld v-model="form.personen" label="Personen" type="number" name="personen" required :min="1" :max="maxPersonen" />
           </div>
-          <BasisFeld v-model="form.nachricht" label="Nachricht an uns" name="nachricht" mehrzeilig :maxlength="500" />
           <div v-if="mitbringenAufSeite1" class="stoerer__mitbringen">
             <TerminMitbringFelder v-model="form.mitbringen" :termin="termin" />
           </div>

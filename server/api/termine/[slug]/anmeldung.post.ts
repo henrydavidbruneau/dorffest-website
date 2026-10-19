@@ -13,7 +13,6 @@ export default defineEventHandler(async (event) => {
   const name = text(body.name, 80)
   const mail = email(body.email)
   const personen = Number(body.personen)
-  const nachricht = text(body.nachricht, 500) || null
   // optional: "Was bringst du mit?" (zweite Seite der Anmeldung)
   const mitbringen = termin.mitbringen_position !== 'aus' ? (text(body.mitbringen, 200) || null) : null
 
@@ -26,7 +25,7 @@ export default defineEventHandler(async (event) => {
   }
 
   await pruefeTurnstile(event, body)
-  await directusAnlegen('anmeldungen', { termin: termin.id, name, email: mail, personen, nachricht, mitbringen })
+  await directusAnlegen('anmeldungen', { termin: termin.id, name, email: mail, personen, mitbringen })
 
   const wann = termin.beginn
     ? `${datumAusgeschrieben(termin.beginn)}${termin.uhrzeit_folgt ? ' (Uhrzeit folgt)' : `, ${uhrzeit(termin.beginn)} Uhr`}`

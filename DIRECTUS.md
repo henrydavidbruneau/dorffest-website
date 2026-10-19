@@ -493,10 +493,16 @@ Ohne echte E-Mail gibt es kein „Passwort vergessen“ – dann setzt ein Admin
   Im Browser: `vh.liste/eins/anlegen/aendern/loeschen/hochladen` (`app/composables/useVereinsheim.ts`).
 - **Sonderrouten** (mehrere Schritte oder Mails): Rundmail, Gastbeitrag annehmen/ablehnen,
   „Dein Beitrag ist erschienen“ (`artikel/:id/erschienen`, einmalig über `gastbeitraege.erschienen_mail_am`),
-  Plenum-Erinnerung verschicken (`plenum/erinnern`: an alle Bestätigten, „nur das nächste“ wird danach
-  abgemeldet, `zuletzt_erinnert_am`), Mitgliedsantrag annehmen/ablehnen, Passwort, Konto,
+  Mitgliedsantrag annehmen/ablehnen, Passwort, Konto,
   Markdown-Vorschau, Bilder
   (`/api/vereinsheim/bild/:id` – zeigt auch Gastbeitrags-Fotos und eigene Belege).
+- **Plenum-Erinnerung automatisch:** Netlify Scheduled Function `netlify/functions/plenum-erinnerung.mjs`
+  (täglich 7 Uhr UTC, nur auf dem Produktions-Deploy) ruft `POST /api/plenum-erinnerung/automatisch` mit
+  `Authorization: Bearer <NUXT_LINK_SECRET>`. Ist das nächste Plenum (Termin mit Adresse `plenum…`,
+  regelmäßig erlaubt) höchstens 3 Tage entfernt, bekommen alle Bestätigten eine Mail (`server/utils/plenum.ts`),
+  jede*r einmal pro Treffen (`zuletzt_erinnert_am`); „nur das nächste“ wird danach abgemeldet. Server-Policy
+  darf dafür `plenum_erinnerungen` lesen und `zuletzt_erinnert_am` setzen. Im Vereinsheim stehen die Abos in der
+  Anmeldeliste des Plenums; die Rundmail erreicht sie auch (`mitErinnerung`, mit Abmelde-Link).
 - **Vorstand?** = darf `mitglieder` lesen (Policy `Vorstand`).
 - **Post** (`/vereinsheim/post`, nur Vorstand): kleines Mailprogramm fürs Kontakt-Postfach
   (`server/utils/postfach.ts`). Lesen per IMAP (`imapflow` + `mailparser`, PEEK – nichts wird als gelesen

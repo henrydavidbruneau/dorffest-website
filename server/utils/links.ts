@@ -39,3 +39,10 @@ export async function pruefeSignaturWert(zweck: string, wert: unknown, sig: unkn
 export function seitenUrl(event: Parameters<typeof getRequestURL>[0]) {
   return getRequestURL(event, { xForwardedHost: true }).origin
 }
+
+/** Zeitplan-Aufrufe (Netlify Scheduled Function) schicken `Authorization: Bearer <NUXT_LINK_SECRET>` */
+export function istZeitplanAufruf(event: Parameters<typeof getHeader>[0]) {
+  const { linkSecret } = useRuntimeConfig()
+  const kopf = getHeader(event, 'authorization') ?? ''
+  return !!linkSecret && gleich(kopf, `Bearer ${linkSecret}`)
+}

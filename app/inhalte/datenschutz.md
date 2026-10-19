@@ -28,7 +28,7 @@ Was du über unsere Formulare schickst, speichern wir in einer eigenen Datenbank
 
 Wenn du eines unserer Formulare nutzt, verarbeiten wir die Angaben, die du dort machst, ausschließlich für den jeweiligen Zweck:
 
-- **Anmeldung zu Terminen** und **„Was bringst du mit?“**: Name, E-Mail-Adresse, Personenzahl, deine Nachricht und was du mitbringst – um die Veranstaltung zu planen und dich dazu zu informieren.
+- **Anmeldung zu Terminen** und **„Was bringst du mit?“**: Name, E-Mail-Adresse, Personenzahl und was du mitbringst bzw. deine Antwort auf unsere Frage – um die Veranstaltung zu planen und dich dazu zu informieren.
 - **Erinnerung ans Plenum**: Name und E-Mail-Adresse – um dir Termin und Link zum Plenum zu schicken.
 - **Ideen einreichen**: Name, E-Mail-Adresse und deine Idee – um uns bei dir zu melden.
 - **Mitgliedsantrag**: Name, Anschrift, E-Mail-Adresse, optional Telefonnummer, Mitgliedsart und Beitrag – zur Mitgliederverwaltung.

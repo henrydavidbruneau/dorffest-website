@@ -60,6 +60,3 @@ export async function mailAnVerein(betreff: string, text: string, antwortAn?: st
   const { kontakt_email } = await ladeVerein()
   return sendeMailStill({ an: kontakt_email || KONTAKT_MAIL, betreff, text, antwortAn, tags: ['hinweis'] })
 }
-
-/** Gruß unter Mails an Nachbar*innen */
-export const GRUSS = `Bis bald im Dorf!\nKönigsdorf rückt zusammen e.V.\n${KONTAKT_MAIL}`

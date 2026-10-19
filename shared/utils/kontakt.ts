@@ -1,6 +1,9 @@
 // Von App und Server genutzt
 export const KONTAKT_MAIL = 'kontakt@koenigsdorf-rueckt-zusammen.de'
 
+/** Gruß unter Mails an Nachbar*innen (auch für die Rundmail-Vorschau im Vereinsheim) */
+export const GRUSS = `Bis bald im Dorf!\nKönigsdorf rückt zusammen e.V.\n${KONTAKT_MAIL}`
+
 /** Vereinskonto (für Mitgliedsbeiträge) */
 export const KONTO = {
   inhaber: 'RücktZusammen',
