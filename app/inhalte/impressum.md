@@ -5,10 +5,12 @@ Baumschulenstraße 28<br>
 50226 Frechen
 
 **Vertreten durch den Vorstand:**<br>
-[Namen der vertretungsberechtigten Vorstandsmitglieder folgen]
+Bruno Balscheit, Joachim Schmitt, Vivian Fuhs, Gabriele Bochem<br>
+(je zwei Vorstandsmitglieder vertreten den Verein gemeinsam, § 26 BGB)
 
 **Registereintrag:**<br>
-[Registergericht und Registernummer folgen nach Eintragung ins Vereinsregister]
+Eingetragen im Vereinsregister beim Amtsgericht Köln<br>
+Registernummer: VR 22732
 
 ## Kontakt
 
@@ -16,7 +18,7 @@ E-Mail: [kontakt@koenigsdorf-rueckt-zusammen.de](mailto:kontakt@koenigsdorf-ruec
 
 ## Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV
 
-[Name und Anschrift folgen]<br>
+Bruno Balscheit<br>
 Baumschulenstraße 28<br>
 50226 Frechen
 

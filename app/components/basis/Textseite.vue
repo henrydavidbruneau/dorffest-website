@@ -9,10 +9,11 @@ const props = defineProps<{
   inhalt: string
 }>()
 
-// Londrina Solid hat kein sichtbares "§" – in Überschriften darum in Poppins setzen
+// Londrina Solid hat kein sichtbares "§" – in Überschriften (auch mitten im Text) darum in Poppins setzen
 const html = computed(() =>
   (marked.parse(props.inhalt, { async: false }) as string)
-    .replace(/<h2>§\s*/g, '<h2><span class="paragraf">§</span>&nbsp;'),
+    .replace(/<(h[2-4])([^>]*)>([\s\S]*?)<\/\1>/g, (_, h, attr, text) =>
+      `<${h}${attr}>${text.replace(/§\s*/g, '<span class="paragraf">§</span>&nbsp;')}</${h}>`),
 )
 </script>
 
