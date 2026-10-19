@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
 
   if (body.test === true) {
     const an = echteMail(person.email) ?? KONTAKT_MAIL
-    await sendeMail({ an, betreff: `[Test] ${betreff}`, text: rundbriefText(inhalt), tags: ['rundbrief-test'], rubrik: 'Rundbrief' })
+    await sendeMail({ an, betreff: `[Test] ${betreff}`, text: rundbriefText(inhalt), tags: ['rundbrief-test'], rubrik: 'Rundbrief', grosserGruss: true })
     return { ok: true, an }
   }
   if (!rundbriefKonfig().eingerichtet) throw fail(409, 'brevo', 'Brevo ist noch nicht eingerichtet (NUXT_BREVO_API_KEY und NUXT_BREVO_NEWSLETTER_LISTE auf Netlify).')

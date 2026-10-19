@@ -18,6 +18,7 @@ const sendet = ref<'' | 'test' | 'alle'>('')
 const vorschau = computed(() => mailHtml(`${brief.text.trim() || '…'}\n\n${GRUSS}`, {
   basis: import.meta.client ? window.location.origin : '',
   rubrik: 'Rundbrief',
+  grosserGruss: true,
   abmelden: '#',
 }))
 

@@ -116,6 +116,8 @@ export interface MailHtmlOptionen {
   rubrik?: string
   /** Abmelde-Link im Fuß (Newsletter: Brevo-Platzhalter `{{ unsubscribe }}`) */
   abmelden?: string
+  /** großes „Bis bald im Dorf!“ als Abschluss (Rundbrief); sonst nur die Kontaktdaten unter der Linie */
+  grosserGruss?: boolean
   /** kurzer Vorschautext im Postfach (nicht sichtbar) */
   vorschau?: string
 }
@@ -132,17 +134,19 @@ function schriften(basis: string) {
   return f('Londrina Solid', 'londrina-solid-900', 900) + f('Poppins', 'poppins-300', 300) + f('Poppins', 'poppins-700', 700) + f('Reenie Beanie', 'reenie-beanie-400', 400)
 }
 
-export function mailHtml(text: string, { basis, rubrik, abmelden, vorschau }: MailHtmlOptionen): string {
+export function mailHtml(text: string, { basis, rubrik, abmelden, grosserGruss, vorschau }: MailHtmlOptionen): string {
   const absaetze = text.replace(/\r\n?/g, '\n').trim().split(/\n\s*\n/)
   // der Gruß am Ende bekommt die gestrichelte Linie wie auf der Website
   const grussDa = absaetze.at(-1)?.trim() === GRUSS
   const inhalt = (grussDa ? absaetze.slice(0, -1) : absaetze).map((a, i) => absatzHtml(a, basis, i === 0)).join('\n')
   // Gruß schlicht: nur „Bis bald im Dorf!“ (Verein + Kontakt stehen in der Klartext-Fassung und im Absender)
-  const [gruss1] = GRUSS.split('\n')
-  const gruss = grussDa
-    ? `<div style="margin-top:30px;padding-top:22px;border-top:2px dashed ${ORANGE}">`
-    + `<p style="margin:0;font-size:38px;line-height:1.15;${TITEL}">${grussTitel(gruss1!)}</p></div>`
-    : ''
+  // Abschluss unter der gestrichelten Linie: beim Rundbrief groß „Bis bald im Dorf!“, sonst schlicht die Kontaktdaten
+  const [gruss1, ...kontakt] = GRUSS.split('\n')
+  const gruss = !grussDa
+    ? ''
+    : grosserGruss
+      ? `<div style="margin-top:30px;padding-top:22px;border-top:2px dashed ${ORANGE}"><p style="margin:0;font-size:38px;line-height:1.15;${TITEL}">${grussTitel(gruss1!)}</p></div>`
+      : `<div style="margin-top:28px;padding-top:18px;border-top:2px dashed ${ORANGE}"><p style="margin:0;font-size:14px;line-height:1.6;color:#5c564d">${kontakt.map(z => zeile(z, basis)).join('<br>')}</p></div>`
   const kopf = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;border-bottom:2px solid #16140F"><tr>`
     + `<td style="padding:0 0 8px;font-family:${DISPLAY};font-size:15px;font-weight:900;text-transform:uppercase;color:#16140F">Königsdorf rückt zusammen</td>`
     + `<td align="right" style="padding:0 0 8px;font-family:${DISPLAY};font-size:15px;font-weight:900;text-transform:uppercase;color:#16140F">${esc(rubrik ?? '')}</td>`
