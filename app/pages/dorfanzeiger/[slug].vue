@@ -77,10 +77,12 @@ useSeoMeta({
       <span>{{ kopfzeile }}</span>
     </div>
 
-    <div class="beitrag__leiste">
-      <NuxtLink to="/dorfanzeiger" class="beitrag__zurueck handlink">← zum Dorfanzeiger</NuxtLink>
-      <BasisKnopf v-if="angemeldet" :to="`/vereinsheim/dorfanzeiger/artikel/${artikel.id}`" groesse="klein">Bearbeiten</BasisKnopf>
-    </div>
+    <NuxtLink to="/dorfanzeiger" class="beitrag__zurueck handlink">← zum Dorfanzeiger</NuxtLink>
+
+    <!-- nur für Angemeldete: schwebt unten rechts (am body, weil das gedrehte Blatt `fixed` sonst einfängt) -->
+    <Teleport v-if="angemeldet" to="body">
+      <BasisKnopf :to="`/vereinsheim/dorfanzeiger/artikel/${artikel.id}`" groesse="klein" class="beitrag__bearbeiten">Bearbeiten</BasisKnopf>
+    </Teleport>
 
     <ZeitungArtikel :artikel="artikel" :dachzeile="dachzeile" />
 
@@ -147,18 +149,18 @@ useSeoMeta({
   text-decoration: underline;
 }
 
-.beitrag__leiste {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--abstand-s);
-  margin-top: var(--abstand-m);
-}
-
 .beitrag__zurueck {
   display: inline-block;
+  margin-top: var(--abstand-m);
   color: var(--farbe-orange-text);
+}
+
+.beitrag__bearbeiten {
+  position: fixed;
+  right: clamp(1rem, 3vw, 2rem);
+  bottom: clamp(1rem, 3vw, 2rem);
+  z-index: 20;
+  box-shadow: 0 0 0 2px var(--farbe-creme), 0 0.5rem 1.5rem rgb(0 0 0 / 0.35);
 }
 
 /* ---------- Weitersagen ---------- */

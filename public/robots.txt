@@ -1,5 +1,4 @@
 User-agent: *
 Disallow: /vereinsheim
 Disallow: /gastbeitrag/
-Disallow: /komponenten
 Disallow: /api/

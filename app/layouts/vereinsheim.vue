@@ -52,13 +52,6 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', draussen)
   document.removeEventListener('keydown', escape)
 })
-
-// „Tschüss“ führt nur zur Website (angemeldet bleiben); „Abmelden“ darunter meldet ab
-async function abmelden() {
-  await $fetch('/api/vereinsheim/logout', { method: 'POST' }).catch(() => {})
-  ich.value = null
-  await navigateTo('/')
-}
 </script>
 
 <template>
@@ -112,10 +105,7 @@ async function abmelden() {
               </span>
               <span class="vh__profil-name"><span class="nur-screenreader">Mein Profil: </span>{{ ich?.first_name || ich?.benutzername || 'Profil' }}</span>
             </NuxtLink>
-            <div class="vh__tschuess">
-              <BasisKnopf to="/" variante="hell" groesse="klein">Tschüss</BasisKnopf>
-              <button type="button" class="vh__abmelden" @click="abmelden">Abmelden</button>
-            </div>
+            <BasisKnopf to="/" variante="hell" groesse="klein">Tschüss</BasisKnopf>
           </div>
         </nav>
       </div>
@@ -296,29 +286,6 @@ async function abmelden() {
   flex: none;
   align-items: center;
   gap: var(--abstand-s);
-}
-
-/* Tschüss = zur Website (bleibt angemeldet), darunter klein „Abmelden“ */
-.vh__tschuess {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-}
-
-.vh__abmelden {
-  padding: 0.1rem 0.3rem;
-  border: 0;
-  background: none;
-  color: var(--farbe-pfirsich);
-  font: inherit;
-  font-size: 0.75rem;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.vh__abmelden:hover {
-  color: var(--farbe-creme);
 }
 
 /* Profil: rundes Bild (oder Symbol) + Vorname, führt zu „Mein Konto“ */
