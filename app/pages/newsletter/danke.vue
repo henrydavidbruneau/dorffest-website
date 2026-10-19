@@ -22,7 +22,7 @@ const WEGE = [
       <section class="danke__kopf inhalt">
         <BasisNotizzettel farbe="pfirsich" tape="mitte" tape-farbe="flieder" :drehung="-2" class="danke__zettel">
           <p class="danke__gross">{{ ungueltig ? 'Hm…' : 'Geklappt!' }}</p>
-          <p class="danke__zusatz handschrift">{{ ungueltig ? 'der Link passt leider nicht' : 'ab jetzt kommt Post aus dem Dorf' }}</p>
+          <p class="danke__zusatz handschrift">{{ ungueltig ? 'der Link passt leider nicht' : 'ab jetzt bekommst du unseren Rundbrief!' }}</p>
         </BasisNotizzettel>
 
         <div>
