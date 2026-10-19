@@ -38,6 +38,12 @@ export default defineNuxtConfig({
     turnstileSecretKey: '',
     // Schlüssel für signierte Bestätigungs-/Abmeldelinks (Plenum-Erinnerung)
     linkSecret: '',
+    // Kontakt-Postfach im Vereinsheim (nur Vorstand, nur lesen)
+    imapHost: '',
+    imapPort: '993',
+    imapBenutzer: '',
+    imapPasswort: '',
+    webmailUrl: 'https://mail.ionos.de',
     public: {
       siteUrl: 'https://königsdorf-rückt-zusammen.de',
       turnstileSiteKey: '',

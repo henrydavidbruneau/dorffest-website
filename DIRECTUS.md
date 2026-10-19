@@ -346,6 +346,7 @@ Sichtbar nur für die Policy `Vorstand`. Der Server-Token darf nur **anlegen**, 
 | `NUXT_DIRECTUS_TOKEN` | statischer Token des Server-Users |
 | `NUXT_BREVO_API_KEY` | Mails (Anmeldebestätigung, Rundmails, Anträge) |
 | `NUXT_BREVO_NEWSLETTER_LISTE` | ID der Newsletter-Liste in Brevo |
+| `NUXT_IMAP_HOST` / `NUXT_IMAP_BENUTZER` / `NUXT_IMAP_PASSWORT` | Kontakt-Postfach im Vereinsheim (nur lesen) |
 | `NUXT_TURNSTILE_SECRET_KEY` / `NUXT_PUBLIC_TURNSTILE_SITE_KEY` | Bot-Schutz für Formulare |
 | `NUXT_LINK_SECRET` | Schlüssel für signierte Bestätigungslinks (Newsletter, Plenum-Erinnerung; bei DPAT `NUXT_NEWSLETTER_SECRET`). Kommt mit dem Double-Opt-in. Das Vereinsheim braucht keinen eigenen Session-Schlüssel (Directus-Tokens im httpOnly-Cookie, wie DPAT). |
 
@@ -474,6 +475,11 @@ Jede*r braucht trotzdem eine E-Mail (Directus-Pflicht, Passwort vergessen).
   Markdown-Vorschau, Bilder
   (`/api/vereinsheim/bild/:id` – zeigt auch Gastbeitrags-Fotos und eigene Belege).
 - **Vorstand?** = darf `mitglieder` lesen (Policy `Vorstand`).
+- **Post** (`/vereinsheim/post`, nur Vorstand): liest das Kontakt-Postfach per IMAP
+  (`server/utils/postfach.ts`, `imapflow` + `mailparser`), nur lesen (PEEK – nichts wird als gelesen
+  markiert), 60 s zwischengespeichert, keine Kopie in Directus. Antworten per `mailto:` bzw. Webmail.
+  Variablen: `NUXT_IMAP_HOST` (IONOS: `imap.ionos.de`), `NUXT_IMAP_BENUTZER`, `NUXT_IMAP_PASSWORT`,
+  optional `NUXT_IMAP_PORT` (993), `NUXT_WEBMAIL_URL`. Ohne sie zeigt die Seite einen Hinweis.
 - Lokal testen: `vh_at`-Cookie auf einen statischen Token setzen.
 
 - **Vereinsdaten** (`verein`): Website liest sie über `/api/verein` (`useVerein()`, 5 Min. Cache),

@@ -12,7 +12,7 @@ const reiter = computed(() => [
   { text: 'Ideensammlung', to: '/vereinsheim/ideensammlung' },
   { text: 'Über uns', to: '/vereinsheim/ueber-uns' },
   { text: 'Kasse', to: '/vereinsheim/kassenbuch' },
-  ...(ich.value?.vorstand ? [{ text: 'Mitglieder', to: '/vereinsheim/mitglieder' }] : []),
+  ...(ich.value?.vorstand ? [{ text: 'Mitglieder', to: '/vereinsheim/mitglieder' }, { text: 'Post', to: '/vereinsheim/post' }] : []),
 ])
 
 const aktiv = (to: string) => (to === '/vereinsheim' ? route.path === to : route.path.startsWith(to))

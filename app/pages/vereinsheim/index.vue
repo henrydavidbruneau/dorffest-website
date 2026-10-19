@@ -9,6 +9,7 @@ const { ich } = useVereinsheimIch()
 interface Post { art: 'antrag' | 'vorschlag' | 'gastbeitrag' | 'leserbrief' | 'anmeldung', titel: string, von: string, wann: string, to: string }
 interface Auslage { id: number, titel: string, betrag: string | number, status: string, datum: string }
 interface Termin { id: number, titel: string, slug: string, beginn: string, ort: string | null }
+interface MailKopf { uid: number, von: string, betreff: string, datum: string, gelesen: boolean }
 
 const WOCHE = { _gte: '$NOW(-7 days)' }
 
@@ -35,7 +36,11 @@ const { data } = useAsyncData('vh-dashboard', async () => {
   // Vorstand: was zuletzt über die Website reinkam · Mitglieder: eigene Einreichungen in der Kasse
   let post: Post[] = []
   let auslagen: Auslage[] = []
+  let mails: MailKopf[] | null = null
   if (ich.value?.vorstand) {
+    // echtes Kontakt-Postfach, falls angeschlossen – sonst die Eingänge über die Website
+    const postfach = await $fetch<{ eingerichtet: boolean, mails: MailKopf[] }>('/api/vereinsheim/post', { query: { anzahl: 5 } }).catch(() => null)
+    if (postfach?.eingerichtet) mails = postfach.mails
     const [antraege, vorschlaege, gast, briefe, anmeldungen] = await Promise.all([
       neueste<{ vorname: string, nachname: string, art: string }>('mitgliedsantraege', 'vorname,nachname,art'),
       neueste<{ name: string, idee: string }>('vorschlaege', 'name,idee'),
@@ -56,7 +61,7 @@ const { data } = useAsyncData('vh-dashboard', async () => {
   }
 
   const [anmeldungen, gastbeitraege, leserbriefe, vorschlaege, ideen, kasse, antraege] = neuIn
-  return { naechster: naechster[0] ?? null, plenum: plenum[0] ?? null, post, auslagen, neu: { anmeldungen, gastbeitraege, leserbriefe, vorschlaege, ideen, kasse, antraege } }
+  return { naechster: naechster[0] ?? null, plenum: plenum[0] ?? null, post, mails, auslagen, neu: { anmeldungen, gastbeitraege, leserbriefe, vorschlaege, ideen, kasse, antraege } }
 }, { server: false })
 
 // Begrüßung je nach Tageszeit: Spruch als Überschrift, Name hervorgehoben
@@ -116,7 +121,20 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
 
         <!-- Vorstand: Post · Mitglieder: eigene Einreichungen -->
         <BasisNotizzettel farbe="pfirsich" radius="l" :drehung="1.5" class="dash__karte">
-          <template v-if="ich?.vorstand">
+          <template v-if="ich?.vorstand && data?.mails">
+            <p class="dash__karte-titel"><VereinsheimIcon name="post" class="dash__karte-icon" /> Neue Post</p>
+            <ul v-if="data.mails.length" class="dash__post">
+              <li v-for="m in data.mails" :key="m.uid">
+                <NuxtLink to="/vereinsheim/post" class="dash__post-link" :class="{ 'dash__post-link--neu': !m.gelesen }">
+                  <VereinsheimIcon name="post" class="dash__post-icon" />
+                  <span class="dash__post-text"><strong>{{ m.von }}</strong> · {{ m.betreff }}</span>
+                  <span class="dash__post-zeit">{{ seit(m.datum) }}</span>
+                </NuxtLink>
+              </li>
+            </ul>
+            <p v-else class="dash__leer">Der Briefkasten ist leer.</p>
+          </template>
+          <template v-else-if="ich?.vorstand">
             <p class="dash__karte-titel"><VereinsheimIcon name="post" class="dash__karte-icon" /> Neue Post</p>
             <ul v-if="data?.post.length" class="dash__post">
               <li v-for="(p, i) in data.post" :key="i">
@@ -143,8 +161,8 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
             <p v-else class="dash__leer">Noch nichts eingereicht.</p>
           </template>
           <BasisTrennlinie class="dash__linie" />
-          <NuxtLink :to="ich?.vorstand ? '/vereinsheim/ideensammlung' : '/vereinsheim/kassenbuch'" class="dash__mehr">
-            {{ ich?.vorstand ? 'Alles ansehen' : 'Zur Kasse' }} <span aria-hidden="true">→</span>
+          <NuxtLink :to="ich?.vorstand ? '/vereinsheim/post' : '/vereinsheim/kassenbuch'" class="dash__mehr">
+            {{ ich?.vorstand ? 'Zum Postfach' : 'Zur Kasse' }} <span aria-hidden="true">→</span>
           </NuxtLink>
         </BasisNotizzettel>
       </div>
@@ -276,7 +294,11 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
   border-bottom: 1px dashed rgb(0 0 0 / 0.15);
 }
 
-.dash__post-link:hover .dash__post-icon {
+.dash__post-link:hover .dash__post-link--neu .dash__post-text {
+  font-weight: var(--gewicht-text-normal);
+}
+
+.dash__post-icon {
   align-self: center;
   width: 1.4rem;
   height: 1.4rem;
@@ -285,6 +307,10 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
 
 .dash__post-text {
   text-decoration: underline;
+}
+
+.dash__post-link--neu .dash__post-text {
+  font-weight: var(--gewicht-text-normal);
 }
 
 .dash__post-icon {
