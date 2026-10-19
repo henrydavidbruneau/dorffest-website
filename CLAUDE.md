@@ -23,7 +23,7 @@ Treffpunkte und Hilfe im Dorf organisieren.
 - Module: `@nuxt/fonts` (Schriften lokal), `@nuxt/image` (Fotos als WebP), `@nuxt/eslint`.
 - **Directus** (self-hosted, siehe `DIRECTUS.md`) für alles Dynamische – angebunden über `server/utils/*`.
 - **Kein** Nuxt Content, **kein** Nuxt Studio, **kein** i18n.
-- **Brevo** (Mails, `server/utils/mail.ts`; HTML im Website-Look aus `shared/utils/mailHtml.ts` wie die Gastbeitrag-Seite: Karte mit Klebestreifen, Kopfzeile mit Rubrik, erster Absatz „Hallo …“ in Handschrift, `# Überschrift ==Hervorhebung==`, `## …`, `**fett**`, `[Knopf](url)` allein im Absatz, `![Bild](/bilder/… "Unterschrift")`, `- Liste`, `---`; Logo + Schriften aus `public/mail/` (CORS über routeRules) von `mailBasis` = Netlify-`URL`; Absender „Rückt Zusammen e.V.“) und **Cloudflare Turnstile** (Bot-Schutz, `<BasisTurnstile>`);
+- **Brevo** (Mails, `server/utils/mail.ts`; HTML im Website-Look aus `shared/utils/mailHtml.ts` wie die Gastbeitrag-Seite: Karte mit Klebestreifen, Kopfzeile mit Rubrik, erster Absatz „Hallo …“ in Handschrift, `# Überschrift ==Hervorhebung==`, `## …`, `**fett**`, `[Knopf](url)` allein im Absatz, `![Bild](/bilder/… "Unterschrift")`, `- Liste`, `---`; Logo + Schriften aus `public/mail/` (CORS über routeRules) von `mailBasis` = `https://<SITE_NAME>.netlify.app` (überschreibbar mit `NUXT_MAIL_BASIS`); Absender „Rückt Zusammen e.V.“) und **Cloudflare Turnstile** (Bot-Schutz, `<BasisTurnstile>`);
   ohne Schlüssel nur Log bzw. keine Prüfung.
 - `.env` ist gitignored (`.env.example` zeigt die Variablen). Tokens nur serverseitig
   über `useRuntimeConfig()`, nie im Frontend.

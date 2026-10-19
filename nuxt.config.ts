@@ -35,9 +35,10 @@ export default defineNuxtConfig({
     // Absender bei Brevo (Domain muss dort verifiziert sein)
     mailVon: 'kontakt@koenigsdorf-rueckt-zusammen.de',
     mailVonName: 'Rückt Zusammen e.V.',
-    // Adresse für Logo, Schriften und Bilder in Mails: die Seite, die Netlify gerade ausliefert
-    // (Netlify setzt URL beim Build; nach dem Domain-Umzug ist das die Domain). Sonst siteUrl.
-    mailBasis: process.env.URL ?? '',
+    // Adresse für Logo, Schriften und Bilder in Mails: die Netlify-Adresse der Seite (SITE_NAME setzt Netlify
+    // beim Build). Nicht `URL` – die zeigt auf die eingetragene Domain, und die läuft bis zum Umzug noch auf
+    // der alten Seite. Überschreibbar mit NUXT_MAIL_BASIS; ohne beides siteUrl.
+    mailBasis: process.env.SITE_NAME ? `https://${process.env.SITE_NAME}.netlify.app` : '',
     turnstileSecretKey: '',
     // Schlüssel für signierte Bestätigungs-/Abmeldelinks (Plenum-Erinnerung)
     linkSecret: '',

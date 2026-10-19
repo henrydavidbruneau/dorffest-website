@@ -24,7 +24,6 @@ export default defineEventHandler(async (event) => {
     an: mail,
     betreff: 'Bitte bestätigen: Erinnerung ans Plenum',
     tags: ['plenum-doi'],
-    rubrik: 'Plenum',
     abmelden: await link('abmelden'),
     text: [
       `Hallo ${name},`,

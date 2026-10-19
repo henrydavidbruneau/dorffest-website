@@ -31,7 +31,6 @@ export default defineEventHandler(async (event) => {
       an: a.email,
       betreff,
       tags: ['rundmail'],
-      rubrik: termin.titel,
       text: [`Hallo ${a.name || 'du'},`, inhalt, GRUSS].join('\n\n'),
       ...(abmelden ? { abmelden } : {}),
     }).then(() => gesendet++, e => console.error('[rundmail]', a.email, e?.data ?? e))

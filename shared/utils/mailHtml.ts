@@ -112,7 +112,7 @@ function absatzHtml(roh: string, basis: string, erster: boolean): string {
 export interface MailHtmlOptionen {
   /** Adresse der Website (Logo, Schriften, Bilder, Links im Fuß) */
   basis: string
-  /** rechts in der Kopfzeile, z.B. „Anmeldung“ oder „Rundbrief“ */
+  /** rechts in der Kopfzeile, z.B. „Rundbrief“; ohne Rubrik keine Kopfzeile */
   rubrik?: string
   /** Abmelde-Link im Fuß (Newsletter: Brevo-Platzhalter `{{ unsubscribe }}`) */
   abmelden?: string
@@ -147,7 +147,8 @@ export function mailHtml(text: string, { basis, rubrik, abmelden, grosserGruss, 
     : grosserGruss
       ? `<div style="margin-top:30px;padding-top:22px;border-top:2px dashed ${ORANGE}"><p style="margin:0;font-size:38px;line-height:1.15;${TITEL}">${grussTitel(gruss1!)}</p></div>`
       : `<div style="margin-top:28px;padding-top:18px;border-top:2px dashed ${ORANGE}"><p style="margin:0;font-size:14px;line-height:1.6;color:#5c564d">${kontakt.map(z => zeile(z, basis)).join('<br>')}</p></div>`
-  const kopf = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;border-bottom:2px solid #16140F"><tr>`
+  // Kopfzeile wie im Dorfanzeiger nur mit Rubrik (Rundbrief, Newsletter …); Termin-Mails kommen ohne
+  const kopf = !rubrik ? '' : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;border-bottom:2px solid #16140F"><tr>`
     + `<td style="padding:0 0 8px;font-family:${DISPLAY};font-size:15px;font-weight:900;text-transform:uppercase;color:#16140F">Königsdorf rückt zusammen</td>`
     + `<td align="right" style="padding:0 0 8px;font-family:${DISPLAY};font-size:15px;font-weight:900;text-transform:uppercase;color:#16140F">${esc(rubrik ?? '')}</td>`
     + '</tr></table>'

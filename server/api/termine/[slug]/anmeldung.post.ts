@@ -43,7 +43,6 @@ export default defineEventHandler(async (event) => {
     an: mail,
     betreff: `Du bist angemeldet: ${termin.titel}`,
     tags: ['anmeldung'],
-    rubrik: 'Anmeldung',
     text: [
       `Hallo ${name},`,
       '# Du bist ==dabei!==',
