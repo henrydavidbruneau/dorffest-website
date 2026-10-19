@@ -6,44 +6,30 @@ useSeoMeta({ title: 'Artikel · Vereinsheim', robots: 'noindex, nofollow' })
 const route = useRoute()
 const id = computed(() => String(route.params.id))
 const { zeige, fehler } = useVereinsheimMeldung()
-const JAHRESZEIT: Record<string, string> = { fruehling: 'Frühling', sommer: 'Sommer', herbst: 'Herbst', winter: 'Winter' }
 
 const { data: beziehungen } = useAsyncData('vh-artikel-beziehungen', async () => {
-  const [ressorts, ausgaben] = await Promise.all([
-    vh.liste<{ id: number, name: string }>('ressorts', { fields: 'id,name', sort: 'sort' }),
-    vh.liste<{ id: number, nummer: number, jahreszeit: string, jahr: number }>('ausgaben', { fields: 'id,nummer,jahreszeit,jahr', sort: '-nummer' }),
-  ])
-  return {
-    ressort: Object.fromEntries(ressorts.map(r => [r.id, r.name])),
-    ausgabe: Object.fromEntries(ausgaben.map(a => [a.id, `Nr. ${a.nummer} · ${JAHRESZEIT[a.jahreszeit]} ${a.jahr}`])),
-  }
+  const ressorts = await vh.liste<{ id: number, name: string }>('ressorts', { fields: 'id,name', sort: 'sort' })
+  return { ressort: Object.fromEntries(ressorts.map(r => [r.id, r.name])) }
 }, { server: false })
 
 // Neue Artikel: Name der angemeldeten Person als Autor*in vorausgefüllt (änderbar)
 const { ich } = useVereinsheimIch()
 const vorlage = computed(() => ({
-  status: 'draft', titelgeschichte: false, hervorgehoben: false,
+  status: 'draft', hervorgehoben: false,
   autor_in: [ich.value?.first_name, ich.value?.last_name].filter(Boolean).join(' ') || null,
-  ausgabe: route.query.ausgabe ? Number(route.query.ausgabe) : null,
 }))
 
-// Lesedauer aus dem Text schätzen (≈ 200 Wörter pro Minute), wenn niemand sie eingetragen hat
-function vorbereiten(daten: Record<string, unknown>) {
-  if (daten.lesedauer_minuten || !daten.inhalt) return daten
-  return { ...daten, lesedauer_minuten: Math.max(1, Math.round(String(daten.inhalt).split(/\s+/).length / 200)) }
+// Vor dem Speichern: Lesedauer aus dem Text schätzen (≈ 200 Wörter pro Minute), wenn niemand sie
+// eingetragen hat; beim Veröffentlichen ohne Datum gilt heute als Erscheinungstag (bestimmt die Reihenfolge)
+function vorbereiten(daten: Record<string, unknown>, neuerStatus?: string) {
+  const ergebnis = { ...daten }
+  if (!ergebnis.lesedauer_minuten && ergebnis.inhalt) ergebnis.lesedauer_minuten = Math.max(1, Math.round(String(ergebnis.inhalt).split(/\s+/).length / 200))
+  if (neuerStatus === 'published' && !ergebnis.veroeffentlicht_am) ergebnis.veroeffentlicht_am = isoZuOrtszeit(new Date().toISOString()).slice(0, 10)
+  return ergebnis
 }
 
 async function gespeichert(daten: Record<string, unknown>) {
   const artikelId = daten.id ?? id.value
-  // Höchstens eine Titelgeschichte je Ausgabe: die bisherige wird zur normalen Geschichte
-  if (daten.titelgeschichte && daten.ausgabe) {
-    const andere = await vh.liste<{ id: number, titel: string }>('artikel', {
-      fields: 'id,titel',
-      filter: { titelgeschichte: { _eq: true }, ausgabe: { _eq: daten.ausgabe }, id: { _neq: artikelId } },
-    })
-    for (const a of andere) await vh.aendern('artikel', a.id, { titelgeschichte: false })
-    if (andere.length) zeige(`„${andere[0]!.titel}“ ist jetzt keine Titelgeschichte mehr.`)
-  }
   // Gastbeitrag erschienen? Dann bekommt die Autor*in Bescheid (einmalig, prüft der Server)
   if (daten.status === 'published') {
     const r = await $fetch<{ gesendet: boolean }>(`/api/vereinsheim/artikel/${artikelId}/erschienen`, { method: 'POST' }).catch(() => ({ gesendet: false }))
@@ -91,8 +77,7 @@ const vorschau = computed(() => {
 })
 const dachzeile = computed(() => {
   const d = formular.value?.daten ?? {}
-  const ressort = beziehungen.value?.ressort[String(d.ressort ?? '')] ?? ''
-  return `${d.titelgeschichte ? 'Titelgeschichte · ' : ''}${ressort}`
+  return beziehungen.value?.ressort[String(d.ressort ?? '')] ?? ''
 })
 </script>
 

@@ -40,6 +40,13 @@ wo wir gerade sind und was als Nächstes kommt.
   **Bruno: `node scripts/directus-setup.mjs` einmal ausführen** (legt `tour_erledigt_am`, Ordner `profilbilder` und die
   Rechte an) – bis dahin merkt sich nur der Browser die Tour.
 
+- **Dorfanzeiger ohne Ausgaben:** neuester Artikel groß, drei in der Reihe, weitere in der Seitenspalte bis sie voll
+  ist, Archiv unter `/dorfanzeiger/archiv`. Reihenfolge = `veroeffentlicht_am`. **Achtung:** „Wir sind jetzt ein Verein“
+  und „Kleidertausch #2“ haben aus dem Import kein Erscheinungsdatum und stehen deshalb ganz hinten – Bruno trägt im
+  Vereinsheim ein Datum ein, wenn sie weiter vorn stehen sollen.
+- Dashboard: Kacheln springen nicht mehr (Post-Karte hat feste Mindesthöhe + Platzhalter), Plenum-Fuß ohne Datum,
+  Tour-Vorschlag nach 1 s mittig mit abgedunkeltem Hintergrund. Turnstile in schmalen Spalten kompakt (Leserbrief).
+
 ## Offen / als Nächstes
 
 1. **Phase 8:** rechtliche Seiten mit echten Inhalten (Impressum: Vorstand, Registereintrag, Verantwortliche*r nach

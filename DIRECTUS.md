@@ -49,7 +49,7 @@ in Konfigurationen immer Punycode), Directus 12.5.0, Lizenz: Open Innovation Gra
 | `beitraege` | „Was bringst du mit?“ bei Terminen ohne Anmeldung | create | read, update, delete | alles |
 | `termin_rundmails` | Mails an alle Angemeldeten (Protokoll) | – | create, read | alles |
 | `ressorts` | Ressorts des Dorfanzeigers | read | read | alles |
-| `ausgaben` | Dorfanzeiger-Ausgaben (Nr., Jahreszeit) | read | alles | alles |
+| `ausgaben` | **ungenutzt seit 19.10.2026** (Dorfanzeiger ohne Ausgaben) | read | alles | alles |
 | `artikel` | Dorfanzeiger-Artikel | read (published) | alles | alles |
 | `kleinanzeigen` | max. 4 Kleinanzeigen im Dorfanzeiger | read (published) | alles | alles |
 | `leserbriefe` | Leserbriefe (sofort sichtbar, moderierbar) | create, read (published) | read, update, delete | alles |
@@ -140,8 +140,9 @@ Protokoll der Mails an alle Angemeldeten: `termin` (M2O), `betreff`, `text` (Mar
 (Slugs `feste`, `verein`, `dorffunk`, `rezepte`, `feuilleton`, `portraets`). Als eigene
 Collection, damit sie ohne Code-Änderung ergänzt werden können.
 
-### `ausgaben`
-`nummer` (Zahl, eindeutig), `jahreszeit` (Auswahl `fruehling` · `sommer` · `herbst` · `winter`),
+### `ausgaben` (ungenutzt)
+Seit 19.10.2026 gibt es **keine Ausgaben mehr** (Brunos Entscheidung): Website und Vereinsheim lesen die
+Collection nicht mehr; sie bleibt in Directus stehen (nichts löschen). Früher: `nummer` (Zahl, eindeutig), `jahreszeit` (Auswahl `fruehling` · `sommer` · `herbst` · `winter`),
 `jahr`, `motto` (optional), `bild` (Datei, optional), `bild_alt`, `erschienen_am` (Datum;
 leer = angekündigt). Die neueste erschienene Ausgabe ist die aktuelle.
 
@@ -156,13 +157,13 @@ leer = angekündigt). Die neueste erschienene Ausgabe ist die aktuelle.
 | `teaser` | Text | Vorspann / Teaser im Dorfanzeiger |
 | `teaser_kurz` | Text, optional | noch kürzer für die Startseite |
 | `ressort` | M2O → `ressorts`, Pflicht | |
-| `ausgabe` | M2O → `ausgaben` | |
-| `sort` | Zahl | Reihenfolge in der Ausgabe (Drag & Drop) |
-| `titelgeschichte` | Boolean | max. eine je Ausgabe (im Vereinsheim prüfen) |
+| `ausgabe` | M2O → `ausgaben` | ungenutzt |
+| `sort` | Zahl | ungenutzt (Reihenfolge = Erscheinungsdatum) |
+| `titelgeschichte` | Boolean | ungenutzt (groß oben steht immer der neueste Artikel) |
 | `hervorgehoben` | Boolean | Startseite „Was bisher geschah“ (3 Stück) |
 | `autor_in` | Text, optional | |
 | `autor_in_bild` | Datei, optional | kleines Rundbild |
-| `veroeffentlicht_am` | Datum, optional | |
+| `veroeffentlicht_am` | Datum, optional | **bestimmt die Reihenfolge** (neueste zuerst); setzt das Vereinsheim beim Veröffentlichen auf heute, wenn leer. Ohne Datum steht ein Artikel ganz hinten |
 | `datum_text` | Text, optional | statt Datum („November“, „Datum folgt“) |
 | `lesedauer_minuten` | Zahl, optional | kann das Vereinsheim aus dem Text schätzen |
 | `seite` | Zahl, optional | „Seite 1“ in der Kopfzeile |
@@ -233,20 +234,24 @@ gibt ihn privat weiter.
 **Ablauf:** Einreichung → `gastbeitraege` (`eingereicht`) + Hinweis-Mail an den Verein →
 im Vereinsheim liest **ein Mitglied** und klickt **Annehmen** (legt einen `artikel`-Entwurf mit
 Text, Bild und `autor_in` an, verknüpft ihn, `geprueft_von` = Mitglied) oder **Ablehnen**
-(optional kurze Mail). Der Artikel-Entwurf wird wie jeder Artikel einer Ausgabe zugeordnet und
+(optional kurze Mail). Der Artikel-Entwurf wird wie jeder Artikel geprüft und
 veröffentlicht; dann geht eine „Dein Beitrag ist erschienen“-Mail an `email`. Abgelehnte
 Gastbeiträge nach 6 Monaten löschen (Flow).
 
 ### Vereinsheim: Dorfanzeiger (ein Tab mit vier Reitern)
-1. **Artikel** – Liste je Ausgabe (sortierbar), Bearbeiten/Duplizieren/Löschen, Ressort
-   zuweisen, Markdown-Editor mit Bild-Upload und Vorschau im Zeitungslook.
+1. **Artikel** – alle Artikel neueste zuerst (Alle · Veröffentlicht · Entwürfe), mit Hinweis, wo ein Artikel
+   auf der Website steht (groß oben / Reihe / „Fünf Fragen an …“); Bearbeiten/Duplizieren/Löschen,
+   Markdown-Editor mit Bild-Upload und Vorschau im Zeitungslook.
 2. **Kleinanzeigen** – vier Kärtchen, bearbeiten/löschen/neu (max. 4).
 3. **Leserbriefe** – neueste zuerst, „Ausblenden“ / „Löschen“ (wie DPAT-Freundebuch).
 4. **Gastbeiträge** – oben „Link erstellen“ (Name, Rubrik, gültig bis → Link kopieren) und die
    Liste der Links (widerrufen); darunter eingereichte Beiträge mit Vorschau im Zeitungslook,
    **Annehmen** / **Ablehnen**.
 
-Ausgaben verwalten als kleiner Bereich im Reiter „Artikel“.
+**Website-Aufbau ohne Ausgaben:** neuester Artikel groß, die drei davor in der Reihe (mit Bild), weitere in
+der Seitenspalte unter dem Terminkalender, so viele neben den Hauptartikel passen, darunter „Alle Artikel im
+Archiv“ → `/dorfanzeiger/archiv` (alle Artikel nach Monat, Ressort-Filter). Porträts laufen nur über
+„Fünf Fragen an …“ (das neueste).
 
 ---
 

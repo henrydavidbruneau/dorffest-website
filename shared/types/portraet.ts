@@ -9,6 +9,4 @@ export interface Portraet {
   bild_alt: string | null
   /** Slug des Interview-Artikels */
   artikel: string | null
-  /** Fremdschlüssel auf `ausgaben` */
-  ausgabe: number | null
 }

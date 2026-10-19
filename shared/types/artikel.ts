@@ -34,15 +34,8 @@ export interface Artikel extends DirectusEintrag {
   aufruf_text: string | null
   aufruf_knopf: string | null
   aufruf_link: string | null
-  /** Seite in der Ausgabe */
-  seite: number | null
-  titelgeschichte: boolean
   /** auf der Startseite unter "Was bisher geschah" zeigen */
   hervorgehoben: boolean
-  /** Reihenfolge innerhalb der Ausgabe (Directus: manuelle Sortierung) */
-  sort: number | null
-  /** Fremdschlüssel auf `ausgaben` */
-  ausgabe: number | null
   /** nur Ressort „Porträts“: Name und Zitat für „Fünf Fragen an …“ */
   portraet_name: string | null
   portraet_zitat: string | null

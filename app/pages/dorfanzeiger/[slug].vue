@@ -12,32 +12,21 @@ if (!artikel.value) {
   throw createError({ statusCode: 404, statusMessage: 'Artikel nicht gefunden', fatal: true })
 }
 
-const [{ data: ausgaben }, { data: ausgabeArtikel }] = await Promise.all([
-  useAusgaben(),
-  useDorfanzeiger({ ausgabe: artikel.value.ausgabe ?? undefined, mitInterviews: true }),
-])
+const { data: neueste } = await useDorfanzeiger({ mitInterviews: true, limit: 12 })
 
-const ausgabe = computed(() => ausgaben.value.find(a => a.id === artikel.value?.ausgabe) ?? null)
+// Kopfzeile: Ressort und Monat
 const kopfzeile = computed(() => {
-  const a = ausgabe.value
+  const a = artikel.value
   if (!a) return ''
-  const teile = [`Nr. ${a.nummer}`, `${JAHRESZEITEN[a.jahreszeit]} ${a.jahr}`]
-  if (artikel.value?.seite) teile.push(`Seite ${artikel.value.seite}`)
-  return teile.join(' · ')
+  const wann = a.veroeffentlicht_am
+  return [RESSORTS[a.ressort], wann ? monatJahr(wann) : null].filter(Boolean).join(' · ')
 })
 
-function ressortName(a: Artikel) {
-  return RESSORTS[a.ressort]
-}
+const dachzeile = computed(() => RESSORTS[artikel.value!.ressort])
 
-const dachzeile = computed(() => {
-  const a = artikel.value!
-  return `${a.titelgeschichte ? 'Titelgeschichte · ' : ''}${ressortName(a)}`
-})
-
-// Mehr aus dieser Ausgabe: zwei Beiträge aus anderen Ressorts, dann das Porträt
+// Mehr aus dem Dorfanzeiger: zwei neue Beiträge möglichst aus anderen Ressorts, dann das Porträt
 const mehr = computed(() => {
-  const andere = ausgabeArtikel.value.filter(a => a.slug !== slug.value)
+  const andere = neueste.value.filter(a => a.slug !== slug.value)
   const beitraege = andere.filter(a => a.ressort !== 'portraets')
   const fremdeRessorts = beitraege.filter(a => a.ressort !== artikel.value?.ressort)
   const auswahl = [...fremdeRessorts, ...beitraege.filter(a => !fremdeRessorts.includes(a))].slice(0, 2)
@@ -81,7 +70,7 @@ useSeoMeta({
       <span>{{ kopfzeile }}</span>
     </div>
 
-    <NuxtLink to="/dorfanzeiger" class="beitrag__zurueck handlink">← zur ganzen Ausgabe</NuxtLink>
+    <NuxtLink to="/dorfanzeiger" class="beitrag__zurueck handlink">← zum Dorfanzeiger</NuxtLink>
 
     <ZeitungArtikel :artikel="artikel" :dachzeile="dachzeile" />
 
@@ -95,8 +84,8 @@ useSeoMeta({
 
     <section v-if="mehr.length" class="beitrag__mehr" aria-labelledby="mehr-titel">
       <div class="beitrag__mehr-kopf">
-        <h2 id="mehr-titel">Mehr aus dieser Ausgabe</h2>
-        <NuxtLink to="/dorfanzeiger">Alle Beiträge <span aria-hidden="true">→</span></NuxtLink>
+        <h2 id="mehr-titel">Mehr aus dem Dorfanzeiger</h2>
+        <NuxtLink to="/dorfanzeiger/archiv">Alle Beiträge im Archiv <span aria-hidden="true">→</span></NuxtLink>
       </div>
       <ul class="beitrag__mehr-liste">
         <li v-for="a in mehr" :key="a.id" class="beitrag__mehr-eintrag">
@@ -109,7 +98,7 @@ useSeoMeta({
             sizes="100vw md:240px"
             class="beitrag__mehr-bild"
           />
-          <p class="beitrag__mehr-ressort">{{ ressortName(a) }}</p>
+          <p class="beitrag__mehr-ressort">{{ RESSORTS[a.ressort] }}</p>
           <h3 class="beitrag__mehr-titel">
             <NuxtLink :to="`/dorfanzeiger/${a.slug}`">{{ a.titel }}</NuxtLink>
           </h3>
@@ -190,7 +179,7 @@ useSeoMeta({
   color: var(--farbe-lila);
 }
 
-/* ---------- Mehr aus dieser Ausgabe ---------- */
+/* ---------- Mehr aus dem Dorfanzeiger ---------- */
 .beitrag__mehr {
   margin-top: var(--abstand-xl);
 }

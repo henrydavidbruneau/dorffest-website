@@ -9,22 +9,44 @@ const ressort = computed<Ressort | undefined>(() => {
   return wert in RESSORTS ? (wert as Ressort) : undefined
 })
 
-const { data: ausgaben } = await useAusgaben()
-// aktuelle Ausgabe = neueste erschienene
-const aktuelle = computed(() => ausgaben.value.find(a => a.erschienen_am) ?? null)
-const nummer = computed(() => aktuelle.value?.id)
-
 const [{ data: artikel }, { data: termine }, { data: portraets }, { data: anzeigen }] = await Promise.all([
-  useDorfanzeiger({ ressort, ausgabe: nummer }),
+  useDorfanzeiger({ ressort }),
   useTermine({ mitDatum: true, limit: 3 }),
-  usePortraets(nummer),
+  usePortraets(),
   useKleinanzeigen(4),
 ])
 
-// Aufteilung wie im Design: Titelgeschichte, zwei in der Seitenspalte, Rest in der Reihe
+// Neuester Artikel groß, die drei davor in der Reihe (mit Bild), alle weiteren in der Seitenspalte
 const titel = computed(() => artikel.value[0] ?? null)
-const seitenspalte = computed(() => artikel.value.slice(1, 3))
-const reihe = computed(() => artikel.value.slice(3))
+const reihe = computed(() => artikel.value.slice(1, 4))
+const weitere = computed(() => artikel.value.slice(4, 14))
+const stand = computed(() => titel.value?.veroeffentlicht_am ?? null)
+
+// Seitenspalte nur so weit füllen, wie neben dem Hauptartikel Platz ist (Rest steht im Archiv)
+const weitereEl = ref<HTMLElement | null>(null)
+const sichtbar = ref(Infinity)
+function spalteFuellen() {
+  const el = weitereEl.value
+  if (!el) return
+  // nur nebeneinander (Desktop) begrenzen; mobil regelt CSS die Anzahl
+  if (!window.matchMedia('(min-width: 64rem)').matches) {
+    sichtbar.value = Infinity
+    return
+  }
+  const hoehe = el.clientHeight
+  const eintraege = [...el.children] as HTMLElement[]
+  const passt = eintraege.findIndex(e => e.offsetTop + e.offsetHeight > hoehe)
+  sichtbar.value = passt === -1 ? eintraege.length : passt
+}
+let beobachter: ResizeObserver | null = null
+onMounted(() => {
+  spalteFuellen()
+  beobachter = new ResizeObserver(spalteFuellen)
+  if (weitereEl.value) beobachter.observe(weitereEl.value)
+})
+onBeforeUnmount(() => beobachter?.disconnect())
+watch(weitere, () => nextTick(spalteFuellen))
+
 // Vorschau: die ersten drei reinen Textabsätze
 const absaetze = computed(() => (titel.value ? textAbsaetze(titel.value.inhalt).slice(0, 3) : []))
 
@@ -39,19 +61,17 @@ useSeoMeta({
 <template>
   <div>
     <ZeitungBlatt>
-      <ZeitungKopf :ausgabe="aktuelle" :ressort="ressort" />
+      <ZeitungKopf :stand="stand" :ressort="ressort" />
 
       <p v-if="!titel" class="anzeiger__leer">
-        In diesem Ressort ist in dieser Ausgabe nichts erschienen.
+        In diesem Ressort ist noch nichts erschienen.
         <NuxtLink :to="{ query: {} }">Alle Ressorts zeigen</NuxtLink>
       </p>
 
       <div v-else class="anzeiger__oben">
         <!-- Titelgeschichte -->
         <article class="titelgeschichte">
-          <p class="titelgeschichte__dachzeile">
-            {{ titel.titelgeschichte ? 'Titelgeschichte · ' : '' }}{{ RESSORTS[titel.ressort] }}
-          </p>
+          <p class="titelgeschichte__dachzeile">Neu · {{ RESSORTS[titel.ressort] }}</p>
           <h2 class="titelgeschichte__titel">
             <NuxtLink :to="`/dorfanzeiger/${titel.slug}`">{{ titel.titel }}</NuxtLink>
           </h2>
@@ -77,20 +97,28 @@ useSeoMeta({
           </div>
         </article>
 
-        <!-- Seitenspalte -->
-        <aside class="anzeiger__seite" aria-label="Termine und weitere Meldungen">
+        <!-- Seitenspalte: Termine, dann weitere Artikel, bis die Spalte voll ist -->
+        <aside class="anzeiger__seite" aria-label="Termine und weitere Artikel">
           <ZeitungTerminkalender :termine="termine" />
-          <BasisArtikelTeaser
-            v-for="a in seitenspalte"
-            :key="a.id"
-            :artikel="a"
-            variante="kompakt"
-            class="anzeiger__meldung"
-          />
+          <div v-if="weitere.length" ref="weitereEl" class="anzeiger__weitere">
+            <BasisArtikelTeaser
+              v-for="(a, i) in weitere"
+              :key="a.id"
+              :artikel="a"
+              variante="kompakt"
+              class="anzeiger__meldung"
+              :class="{ 'anzeiger__meldung--weg': i >= sichtbar }"
+              :aria-hidden="i >= sichtbar ? 'true' : undefined"
+              :inert="i >= sichtbar || undefined"
+            />
+          </div>
+          <NuxtLink :to="{ path: '/dorfanzeiger/archiv', query: ressort ? { ressort } : {} }" class="anzeiger__archiv">
+            Alle Artikel im Archiv <span aria-hidden="true">→</span>
+          </NuxtLink>
         </aside>
       </div>
 
-      <!-- 3er-Reihe -->
+      <!-- 3er-Reihe: die drei Artikel vor dem neuesten -->
       <div v-if="reihe.length" class="anzeiger__reihe">
         <BasisArtikelTeaser v-for="a in reihe" :key="a.id" :artikel="a" variante="spalte" />
       </div>
@@ -243,9 +271,42 @@ useSeoMeta({
   align-content: start;
 }
 
+.anzeiger__weitere {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--abstand-m);
+}
+
 .anzeiger__meldung + .anzeiger__meldung {
   padding-top: var(--abstand-m);
   border-top: 1px solid var(--farbe-spaltenlinie);
+}
+
+/* mobil stehen nur drei weitere da, der Rest im Archiv */
+.anzeiger__meldung:nth-child(n + 4) {
+  display: none;
+}
+
+.anzeiger__meldung--weg {
+  visibility: hidden;
+}
+
+.anzeiger__archiv {
+  align-self: start;
+  padding: 0.5rem 0 0.2rem;
+  border-top: 3px double var(--farbe-schwarz);
+  border-bottom: 3px double var(--farbe-schwarz);
+  font-family: var(--schrift-display);
+  font-weight: var(--gewicht-display);
+  font-size: clamp(1rem, 1.25vw, 1.15rem);
+  text-transform: uppercase;
+  color: var(--farbe-lila);
+  text-decoration: none;
+}
+
+.anzeiger__archiv:hover {
+  color: var(--farbe-schwarz);
 }
 
 /* ---------- 3er-Reihe ---------- */
@@ -363,9 +424,30 @@ useSeoMeta({
     grid-row: 1;
   }
 
+  /* Die Seitenspalte bestimmt die Höhe nicht mit: sie ist so hoch wie der Hauptartikel,
+     die weiteren Artikel füllen den Rest (überzählige blendet spalteFuellen() aus) */
   .anzeiger__seite {
+    display: flex;
+    flex-direction: column;
     grid-column: 3;
     grid-row: 1;
+    height: 0;
+    min-height: 100%;
+  }
+
+  .anzeiger__weitere {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .anzeiger__meldung:nth-child(n + 4) {
+    display: flex;
+  }
+
+  .anzeiger__archiv {
+    flex: none;
+    margin-top: var(--abstand-m);
   }
 }
 </style>

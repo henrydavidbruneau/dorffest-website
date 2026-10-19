@@ -1,2 +1,2 @@
-// GET /api/portraets?ausgabe=3
-export default defineEventHandler((event) => ladePortraets(zahlAusQuery(getQuery(event).ausgabe, 9999)))
+// GET /api/portraets – neuestes zuerst
+export default defineEventHandler(() => ladePortraets())

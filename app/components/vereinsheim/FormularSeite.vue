@@ -21,7 +21,7 @@ const props = withDefaults(defineProps<{
   veroeffentlichen?: boolean
   loeschen?: boolean
   /** Daten vor dem Speichern ergänzen (z.B. Lesedauer schätzen) */
-  vorbereiten?: (daten: Record<string, unknown>) => Record<string, unknown>
+  vorbereiten?: (daten: Record<string, unknown>, neuerStatus?: string) => Record<string, unknown>
 }>(), { gruppen: undefined, beziehungen: undefined, vorlage: () => ({}), titelFeld: 'titel', veroeffentlichen: true, loeschen: true, vorbereiten: undefined })
 
 const emit = defineEmits<{ gespeichert: [daten: Record<string, unknown>] }>()
@@ -76,7 +76,7 @@ async function speichern(neuerStatus?: string) {
     .filter(f => daten.value[f.feld] === null || daten.value[f.feld] === undefined || daten.value[f.feld] === '')
     .map(f => f.label)
   if (fehlend.value.length) return
-  if (props.vorbereiten) daten.value = props.vorbereiten(daten.value)
+  if (props.vorbereiten) daten.value = props.vorbereiten(daten.value, neuerStatus)
 
   status.value = 'speichert'
   const erlaubt = new Set(props.felder.map(f => f.feld).concat(['status', 'sort']))

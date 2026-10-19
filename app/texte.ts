@@ -46,7 +46,7 @@ export const texte = {
       text: 'In unserem Dorfanzeiger blicken wir auf vergangene Veranstaltungen zurück und teilen Ideen und Gedanken zum Zusammenleben im Dorf. Ihr möchtet etwas ansprechen, eine Erfahrung teilen oder einen Gedanken einbringen? Wir freuen uns über eure Gastartikel und Leserbriefe!',
       zusatz: 'Neues aus dem',
       titel: 'Königsdorfer Dorfanzeiger',
-      link: 'zur ganzen Ausgabe',
+      link: 'zum ganzen Dorfanzeiger',
     },
     nimmDirEinen: {
       text: 'Bei uns kann jeder und jede einfach mitmachen, auch ohne Vereinsmitgliedschaft. Wir freuen uns auf alle, die Lust haben, mit uns gemeinsam etwas im Dorf auf die Beine zu stellen.',

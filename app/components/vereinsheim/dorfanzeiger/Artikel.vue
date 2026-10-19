@@ -1,47 +1,52 @@
 <script setup lang="ts">
-// Artikel je Ausgabe (Reihenfolge mit ↑ ↓), Ausgaben verwalten
-interface Ausgabe { id: number, nummer: number, jahreszeit: string, jahr: number, motto: string | null, erschienen_am: string | null }
-interface ArtikelZeile { id: number, status: string, titel: string, slug: string, sort: number | null, titelgeschichte: boolean, hervorgehoben: boolean, ausgabe: number | null, ressort: { name: string } | null, autor_in: string | null }
+// Alle Artikel, neueste zuerst (wie auf der Website: der neueste steht dort groß oben) – ohne Ausgaben
+interface ArtikelZeile {
+  id: number
+  status: string
+  titel: string
+  slug: string
+  hervorgehoben: boolean
+  ressort: { name: string, slug: string } | null
+  autor_in: string | null
+  veroeffentlicht_am: string | null
+  date_created: string
+}
 
 const { zeige, fehler } = useVereinsheimMeldung()
-const ausgabeWahl = ref<number | 'ohne' | null>(null)
+const filter = ref<'alle' | 'veroeffentlicht' | 'entwuerfe'>('alle')
 
-const { data, refresh } = useAsyncData('vh-artikel', async () => {
-  const [ausgaben, artikel] = await Promise.all([
-    vh.liste<Ausgabe>('ausgaben', { fields: 'id,nummer,jahreszeit,jahr,motto,erschienen_am', sort: '-nummer' }),
-    vh.liste<ArtikelZeile>('artikel', { fields: 'id,status,titel,slug,sort,titelgeschichte,hervorgehoben,ausgabe,ressort.name,autor_in', sort: 'sort,id' }),
-  ])
-  return { ausgaben, artikel }
-}, { server: false, default: () => ({ ausgaben: [], artikel: [] }) })
+const { data, refresh, status } = useAsyncData('vh-artikel', () => vh.liste<ArtikelZeile>('artikel', {
+  fields: 'id,status,titel,slug,hervorgehoben,ressort.name,ressort.slug,autor_in,veroeffentlicht_am,date_created',
+}), { server: false, default: () => [] })
 
-// Standard: die neueste erschienene Ausgabe
-watch(() => data.value.ausgaben, (liste) => {
-  if (ausgabeWahl.value === null && liste.length) ausgabeWahl.value = (liste.find(a => a.erschienen_am) ?? liste[0])!.id
-}, { immediate: true })
-
-const liste = computed(() => data.value.artikel.filter(a => ausgabeWahl.value === 'ohne' ? !a.ausgabe : a.ausgabe === ausgabeWahl.value))
-const JAHRESZEIT: Record<string, string> = { fruehling: 'Frühling', sommer: 'Sommer', herbst: 'Herbst', winter: 'Winter' }
-
-async function verschieben(index: number, richtung: -1 | 1) {
-  const neu = [...liste.value]
-  const ziel = index + richtung
-  if (ziel < 0 || ziel >= neu.length) return
-  ;[neu[index], neu[ziel]] = [neu[ziel]!, neu[index]!]
-  try {
-    // alle Positionen neu durchnummerieren (1, 2, 3 …), nur geänderte speichern
-    await Promise.all(neu.map((a, i) => (a.sort === i + 1 ? null : vh.aendern('artikel', a.id, { sort: i + 1 }))))
-    await refresh()
-  }
-  catch (e) {
-    fehler(e)
-  }
+const wann = (a: ArtikelZeile) => a.veroeffentlicht_am ?? a.date_created
+// wie auf der Website: nach Erscheinungsdatum, ohne Datum ans Ende (Entwürfe nach Anlagedatum)
+const sortierZeit = (a: ArtikelZeile) => Date.parse(a.veroeffentlicht_am ?? (a.status === 'published' ? '' : a.date_created)) || 0
+const sortiert = computed(() => [...data.value].sort((a, b) => sortierZeit(b) - sortierZeit(a) || b.id - a.id))
+const liste = computed(() => sortiert.value.filter(a => filter.value === 'alle' || (filter.value === 'veroeffentlicht') === (a.status === 'published')))
+const anzahl = computed(() => ({
+  alle: data.value.length,
+  veroeffentlicht: data.value.filter(a => a.status === 'published').length,
+  entwuerfe: data.value.filter(a => a.status !== 'published').length,
+}))
+// Position auf der Website: 1 = groß oben, 2–4 = Reihe, danach Seitenspalte bzw. Archiv.
+// Porträts laufen dort nicht in der Liste, sondern unter „Fünf Fragen an …“ (das neueste).
+const istPortraet = (a: ArtikelZeile) => a.ressort?.slug === 'portraets'
+const veroeffentlicht = computed(() => sortiert.value.filter(a => a.status === 'published'))
+const platz = computed(() => new Map(veroeffentlicht.value.filter(a => !istPortraet(a)).map((a, i) => [a.id, i])))
+const neuestesPortraet = computed(() => veroeffentlicht.value.find(istPortraet)?.id)
+function platzText(a: ArtikelZeile) {
+  if (a.id === neuestesPortraet.value) return 'bei „Fünf Fragen an …“'
+  const p = platz.value.get(a.id)
+  if (p === undefined) return ''
+  return p === 0 ? 'steht groß oben' : p < 4 ? 'in der Reihe' : ''
 }
 
 async function duplizieren(a: ArtikelZeile) {
   try {
     const voll = await vh.eins<Record<string, unknown>>('artikel', a.id, { fields: FELDER_ARTIKEL.map(f => f.feld).join(',') })
-    const kopie = await vh.anlegen<{ id: number }>('artikel', { ...voll, slug: `${a.slug}-kopie-${Date.now().toString(36).slice(-4)}`, titel: `${a.titel} (Kopie)`, status: 'draft', titelgeschichte: false })
-    zeige('Kopie liegt im Fach.')
+    const kopie = await vh.anlegen<{ id: number }>('artikel', { ...voll, slug: `${a.slug}-kopie-${Date.now().toString(36).slice(-4)}`, titel: `${a.titel} (Kopie)`, status: 'draft', veroeffentlicht_am: null })
+    zeige('Kopie angelegt (als Entwurf).')
     await navigateTo(`/vereinsheim/dorfanzeiger/artikel/${kopie.id}`)
   }
   catch (e) {
@@ -63,188 +68,107 @@ async function loeschen(a: ArtikelZeile) {
 </script>
 
 <template>
-  <div class="tisch">
-    <aside class="tisch__ausgaben">
-      <div class="tisch__ausgaben-zettel">
-        <h2>Ausgaben</h2>
-        <ul>
-          <li v-for="a in data.ausgaben" :key="a.id">
-            <button type="button" :aria-pressed="ausgabeWahl === a.id" @click="ausgabeWahl = a.id">
-              Nr. {{ a.nummer }} · {{ JAHRESZEIT[a.jahreszeit] }} {{ a.jahr }}
-            </button>
-            <span v-if="!a.erschienen_am" class="tisch__klein">angekündigt</span>
-            <NuxtLink :to="`/vereinsheim/dorfanzeiger/ausgabe/${a.id}`" class="tisch__klein">bearbeiten</NuxtLink>
-          </li>
-          <li>
-            <button type="button" :aria-pressed="ausgabeWahl === 'ohne'" @click="ausgabeWahl = 'ohne'">ohne Ausgabe</button>
-          </li>
-        </ul>
-        <NuxtLink to="/vereinsheim/dorfanzeiger/ausgabe/neu" class="tisch__neu">+ neue Ausgabe</NuxtLink>
-      </div>
-    </aside>
+  <section class="tisch" aria-label="Artikel">
+    <div class="tisch__kopf">
+      <VereinsheimReiter
+        v-model="filter"
+        :reiter="[
+          { key: 'alle', text: `Alle · ${anzahl.alle}` },
+          { key: 'veroeffentlicht', text: `Veröffentlicht · ${anzahl.veroeffentlicht}` },
+          { key: 'entwuerfe', text: `Entwürfe · ${anzahl.entwuerfe}` },
+        ]"
+      />
+      <BasisKnopf to="/vereinsheim/dorfanzeiger/artikel/neu" groesse="klein">+ Neuer Artikel</BasisKnopf>
+    </div>
+    <p class="tisch__hinweis">Der neueste veröffentlichte Artikel steht im Dorfanzeiger groß oben, die drei davor in der Reihe darunter, ältere in der Seitenspalte und im Archiv.</p>
 
-    <section class="tisch__artikel" aria-label="Artikel der Ausgabe">
-      <div class="tisch__kopf">
-        <p class="tisch__hinweis">Mit den Pfeilen sortieren – so stehen die Artikel auch im Dorfanzeiger.</p>
-        <BasisKnopf :to="`/vereinsheim/dorfanzeiger/artikel/neu${typeof ausgabeWahl === 'number' ? `?ausgabe=${ausgabeWahl}` : ''}`">+ Neuer Artikel</BasisKnopf>
-      </div>
-      <p v-if="!liste.length" class="tisch__leer">Noch kein Manuskript auf dem Tisch.</p>
-      <ol class="tisch__liste">
-        <li v-for="(a, i) in liste" :key="a.id" class="manuskript" :style="{ '--drehung': `${(i % 3 - 1) * 0.6}deg` }">
-          <div class="manuskript__pfeile">
-            <button type="button" :disabled="i === 0" :aria-label="`${a.titel} nach oben`" @click="verschieben(i, -1)">↑</button>
-            <button type="button" :disabled="i === liste.length - 1" :aria-label="`${a.titel} nach unten`" @click="verschieben(i, 1)">↓</button>
+    <p v-if="status === 'pending'" class="tisch__leer">Artikel werden geladen …</p>
+    <p v-else-if="!liste.length" class="tisch__leer">{{ filter === 'entwuerfe' ? 'Keine Entwürfe.' : 'Noch kein Artikel geschrieben.' }}</p>
+    <ol v-else class="tisch__liste">
+      <li v-for="a in liste" :key="a.id" class="manuskript">
+        <time :datetime="wann(a)" class="manuskript__datum">
+          <span class="manuskript__tag">{{ tagZahl(wann(a)) }}</span>
+          <span class="manuskript__monat">{{ monatKurz(wann(a)) }}</span>
+        </time>
+        <div class="manuskript__text">
+          <p class="manuskript__dach">
+            {{ a.ressort?.name ?? 'ohne Ressort' }}{{ a.hervorgehoben ? ' · auf der Startseite' : '' }}{{ platzText(a) ? ` · ${platzText(a)}` : '' }}
+          </p>
+          <NuxtLink :to="`/vereinsheim/dorfanzeiger/artikel/${a.id}`" class="manuskript__titel">{{ a.titel }}</NuxtLink>
+          <p v-if="a.autor_in || (a.status === 'published' && !a.veroeffentlicht_am)" class="manuskript__autor">
+            {{ a.autor_in ? `von ${a.autor_in}` : '' }}
+            <span v-if="a.status === 'published' && !a.veroeffentlicht_am" class="manuskript__ohne-datum">· ohne Erscheinungsdatum – steht deshalb ganz hinten</span>
+          </p>
+          <div class="manuskript__aktionen">
+            <NuxtLink :to="`/vereinsheim/dorfanzeiger/artikel/${a.id}`">Bearbeiten</NuxtLink>
+            <a v-if="a.status === 'published'" :href="`/dorfanzeiger/${a.slug}`" target="_blank" rel="noopener">Ansehen ↗</a>
+            <button type="button" @click="duplizieren(a)">Duplizieren</button>
+            <button type="button" class="manuskript__weg" @click="loeschen(a)">Löschen</button>
           </div>
-          <div class="manuskript__text">
-            <p class="manuskript__dach">
-              {{ a.titelgeschichte ? 'Titelgeschichte · ' : '' }}{{ a.ressort?.name ?? 'ohne Ressort' }}{{ a.hervorgehoben ? ' · auf der Startseite' : '' }}
-            </p>
-            <NuxtLink :to="`/vereinsheim/dorfanzeiger/artikel/${a.id}`" class="manuskript__titel">{{ a.titel }}</NuxtLink>
-            <p v-if="a.autor_in" class="manuskript__autor">von {{ a.autor_in }}</p>
-            <div class="manuskript__aktionen">
-              <NuxtLink :to="`/vereinsheim/dorfanzeiger/artikel/${a.id}`">Bearbeiten</NuxtLink>
-              <a v-if="a.status === 'published'" :href="`/dorfanzeiger/${a.slug}`" target="_blank" rel="noopener">Ansehen ↗</a>
-              <button type="button" @click="duplizieren(a)">Duplizieren</button>
-              <button type="button" class="manuskript__weg" @click="loeschen(a)">Löschen</button>
-            </div>
-          </div>
-          <VereinsheimStempel :status="a.status" />
-        </li>
-      </ol>
-    </section>
-  </div>
+        </div>
+        <VereinsheimStempel :status="a.status" />
+      </li>
+    </ol>
+  </section>
 </template>
 
 <style scoped>
-.tisch {
-  display: grid;
-  grid-template-columns: 1fr 17rem;
-  gap: var(--abstand-l);
-}
-
-.tisch__artikel {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.tisch__ausgaben {
-  grid-column: 2;
-}
-
-/* wie der Terminkalender im Dorfanzeiger */
-.tisch__ausgaben-zettel {
-  padding: 1.2rem 1.3rem 1.3rem;
-  border: 4px solid var(--farbe-schwarz);
-  border-radius: var(--radius-l);
-  background: var(--farbe-gelb);
-  box-shadow: 0 0 0 5px var(--farbe-gelb);
-}
-
-.tisch__ausgaben h2 {
-  margin: 0 0 var(--abstand-xs);
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid rgb(0 0 0 / 0.2);
-  font-size: clamp(1.375rem, 1.8vw, 1.625rem);
-  color: var(--farbe-schwarz);
-}
-
-.tisch__ausgaben ul {
-  display: flex;
-  flex-direction: column;
-  gap: var(--abstand-2xs);
-  margin: 0 0 var(--abstand-s);
-  padding: 0;
-  list-style: none;
-}
-
-.tisch__ausgaben li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.2rem 0.5rem;
-}
-
-.tisch__ausgaben button {
-  padding: 0.15rem 0.4rem;
-  border: 0;
-  border-radius: var(--radius-s);
-  background: none;
-  font: inherit;
-  font-weight: var(--gewicht-text-normal);
-  text-align: left;
-  cursor: pointer;
-}
-
-.tisch__ausgaben button[aria-pressed='true'] {
-  background: var(--farbe-lila);
-  color: var(--farbe-creme);
-}
-
-.tisch__klein {
-  font-size: var(--groesse-xs);
-  color: var(--farbe-schwarz);
-}
-
-.tisch__neu {
-  font-size: var(--groesse-s);
-  color: var(--vh-gedaempft);
-}
-
 .tisch__kopf {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--abstand-s);
-  margin-bottom: var(--abstand-s);
+}
+
+.tisch__kopf :deep(.unterreiter) {
+  margin: 0;
 }
 
 .tisch__hinweis,
 .tisch__leer {
-  margin: 0;
+  margin: var(--abstand-s) 0 0;
   font-size: var(--groesse-xs);
   color: var(--vh-gedaempft);
 }
 
 .tisch__leer {
-  font-size: var(--groesse-m);
+  padding-block: var(--abstand-l);
+  font-size: var(--groesse-s);
 }
 
 .tisch__liste {
-  margin: 0;
+  margin: var(--abstand-m) 0 0;
   padding: 0;
   list-style: none;
 }
 
-/* eine Zeile im Inhaltsverzeichnis der Ausgabe */
+/* eine Zeile im Inhaltsverzeichnis: Datum · Text · Status */
 .manuskript {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 3.5rem 1fr auto;
   align-items: start;
   gap: var(--abstand-m);
   padding: var(--abstand-m) 0;
   border-top: 1px solid var(--farbe-spaltenlinie);
 }
 
-.manuskript__pfeile {
+.manuskript__datum {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  align-items: center;
+  line-height: 1;
 }
 
-.manuskript__pfeile button {
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid var(--vh-rand-stark);
-  border-radius: 0.4rem;
-  background: var(--farbe-weiss);
-  font: inherit;
-  cursor: pointer;
+.manuskript__tag {
+  font-family: var(--schrift-display);
+  font-weight: var(--gewicht-display);
+  font-size: 1.8rem;
 }
 
-.manuskript__pfeile button:disabled {
-  opacity: 0.3;
-  cursor: default;
+.manuskript__monat {
+  font-size: var(--groesse-xs);
+  text-transform: uppercase;
 }
 
 .manuskript__dach {
@@ -276,6 +200,10 @@ async function loeschen(a: ArtikelZeile) {
   font-size: var(--groesse-xs);
 }
 
+.manuskript__ohne-datum {
+  color: #a1260d;
+}
+
 .manuskript__aktionen {
   display: flex;
   flex-wrap: wrap;
@@ -300,18 +228,13 @@ async function loeschen(a: ArtikelZeile) {
 }
 
 @media (max-width: 800px) {
-  .tisch {
-    grid-template-columns: 1fr;
-  }
-
-  .tisch__artikel,
-  .tisch__ausgaben {
-    grid-column: 1;
-    grid-row: auto;
-  }
-
   .manuskript {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 3rem 1fr;
+  }
+
+  .manuskript > .stempel {
+    grid-column: 2;
+    justify-self: start;
   }
 }
 </style>

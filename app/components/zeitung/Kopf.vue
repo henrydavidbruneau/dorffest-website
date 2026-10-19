@@ -1,13 +1,14 @@
 <script setup lang="ts">
-const props = defineProps<{
-  ausgabe: Ausgabe | null
+const props = withDefaults(defineProps<{
+  /** Erscheinungsdatum des neuesten Artikels (ISO) – steht als „Oktober 2026“ im Kopf */
+  stand?: string | null
   /** aktives Ressort (aus ?ressort=…) */
   ressort?: Ressort
-}>()
+  /** Basis-Adresse der Ressort-Links (Archiv filtert auf seiner eigenen Seite) */
+  basis?: string
+}>(), { stand: null, ressort: undefined, basis: '/dorfanzeiger' })
 
-const ausgabeText = computed(() =>
-  props.ausgabe ? `Nr. ${props.ausgabe.nummer} · ${JAHRESZEITEN[props.ausgabe.jahreszeit]} ${props.ausgabe.jahr}` : '',
-)
+const standText = computed(() => (props.stand ? monatJahr(props.stand) : ''))
 const ressorts = Object.entries(RESSORTS) as [Ressort, string][]
 </script>
 
@@ -17,7 +18,7 @@ const ressorts = Object.entries(RESSORTS) as [Ressort, string][]
     <h1 class="zkopf__titel">Der Königsdorfer<br>Dorfanzeiger</h1>
 
     <div class="zkopf__meta">
-      <span>{{ ausgabeText }}</span>
+      <span>{{ standText }}</span>
       <span class="zkopf__herausgeber"><span aria-hidden="true">✶</span> Herausgegeben von Rückt Zusammen e.V. <span aria-hidden="true">✶</span></span>
       <span>Kostet nix</span>
     </div>
@@ -26,7 +27,7 @@ const ressorts = Object.entries(RESSORTS) as [Ressort, string][]
       <ul>
         <li>
           <NuxtLink
-            :to="{ query: {} }"
+            :to="{ path: basis, query: {} }"
             class="zkopf__ressort"
             :class="{ 'zkopf__ressort--aktiv': !ressort }"
             :aria-current="!ressort ? 'page' : undefined"
@@ -36,7 +37,7 @@ const ressorts = Object.entries(RESSORTS) as [Ressort, string][]
         </li>
         <li v-for="[schluessel, name] in ressorts" :key="schluessel">
           <NuxtLink
-            :to="{ query: { ressort: schluessel } }"
+            :to="{ path: basis, query: { ressort: schluessel } }"
             class="zkopf__ressort"
             :class="{ 'zkopf__ressort--aktiv': ressort === schluessel }"
             :aria-current="ressort === schluessel ? 'page' : undefined"
