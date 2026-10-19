@@ -220,6 +220,7 @@ const COLLECTIONS = [
       bool('anmeldung_aktiv', { note: 'Anmeldezettel anzeigen' }),
       int('plaetze', { min: 1, note: 'Leer = unbegrenzt' }),
       select('mitbringen_position', [['aus', 'Aus'], ['seite_1', 'Auf dem Anmeldezettel'], ['seite_2', 'Als 2. Seite']], { def: 'aus', note: '„Was bringst du mit?“' }),
+      str('mitbringen_frage', { max: 120, note: 'Eigene Frage statt „Was bringst du mit?“, z.B. „Welche Songs sollen wir singen?“' }),
       text('mitbringen_text', { note: 'Einleitung, z.B. „Wir stellen einen Tisch mit Getränken …“' }),
       tags('mitbringen_vorschlaege', { note: 'Antippbare Vorschläge' }),
       { field: 'anmeldungen', type: 'alias', meta: { interface: 'list-o2m', special: ['o2m'], note: 'Anmeldungen zu diesem Termin', options: { template: '{{name}} ({{personen}})' } }, schema: null, alias: true },
@@ -698,7 +699,9 @@ const PERMISSIONS = {
     { collection: 'mitgliedsantraege', action: 'create', fields: ['art', 'beitrag_stufe', 'beitrag_jahr', 'vorname', 'nachname', 'strasse', 'plz', 'ort', 'email', 'telefon', 'plenum_besucht', 'nachricht', 'satzung_anerkannt_am'] },
     { collection: 'verein', action: 'read', fields: ['*'] },
     // Vereinsheim-Login: Benutzername → E-Mail (nur aktive User mit Benutzernamen)
-    { collection: 'directus_users', action: 'read', fields: ['email', 'benutzername'], permissions: { _and: [{ benutzername: { _nnull: true } }, { status: { _eq: 'active' } }] } },
+    { collection: 'directus_users', action: 'read', fields: ['id', 'email', 'benutzername'], permissions: { _and: [{ benutzername: { _nnull: true } }, { status: { _eq: 'active' } }] } },
+    // Konten ohne E-Mail: beim ersten Login Platzhalter `<benutzername>@ohne-mail.…` eintragen (nur wenn leer)
+    { collection: 'directus_users', action: 'update', fields: ['email'], permissions: { _and: [{ benutzername: { _nnull: true } }, { email: { _null: true } }] }, validation: { email: { _ends_with: '@ohne-mail.koenigsdorf-rueckt-zusammen.de' } } },
     // Dateien: Bilder veröffentlichter Inhalte lesen (Ordner termine/artikel/stimmen),
     // Fotos von Gastbeiträgen hochladen (nur in den Ordner gastbeitraege)
     { collection: 'directus_files', action: 'read', fields: ['*'], permissions: { folder: { name: { _in: ['termine', 'artikel', 'stimmen'] } } } },

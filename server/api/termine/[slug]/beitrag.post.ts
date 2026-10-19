@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   const mail = body.email ? email(body.email) : ''
 
   if (!name) throw fail(400, 'name', 'Bitte gib deinen Namen an.')
-  if (!was) throw fail(400, 'was', 'Was bringst du mit?')
+  if (!was) throw fail(400, 'was', termin.mitbringen_frage || 'Was bringst du mit?')
   if (body.email && !mail) throw fail(400, 'email', 'Das sieht nicht nach einer E-Mail-Adresse aus.')
 
   await pruefeTurnstile(event, body)

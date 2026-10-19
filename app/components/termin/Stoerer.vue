@@ -34,9 +34,9 @@ const fehler = computed(() => pruefFehler.value || (aktiv.value.status.value ===
 const titel = computed(() => {
   const t = props.termin
   if (t.vergangen) return 'Schon vorbei'
-  if (!t.anmeldung_aktiv) return 'Bringst du was mit?'
+  if (!t.anmeldung_aktiv) return t.mitbringen_frage || 'Bringst du was mit?'
   if (ausgebucht.value) return 'Leider ausgebucht'
-  if (seite.value === 2) return 'Was bringst du mit?'
+  if (seite.value === 2) return t.mitbringen_frage || 'Was bringst du mit?'
   return begrenzt.value ? 'Nur begrenzte Plätze!' : 'Sag uns, dass du kommst!'
 })
 
@@ -101,7 +101,7 @@ async function absenden() {
       </template>
       <template v-else>
         <span class="handschrift">Schön, dass du dabei bist, {{ form.name }}!</span><br>
-        Du bist angemeldet<template v-if="form.mitbringen.trim()"> und bringst {{ form.mitbringen }} mit</template>.
+        Du bist angemeldet<template v-if="form.mitbringen.trim()"><template v-if="termin.mitbringen_frage">, deine Antwort: {{ form.mitbringen }}</template><template v-else> und bringst {{ form.mitbringen }} mit</template></template>.
         Wir melden uns per Mail, wenn es Neuigkeiten gibt.
       </template>
     </p>

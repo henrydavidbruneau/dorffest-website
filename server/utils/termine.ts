@@ -36,7 +36,7 @@ const FELDER = [
   'mitbringen_text', 'mitbringen_vorschlaege',
 ].join(',')
 // neuere Felder – fehlen sie in Directus noch, wird ohne sie gelesen
-const FELDER_WIEDERHOLUNG = `${FELDER},wiederholung,wiederholung_bis,im_fokus`
+const FELDER_WIEDERHOLUNG = `${FELDER},wiederholung,wiederholung_bis,im_fokus,mitbringen_frage`
 
 // Solange `wiederholung` in Directus noch nicht angelegt ist (scripts/directus-setup.mjs), ohne lesen
 let mitWiederholung = true

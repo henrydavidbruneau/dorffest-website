@@ -64,14 +64,15 @@ export const FELDER_TERMIN: FeldDef[] = [
   { feld: 'bild_alt', gruppe: 'bild', label: 'Was ist auf dem Bild?', typ: 'text', hinweis: 'für Menschen, die das Bild nicht sehen', wenn: d => !!d.bild, maxlength: 200 },
   { feld: 'anmeldung_aktiv', gruppe: 'anmeldung', label: 'Anmeldung möglich', typ: 'janein' },
   { feld: 'plaetze', gruppe: 'anmeldung', label: 'Plätze', typ: 'zahl', hinweis: 'leer = unbegrenzt', wenn: d => !!d.anmeldung_aktiv },
-  { feld: 'mitbringen_position', gruppe: 'anmeldung', label: '„Was bringst du mit?“', typ: 'auswahl', optionen: { aus: 'aus', seite_1: 'auf dem Anmeldezettel', seite_2: 'als zweite Seite' } },
-  { feld: 'mitbringen_text', gruppe: 'anmeldung', label: 'Einleitung zum Mitbringen', typ: 'mehrzeilig', breit: true, wenn: d => d.mitbringen_position !== 'aus' },
-  { feld: 'mitbringen_vorschlaege', gruppe: 'anmeldung', label: 'Vorschläge zum Antippen', typ: 'tags', breit: true, hinweis: 'mit Komma trennen: Kuchen, Kaffee, Becher', wenn: d => d.mitbringen_position !== 'aus' },
+  { feld: 'mitbringen_position', gruppe: 'anmeldung', label: 'Frage an die Gäste', typ: 'auswahl', hinweis: 'z.B. Mitbringen oder Liederwünsche', optionen: { aus: 'aus', seite_1: 'auf dem Anmeldezettel', seite_2: 'als zweite Seite' } },
+  { feld: 'mitbringen_frage', gruppe: 'anmeldung', label: 'Eigene Frage', typ: 'text', breit: true, maxlength: 120, hinweis: 'leer = „Was bringst du mit?“ – z.B. „Welche Songs sollen wir singen?“', wenn: d => !!d.mitbringen_position && d.mitbringen_position !== 'aus' },
+  { feld: 'mitbringen_text', gruppe: 'anmeldung', label: 'Einleitung', typ: 'mehrzeilig', breit: true, wenn: d => d.mitbringen_position !== 'aus' },
+  { feld: 'mitbringen_vorschlaege', gruppe: 'anmeldung', label: 'Vorschläge zum Antippen', typ: 'tags', breit: true, hinweis: 'mit Komma trennen: Kuchen, Kaffee, Becher – oder Songtitel; mehrere antippbar', wenn: d => d.mitbringen_position !== 'aus' },
 ]
 
 export const GRUPPEN_TERMIN: GruppeDef[] = [
   { key: 'text', titel: 'Worum geht’s?', seite: 'haupt' },
-  { key: 'anmeldung', titel: 'Anmeldung & Mitbringen', seite: 'haupt' },
+  { key: 'anmeldung', titel: 'Anmeldung & Frage an die Gäste', seite: 'haupt' },
   { key: 'wann', titel: 'Wann', seite: 'rand' },
   { key: 'wo', titel: 'Wo', seite: 'rand' },
   { key: 'bild', titel: 'Bild', seite: 'rand' },

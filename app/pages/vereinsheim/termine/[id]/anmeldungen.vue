@@ -7,7 +7,7 @@ useSeoMeta({ title: 'Anmeldungen · Vereinsheim', robots: 'noindex, nofollow' })
 interface Anmeldung { id: number, status: string, name: string, email: string, personen: number, nachricht: string | null, mitbringen: string | null, date_created: string }
 interface Beitrag { id: number, name: string, was: string, email: string | null, date_created: string }
 interface Rundmail { id: number, betreff: string, empfaenger_anzahl: number | null, gesendet_am: string | null, user_created: { first_name: string | null } | null }
-interface Termin { id: number, titel: string, beginn: string | null, plaetze: number | null }
+interface Termin { id: number, titel: string, beginn: string | null, plaetze: number | null, mitbringen_frage?: string | null }
 
 const route = useRoute()
 const id = Number(route.params.id)
@@ -15,7 +15,8 @@ const { zeige, fehler } = useVereinsheimMeldung()
 
 const { data, refresh } = useAsyncData(`vh-anmeldungen-${id}`, async () => {
   const [termin, anmeldungen, beitraege, rundmails] = await Promise.all([
-    vh.eins<Termin>('termine', id, { fields: 'id,titel,beginn,plaetze' }),
+    // `*`: auch `mitbringen_frage` (eigene Frage, z.B. Liederwünsche), ohne dass ein fehlendes Feld stört
+    vh.eins<Termin>('termine', id, { fields: '*' }),
     vh.liste<Anmeldung>('anmeldungen', { fields: 'id,status,name,email,personen,nachricht,mitbringen,date_created', filter: { termin: { _eq: id } }, sort: 'date_created' }),
     vh.liste<Beitrag>('beitraege', { fields: 'id,name,was,email,date_created', filter: { termin: { _eq: id } }, sort: 'date_created' }),
     vh.liste<Rundmail>('termin_rundmails', { fields: 'id,betreff,empfaenger_anzahl,gesendet_am,user_created.first_name', filter: { termin: { _eq: id } }, sort: '-gesendet_am' }),
@@ -56,7 +57,7 @@ async function loeschen(a: Anmeldung) {
 const drucken = () => window.print()
 
 function csv() {
-  csvHerunterladen(`anmeldungen-${id}.csv`, ['Name', 'E-Mail', 'Personen', 'Mitbringen', 'Nachricht', 'Status', 'Angemeldet am'],
+  csvHerunterladen(`anmeldungen-${id}.csv`, ['Name', 'E-Mail', 'Personen', data.value?.termin.mitbringen_frage || 'Mitbringen', 'Nachricht', 'Status', 'Angemeldet am'],
     (data.value?.anmeldungen ?? []).map(a => [a.name, a.email, a.personen, a.mitbringen, a.nachricht, a.status, datumLang(a.date_created)]))
 }
 
@@ -103,7 +104,7 @@ watch(() => data.value?.termin, (t) => {
       <div v-if="data?.anmeldungen.length" class="anm__scroll">
       <table class="anm__tabelle">
         <thead>
-          <tr><th>Name</th><th>Pers.</th><th>Mitbringen</th><th>Nachricht</th><th class="anm__nicht-drucken">E-Mail</th><th class="anm__nicht-drucken"><span class="nur-screenreader">Aktionen</span></th><th class="anm__nur-drucken">da?</th></tr>
+          <tr><th>Name</th><th>Pers.</th><th>{{ data?.termin.mitbringen_frage ? 'Antwort' : 'Mitbringen' }}</th><th>Nachricht</th><th class="anm__nicht-drucken">E-Mail</th><th class="anm__nicht-drucken"><span class="nur-screenreader">Aktionen</span></th><th class="anm__nur-drucken">da?</th></tr>
         </thead>
         <tbody>
           <tr v-for="a in data.anmeldungen" :key="a.id" :class="{ 'anm__ab': a.status !== 'angemeldet' }">
@@ -124,7 +125,7 @@ watch(() => data.value?.termin, (t) => {
       <p v-else class="anm__leer">Noch niemand angemeldet. Sag’s im Infochannel weiter!</p>
 
       <section v-if="mitbringen.length" class="anm__mitbringen">
-        <h2>Wer bringt was mit?</h2>
+        <h2>{{ data?.termin.mitbringen_frage || 'Wer bringt was mit?' }}</h2>
         <ul>
           <li v-for="(m, i) in mitbringen" :key="i"><strong>{{ m.name }}:</strong> {{ m.was }}</li>
         </ul>

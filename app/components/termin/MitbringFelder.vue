@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// "Was bringst du mit?": Einleitung, antippbare Vorschläge und Freitextfeld
+// "Was bringst du mit?" (oder eine eigene Frage, z.B. Liederwünsche): Einleitung, antippbare Vorschläge, Freitext
 const was = defineModel<string>({ default: '' })
 defineProps<{
   termin: Termin
@@ -17,7 +17,7 @@ function umschalten(v: string) {
 <template>
   <div class="mitbring">
     <p v-if="termin.mitbringen_text" class="mitbring__text">{{ termin.mitbringen_text }}</p>
-    <div v-if="termin.mitbringen_vorschlaege?.length" class="mitbring__vorschlaege" role="group" aria-label="Vorschläge zum Mitbringen">
+    <div v-if="termin.mitbringen_vorschlaege?.length" class="mitbring__vorschlaege" role="group" aria-label="Vorschläge zum Antippen">
       <button
         v-for="v in termin.mitbringen_vorschlaege"
         :key="v"
@@ -31,11 +31,11 @@ function umschalten(v: string) {
     </div>
     <BasisFeld
       v-model="was"
-      label="Was bringst du mit?"
+      :label="termin.mitbringen_frage || 'Was bringst du mit?'"
       name="mitbringen"
       :required="pflicht"
       :maxlength="200"
-      placeholder="z.B. ein Blech Plätzchen"
+      :placeholder="termin.mitbringen_frage ? 'antippen oder selbst schreiben' : 'z.B. ein Blech Plätzchen'"
     />
   </div>
 </template>

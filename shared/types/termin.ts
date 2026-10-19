@@ -49,6 +49,8 @@ export interface Termin extends DirectusEintrag {
    *  aus = nicht zeigen · seite_1 = auf der ersten Seite (mit der Anmeldung)
    *  seite_2 = als zweite Seite der Anmeldung (ohne Anmeldung wie seite_1) */
   mitbringen_position: MitbringenPosition
+  /** eigene Frage statt „Was bringst du mit?“ (z.B. Liederwünsche); fehlt, solange das Feld nicht angelegt ist */
+  mitbringen_frage?: string | null
   /** Einleitung zum Mitbringen, z.B. "Wir stellen einen Tisch mit Getränken und Gebäck auf …" */
   mitbringen_text: string | null
   /** Vorschläge zum Antippen (Directus: Tags/JSON) */
