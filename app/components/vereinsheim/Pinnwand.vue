@@ -20,10 +20,10 @@ async function umschalten(e: Eintrag) {
 }
 
 async function loeschen(e: Eintrag) {
-  if (!window.confirm('Diesen Zettel wirklich in den Papierkorb?')) return
+  if (!window.confirm('Diesen Eintrag wirklich löschen?')) return
   try {
     await vh.loeschen(props.collection, e.id)
-    zeige('Zerknüllt und weg.')
+    zeige('Gelöscht.')
     await refresh()
   }
   catch (err) {
@@ -34,13 +34,13 @@ async function loeschen(e: Eintrag) {
 
 <template>
   <div class="wand">
-    <p v-if="!data.length" class="handschrift wand__leer">{{ leer }}</p>
+    <p v-if="!data.length" class="wand__leer">{{ leer }}</p>
     <ul class="wand__liste">
       <li v-for="(e, i) in data" :key="e.id">
         <BasisNotizzettel :farbe="e.status === 'published' ? (i % 3 === 0 ? 'gelb' : i % 3 === 1 ? 'weiss' : 'pfirsich') : 'papier'" befestigung="pin" :drehung="(i % 4 - 1.5)" class="wand__zettel" :class="{ 'wand__zettel--aus': e.status !== 'published' }">
           <VereinsheimSticker v-if="neu(e) && e.status === 'published'" :anzahl="1" text="neu" />
           <p class="wand__text">{{ e.text }}</p>
-          <p class="wand__wer handschrift">– {{ e.name || 'anonym' }}, {{ datumLang(e.date_created) }}</p>
+          <p class="wand__wer">– {{ e.name || 'anonym' }}, {{ datumLang(e.date_created) }}</p>
           <p v-if="e.artikel" class="wand__zu">zu „{{ e.artikel.titel }}“</p>
           <div class="wand__aktionen">
             <VereinsheimStempel v-if="e.status !== 'published'" status="hidden" />
@@ -63,7 +63,7 @@ async function loeschen(e: Eintrag) {
   display: inline-block;
   padding: 0.1rem 0.6rem;
   background: rgb(255 253 247 / 0.85);
-  font-size: var(--groesse-hand-l);
+  font-size: var(--groesse-m);
 }
 
 .wand__liste {
@@ -91,7 +91,7 @@ async function loeschen(e: Eintrag) {
 
 .wand__wer {
   margin: 0;
-  font-size: var(--groesse-hand-s);
+  font-size: var(--groesse-xs);
 }
 
 .wand__zu {

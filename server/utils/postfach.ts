@@ -36,30 +36,72 @@ export function postfachKonfig() {
   return { host: imapHost, port: Number(imapPort) || 993, smtpHost, benutzer: imapBenutzer, passwort: imapPasswort, webmail: webmailUrl, eingerichtet: !!(imapHost && imapBenutzer && imapPasswort) }
 }
 
+// Verbindung kurz offen halten: Liste laden und danach eine Mail öffnen braucht so nur einen
+// Login (TLS + Anmeldung kosten bei IONOS spürbar Zeit). Netlify friert Funktionen zwischen
+// Anfragen ein – deshalb nur kurz wiederverwenden und vorher mit NOOP prüfen, ob sie noch lebt.
+const OFFEN_HALTEN = 30_000
+let offen: { imap: ImapFlow, zuletzt: number } | null = null
+
+function schliesse(imap: ImapFlow) {
+  if (offen?.imap === imap) offen = null
+  imap.logout().catch(() => imap.close())
+}
+
+async function lebt(imap: ImapFlow) {
+  const pruefung = imap.noop().then(() => true, () => false)
+  const zeitUm = new Promise<boolean>(r => setTimeout(() => r(false), 1500))
+  return Promise.race([pruefung, zeitUm])
+}
+
+let verbindet: Promise<ImapFlow> | null = null
+
+async function verbindung(): Promise<ImapFlow> {
+  if (offen && offen.imap.usable && Date.now() - offen.zuletzt < OFFEN_HALTEN && await lebt(offen.imap)) return offen.imap
+  if (offen) schliesse(offen.imap)
+  // gleichzeitige Anfragen teilen sich den Aufbau
+  verbindet ??= neueVerbindung().finally(() => (verbindet = null))
+  return verbindet
+}
+
+async function neueVerbindung(): Promise<ImapFlow> {
+  const k = postfachKonfig()
+  const imap = new ImapFlow({ host: k.host, port: k.port, secure: true, auth: { user: k.benutzer, pass: k.passwort }, logger: false })
+  imap.on('error', () => schliesse(imap))
+  imap.on('close', () => {
+    if (offen?.imap === imap) offen = null
+  })
+  await imap.connect()
+  offen = { imap, zuletzt: Date.now() }
+  return imap
+}
+
 async function verbinden<T>(arbeit: (imap: ImapFlow) => Promise<T>): Promise<T> {
   const k = postfachKonfig()
   if (!k.eingerichtet) throw fail(503, 'postfach', 'Das Postfach ist noch nicht eingerichtet.')
-  const imap = new ImapFlow({ host: k.host, port: k.port, secure: true, auth: { user: k.benutzer, pass: k.passwort }, logger: false })
+  let imap: ImapFlow | null = null
   try {
-    await imap.connect()
-    return await arbeit(imap)
+    imap = await verbindung()
+    const ergebnis = await arbeit(imap)
+    if (offen?.imap === imap) offen.zuletzt = Date.now()
+    return ergebnis
   }
   catch (e) {
+    if (imap) schliesse(imap)
     if (isError(e)) throw e
     console.error('[postfach]', (e as Error).message)
     throw fail(502, 'postfach', 'Das Postfach ist gerade nicht erreichbar.')
   }
-  finally {
-    await imap.logout().catch(() => {})
-  }
 }
 
-/** Pfad des Gesendet-Ordners (IONOS: „Gesendete Objekte“) */
+/** Pfad des Gesendet-Ordners (IONOS: „Gesendete Objekte“), einmal je Funktions-Instanz gesucht */
+let gesendet: string | null = null
 async function gesendetPfad(imap: ImapFlow): Promise<string> {
+  if (gesendet) return gesendet
   const ordner = await imap.list()
   const treffer = ordner.find(o => o.specialUse === '\\Sent')
     ?? ordner.find(o => /^(gesendete objekte|gesendet|sent|sent items|sent messages)$/i.test(o.name))
-  return treffer?.path ?? 'Sent'
+  gesendet = treffer?.path ?? 'Sent'
+  return gesendet
 }
 
 async function mitOrdner<T>(imap: ImapFlow, ordner: Ordner, schreiben: boolean, arbeit: () => Promise<T>): Promise<T> {
@@ -77,10 +119,13 @@ const adressen = (liste?: { name?: string, address?: string }[]) => (liste ?? []
 
 // kurz zwischenspeichern, damit Dashboard + Postfach-Seite nicht doppelt verbinden
 const zwischenspeicher = new Map<Ordner, { bis: number, mails: MailKopf[] }>()
+// geöffnete Mails ändern sich nicht (nur „beantwortet“, das leert den Speicher beim Senden)
+const mailSpeicher = new Map<string, { bis: number, mail: PostMail }>()
 
-export async function ladePost(ordner: Ordner = 'eingang', anzahl = 30): Promise<MailKopf[]> {
+/** `frisch` = am Speicher vorbei direkt ins Postfach schauen (Knopf „Aktualisieren“) */
+export async function ladePost(ordner: Ordner = 'eingang', anzahl = 30, frisch = false): Promise<MailKopf[]> {
   const gemerkt = zwischenspeicher.get(ordner)
-  if (gemerkt && gemerkt.bis > Date.now()) return gemerkt.mails.slice(0, anzahl)
+  if (!frisch && gemerkt && gemerkt.bis > Date.now()) return gemerkt.mails.slice(0, anzahl)
   const mails = await verbinden(imap => mitOrdner(imap, ordner, false, async () => {
     const gesamt = (imap.mailbox && typeof imap.mailbox === 'object' ? imap.mailbox.exists : 0) || 0
     if (!gesamt) return []
@@ -100,12 +145,15 @@ export async function ladePost(ordner: Ordner = 'eingang', anzahl = 30): Promise
     }
     return ergebnis.sort((a, b) => Date.parse(b.datum) - Date.parse(a.datum))
   }))
-  zwischenspeicher.set(ordner, { bis: Date.now() + 60_000, mails })
+  zwischenspeicher.set(ordner, { bis: Date.now() + 30_000, mails })
   return mails.slice(0, anzahl)
 }
 
 export async function ladeMail(ordner: Ordner, uid: number): Promise<PostMail> {
-  return verbinden(imap => mitOrdner(imap, ordner, false, async () => {
+  const schluessel = `${ordner}:${uid}`
+  const gemerkt = mailSpeicher.get(schluessel)
+  if (gemerkt && gemerkt.bis > Date.now()) return gemerkt.mail
+  const mail = await verbinden(imap => mitOrdner(imap, ordner, false, async () => {
     const n = await imap.fetchOne(String(uid), { uid: true, source: true, flags: true }, { uid: true })
     if (!n || !n.source) throw fail(404, 'mail', 'Diese Mail gibt es nicht (mehr).')
     const m = await simpleParser(n.source)
@@ -128,6 +176,9 @@ export async function ladeMail(ordner: Ordner, uid: number): Promise<PostMail> {
       references,
     }
   }))
+  if (mailSpeicher.size > 100) mailSpeicher.clear()
+  mailSpeicher.set(schluessel, { bis: Date.now() + 10 * 60_000, mail })
+  return mail
 }
 
 export interface NeueMail {
@@ -188,5 +239,6 @@ export async function sendePost(neu: NeueMail): Promise<{ weg: 'postfach' | 'bre
     console.error('[postfach] Ablage in „Gesendet“ fehlgeschlagen:', (e as Error)?.message ?? e)
   }
   zwischenspeicher.clear()
+  mailSpeicher.clear()
   return { weg }
 }

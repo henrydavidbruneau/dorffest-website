@@ -29,3 +29,18 @@ export function datumAusgeschrieben(iso: string) {
 export function uhrzeit(iso: string) {
   return format(iso, { hour: '2-digit', minute: '2-digit' })
 }
+
+/** "15" */
+export function tagZahl(iso: string) {
+  return format(iso, { day: 'numeric' })
+}
+
+/** "Nov" */
+export function monatKurz(iso: string) {
+  return format(iso, { month: 'short' }).replace('.', '')
+}
+
+/** "November 2025" */
+export function monatJahr(iso: string) {
+  return format(iso, { month: 'long', year: 'numeric' })
+}

@@ -34,26 +34,34 @@ watch(aktiv, key => navigateTo({ query: { ...route.query, reiter: key } }, { rep
 <style scoped>
 .unterreiter {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--abstand-2xs);
+  overflow-x: auto;
+  gap: 0.25rem;
+  width: fit-content;
   max-width: var(--inhaltsbreite);
-  margin: 0 auto var(--abstand-l);
+  margin: 0 0 var(--abstand-l);
+  padding: 0.25rem;
+  border: 1px solid var(--vh-rand, #e4dccf);
+  border-radius: 999px;
+  background: var(--farbe-weiss);
 }
 
 .unterreiter__knopf {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
   padding: 0.45rem 1rem;
-  border: 2px solid var(--farbe-schwarz);
-  border-radius: var(--radius-m);
-  background: var(--farbe-creme);
-  font-family: var(--schrift-display);
-  font-weight: var(--gewicht-display);
-  font-size: 1rem;
-  text-transform: uppercase;
-  box-shadow: 2px 2px 0 rgb(0 0 0 / 0.3);
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-family: var(--schrift-text);
+  font-weight: var(--gewicht-text-mittel);
+  font-size: var(--groesse-xs);
+  white-space: nowrap;
   cursor: pointer;
+}
+
+.unterreiter__knopf:hover {
+  background: var(--farbe-pfirsich);
 }
 
 .unterreiter__knopf[aria-selected='true'] {
@@ -64,16 +72,23 @@ watch(aktiv, key => navigateTo({ query: { ...route.query, reiter: key } }, { rep
 .unterreiter__zahl {
   display: inline-grid;
   place-items: center;
-  min-width: 1.4rem;
-  height: 1.4rem;
+  min-width: 1.3rem;
+  height: 1.3rem;
   padding: 0 0.3rem;
   border-radius: 999px;
-  background: #d8342a;
-  color: var(--farbe-weiss);
-  font-size: 0.8rem;
+  background: var(--farbe-orange);
+  color: var(--farbe-schwarz);
+  font-size: 0.75rem;
+  font-weight: var(--gewicht-text-fett);
 }
+
 .unterreiter--zeitung {
+  flex-wrap: wrap;
   justify-content: center;
+  width: auto;
+  border: 0;
+  border-radius: 0;
+  background: none;
   gap: 0.25rem clamp(1rem, 2.2vw, 2rem);
   margin: 0;
   padding: 0.8rem 0 0.5rem;
@@ -86,10 +101,18 @@ watch(aktiv, key => navigateTo({ query: { ...route.query, reiter: key } }, { rep
   border-radius: 0;
   background: none;
   box-shadow: none;
+  font-family: var(--schrift-display);
+  font-weight: var(--gewicht-display);
   font-size: clamp(1rem, 1.39vw, 1.25rem);
+  text-transform: uppercase;
+}
+
+.unterreiter--zeitung .unterreiter__knopf:hover {
+  background: none;
 }
 
 .unterreiter--zeitung .unterreiter__knopf[aria-selected='true'] {
+  background: none;
   border-bottom-color: var(--farbe-orange);
   color: var(--farbe-lila);
 }

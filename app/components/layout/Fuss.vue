@@ -2,7 +2,7 @@
 import { fussnavigation } from '~/navigation'
 import { texte } from '~/texte'
 
-// Kontakt und Infochannel kommen aus den Vereinsdaten (Directus); dazu dezent der Weg ins Vereinsheim
+// Kontakt und Infochannel kommen aus den Vereinsdaten (Directus)
 const verein = useVerein()
 const spalten = computed(() => fussnavigation.map(spalte => ({
   ...spalte,
@@ -45,7 +45,6 @@ const spalten = computed(() => fussnavigation.map(spalte => ({
           </div>
         </nav>
       </div>
-      <p class="fuss__vereinsheim"><NuxtLink to="/vereinsheim">Vereinsheim</NuxtLink></p>
     </div>
   </footer>
 </template>
@@ -137,19 +136,5 @@ const spalten = computed(() => fussnavigation.map(spalte => ({
   .fuss__nav {
     grid-template-columns: repeat(3, 1fr);
   }
-}
-.fuss__vereinsheim {
-  margin: var(--abstand-l) 0 0;
-  font-size: var(--groesse-xs);
-  text-align: right;
-}
-
-.fuss__vereinsheim a {
-  color: inherit;
-  opacity: 0.7;
-}
-
-.fuss__vereinsheim a:hover {
-  opacity: 1;
 }
 </style>

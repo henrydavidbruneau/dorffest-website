@@ -253,7 +253,7 @@ Ausgaben verwalten als kleiner Bereich im Reiter „Artikel“.
 ## Über uns, Startseite, Mitmachen
 
 ### `stimmen`
-`status`, `name`, `zitat` (≤ 160 Zeichen), `bild` (Datei, quadratisch), `bild_alt`, `sort`.
+`status`, `name`, `zitat` (≤ 400 Zeichen; Feld ist `text`, die Grenze prüft das Vereinsheim), `bild` (Datei, quadratisch), `bild_alt`, `sort`.
 
 ### `faq`
 `status`, `frage`, `antwort` (Markdown), `sort`.
@@ -477,7 +477,10 @@ Jede*r braucht trotzdem eine E-Mail (Directus-Pflicht, Passwort vergessen).
 - **Vorstand?** = darf `mitglieder` lesen (Policy `Vorstand`).
 - **Post** (`/vereinsheim/post`, nur Vorstand): kleines Mailprogramm fürs Kontakt-Postfach
   (`server/utils/postfach.ts`). Lesen per IMAP (`imapflow` + `mailparser`, PEEK – nichts wird als gelesen
-  markiert, 60 s zwischengespeichert, keine Kopie in Directus). Antworten/Neue Mail: Versand über das
+  markiert, keine Kopie in Directus). Tempo: die IMAP-Verbindung bleibt 30 s offen (vor Wiederverwendung NOOP-Prüfung),
+  Liste 30 s und geöffnete Mails 10 min im Server-Speicher (`?frisch=1` umgeht ihn), Vorstands-Prüfung mit nur einer
+  Directus-Anfrage. Im Browser (`useVereinsheimPost()`) bleiben Liste und Mails gemerkt (Dashboard und Post-Seite teilen
+  sie), Mails werden beim Drüberfahren vorgeladen, und solange die Seite sichtbar ist, wird jede Minute nachgeschaut. Antworten/Neue Mail: Versand über das
   Postfach selbst (IONOS-SMTP, Port 465, dieselben Zugangsdaten; Absender `NUXT_MAIL_VON` – muss als
   Alias des Postfachs eingerichtet sein), Antworten mit `In-Reply-To`/`References`. Lehnt IONOS ab,
   geht die Mail über Brevo raus (ohne Thread-Bezug). Danach Kopie in „Gesendete Objekte“, Original

@@ -8,7 +8,7 @@ const veroeffentlicht = computed(() => data.value.filter(a => a.status === 'publ
 async function umschalten(a: Anzeige) {
   try {
     await vh.aendern('kleinanzeigen', a.id, { status: a.status === 'published' ? 'draft' : 'published' })
-    zeige(a.status === 'published' ? 'Abgehängt.' : 'Hängt am Brett!')
+    zeige(a.status === 'published' ? 'Zurückgezogen.' : 'Veröffentlicht!')
     await refresh()
   }
   catch (e) {
@@ -17,10 +17,10 @@ async function umschalten(a: Anzeige) {
 }
 
 async function loeschen(a: Anzeige) {
-  if (!window.confirm(`„${a.ueberschrift}“ wirklich in den Papierkorb?`)) return
+  if (!window.confirm(`„${a.ueberschrift}“ wirklich löschen?`)) return
   try {
     await vh.loeschen('kleinanzeigen', a.id)
-    zeige('Zerknüllt und weg.')
+    zeige('Gelöscht.')
     await refresh()
   }
   catch (e) {
@@ -32,7 +32,7 @@ async function loeschen(a: Anzeige) {
 <template>
   <div class="anzeigen">
     <div class="anzeigen__kopf">
-      <p class="handschrift anzeigen__hinweis">{{ veroeffentlicht }} von 4 Plätzen im Dorfanzeiger belegt</p>
+      <p class="anzeigen__hinweis">{{ veroeffentlicht }} von 4 Plätzen im Dorfanzeiger belegt</p>
       <BasisKnopf to="/vereinsheim/dorfanzeiger/kleinanzeige/neu">+ Neue Anzeige</BasisKnopf>
     </div>
     <p v-if="veroeffentlicht >= 4" class="anzeigen__voll">Alle vier Plätze sind belegt. Neue Anzeigen landen im Fach, bis du eine andere abhängst.</p>
@@ -42,11 +42,11 @@ async function loeschen(a: Anzeige) {
           <VereinsheimStempel :status="a.status" class="anzeige__stempel" />
           <h2 class="anzeige__titel">{{ a.ueberschrift }}</h2>
           <p>{{ a.kurzbeschreibung }}</p>
-          <p class="handschrift anzeige__link">→ {{ a.link_text }} <small>({{ a.ziel_email }})</small></p>
+          <p class="anzeige__link">→ {{ a.link_text }} <small>({{ a.ziel_email }})</small></p>
           <div class="anzeige__aktionen">
             <NuxtLink :to="`/vereinsheim/dorfanzeiger/kleinanzeige/${a.id}`">Bearbeiten</NuxtLink>
             <button type="button" :disabled="a.status !== 'published' && veroeffentlicht >= 4" @click="umschalten(a)">
-              {{ a.status === 'published' ? 'Abhängen' : 'Ans Brett hängen' }}
+              {{ a.status === 'published' ? 'Zurückziehen' : 'Veröffentlichen' }}
             </button>
             <button type="button" class="anzeige__weg" @click="loeschen(a)">Löschen</button>
           </div>
@@ -75,7 +75,7 @@ async function loeschen(a: Anzeige) {
   margin: 0;
   padding: 0.1rem 0.6rem;
   background: rgb(255 253 247 / 0.85);
-  font-size: var(--groesse-hand-m);
+  font-size: var(--groesse-s);
 }
 
 .anzeigen__voll {
@@ -114,8 +114,8 @@ async function loeschen(a: Anzeige) {
 }
 
 .anzeige__link {
-  font-size: var(--groesse-hand-s) !important;
-  color: var(--farbe-orange-text);
+  font-size: var(--groesse-xs) !important;
+  color: var(--vh-gedaempft);
 }
 
 .anzeige__aktionen {

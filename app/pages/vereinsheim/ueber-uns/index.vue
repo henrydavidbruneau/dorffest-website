@@ -6,7 +6,7 @@ const reiter = ref('stimmen')
 
 <template>
   <div class="ueber">
-    <VereinsheimKopf titel="Über uns" zusatz="Stimmen aus dem Verein & Fragen auf der Startseite">
+    <VereinsheimKopf titel="Über" hervorhebung="uns" zusatz="Stimmen aus dem Verein und die Fragen auf der Startseite">
       <BasisKnopf v-if="reiter === 'stimmen'" to="/vereinsheim/ueber-uns/stimme/neu">+ Neue Stimme</BasisKnopf>
       <BasisKnopf v-else to="/vereinsheim/ueber-uns/frage/neu">+ Neue Frage</BasisKnopf>
     </VereinsheimKopf>

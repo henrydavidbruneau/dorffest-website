@@ -37,9 +37,9 @@ async function passwortAendern() {
 
 <template>
   <div class="konto">
-    <VereinsheimKopf titel="Mein Konto" />
+    <VereinsheimKopf titel="Mein" hervorhebung="Konto" />
     <div class="konto__zettel">
-      <BasisNotizzettel farbe="creme" befestigung="pin" :drehung="-1" class="konto__karte">
+      <div class="vh-karte konto__karte">
         <h2>Namensschild</h2>
         <form @submit.prevent="nameSpeichern">
           <BasisFeld v-model="name.first_name" label="Vorname" name="first_name" autocomplete="given-name" required />
@@ -51,9 +51,9 @@ async function passwortAendern() {
           </p>
           <BasisKnopf type="submit" variante="outline">Speichern</BasisKnopf>
         </form>
-      </BasisNotizzettel>
+      </div>
 
-      <BasisNotizzettel farbe="gelb" befestigung="pin" :drehung="1" class="konto__karte">
+      <div class="vh-karte konto__karte">
         <h2>Neuer Schlüssel</h2>
         <form @submit.prevent="passwortAendern">
           <BasisFeld v-model="pw.alt" label="Bisheriges Passwort" name="alt" type="password" autocomplete="current-password" required />
@@ -61,7 +61,7 @@ async function passwortAendern() {
           <BasisFeld v-model="pw.nochmal" label="Neues Passwort nochmal" name="nochmal" type="password" autocomplete="new-password" required />
           <BasisKnopf type="submit" :disabled="sendet">{{ sendet ? 'Wird nachgemacht …' : 'Passwort ändern' }}</BasisKnopf>
         </form>
-      </BasisNotizzettel>
+      </div>
     </div>
   </div>
 </template>
@@ -79,7 +79,6 @@ async function passwortAendern() {
 }
 
 .konto__karte {
-  padding: 2.8rem var(--abstand-l) var(--abstand-l);
 }
 
 .konto__karte h2 {

@@ -299,6 +299,13 @@ useSeoMeta({
   justify-self: end;
 }
 
+/* mobil gerade (die Drehung kommt als Inline-Variable vom Notizzettel) */
+@media (max-width: 47.99rem) {
+  .anzeiger__newsletter .anzeiger__zettel {
+    transform: none;
+  }
+}
+
 @media (min-width: 48rem) {
   .titelgeschichte__text {
     column-count: 3;

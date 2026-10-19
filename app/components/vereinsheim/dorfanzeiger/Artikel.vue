@@ -50,10 +50,10 @@ async function duplizieren(a: ArtikelZeile) {
 }
 
 async function loeschen(a: ArtikelZeile) {
-  if (!window.confirm(`Wirklich in den Papierkorb? „${a.titel}“ ist dann weg.`)) return
+  if (!window.confirm(`„${a.titel}“ wirklich löschen?`)) return
   try {
     await vh.loeschen('artikel', a.id)
-    zeige('Zerknüllt und weg.')
+    zeige('Gelöscht.')
     await refresh()
   }
   catch (e) {
@@ -79,16 +79,16 @@ async function loeschen(a: ArtikelZeile) {
             <button type="button" :aria-pressed="ausgabeWahl === 'ohne'" @click="ausgabeWahl = 'ohne'">ohne Ausgabe</button>
           </li>
         </ul>
-        <NuxtLink to="/vereinsheim/dorfanzeiger/ausgabe/neu" class="tisch__neu handschrift">+ neue Ausgabe</NuxtLink>
+        <NuxtLink to="/vereinsheim/dorfanzeiger/ausgabe/neu" class="tisch__neu">+ neue Ausgabe</NuxtLink>
       </div>
     </aside>
 
     <section class="tisch__artikel" aria-label="Artikel der Ausgabe">
       <div class="tisch__kopf">
-        <p class="handschrift tisch__hinweis">Reihenfolge = Reihenfolge im Dorfanzeiger</p>
+        <p class="tisch__hinweis">Mit den Pfeilen sortieren – so stehen die Artikel auch im Dorfanzeiger.</p>
         <BasisKnopf :to="`/vereinsheim/dorfanzeiger/artikel/neu${typeof ausgabeWahl === 'number' ? `?ausgabe=${ausgabeWahl}` : ''}`">+ Neuer Artikel</BasisKnopf>
       </div>
-      <p v-if="!liste.length" class="handschrift tisch__leer">Noch kein Manuskript auf dem Tisch.</p>
+      <p v-if="!liste.length" class="tisch__leer">Noch kein Manuskript auf dem Tisch.</p>
       <ol class="tisch__liste">
         <li v-for="(a, i) in liste" :key="a.id" class="manuskript" :style="{ '--drehung': `${(i % 3 - 1) * 0.6}deg` }">
           <div class="manuskript__pfeile">
@@ -100,7 +100,7 @@ async function loeschen(a: ArtikelZeile) {
               {{ a.titelgeschichte ? 'Titelgeschichte · ' : '' }}{{ a.ressort?.name ?? 'ohne Ressort' }}{{ a.hervorgehoben ? ' · auf der Startseite' : '' }}
             </p>
             <NuxtLink :to="`/vereinsheim/dorfanzeiger/artikel/${a.id}`" class="manuskript__titel">{{ a.titel }}</NuxtLink>
-            <p v-if="a.autor_in" class="manuskript__autor handschrift">von {{ a.autor_in }}</p>
+            <p v-if="a.autor_in" class="manuskript__autor">von {{ a.autor_in }}</p>
             <div class="manuskript__aktionen">
               <NuxtLink :to="`/vereinsheim/dorfanzeiger/artikel/${a.id}`">Bearbeiten</NuxtLink>
               <a v-if="a.status === 'published'" :href="`/dorfanzeiger/${a.slug}`" target="_blank" rel="noopener">Ansehen ↗</a>
@@ -143,7 +143,7 @@ async function loeschen(a: ArtikelZeile) {
 .tisch__ausgaben h2 {
   margin: 0 0 var(--abstand-xs);
   padding-bottom: 0.5rem;
-  border-bottom: 2px dashed rgb(0 0 0 / 0.35);
+  border-bottom: 2px solid rgb(0 0 0 / 0.2);
   font-size: clamp(1.375rem, 1.8vw, 1.625rem);
   color: var(--farbe-schwarz);
 }
@@ -186,8 +186,8 @@ async function loeschen(a: ArtikelZeile) {
 }
 
 .tisch__neu {
-  font-size: var(--groesse-hand-m);
-  color: var(--farbe-orange-text);
+  font-size: var(--groesse-s);
+  color: var(--vh-gedaempft);
 }
 
 .tisch__kopf {
@@ -202,12 +202,12 @@ async function loeschen(a: ArtikelZeile) {
 .tisch__hinweis,
 .tisch__leer {
   margin: 0;
-  font-size: var(--groesse-hand-s);
-  color: var(--farbe-orange-text);
+  font-size: var(--groesse-xs);
+  color: var(--vh-gedaempft);
 }
 
 .tisch__leer {
-  font-size: var(--groesse-hand-l);
+  font-size: var(--groesse-m);
 }
 
 .tisch__liste {
@@ -235,8 +235,8 @@ async function loeschen(a: ArtikelZeile) {
 .manuskript__pfeile button {
   width: 2rem;
   height: 2rem;
-  border: 1.5px solid var(--farbe-schwarz);
-  border-radius: var(--radius-s);
+  border: 1px solid var(--vh-rand-stark);
+  border-radius: 0.4rem;
   background: var(--farbe-weiss);
   font: inherit;
   cursor: pointer;
@@ -272,7 +272,8 @@ async function loeschen(a: ArtikelZeile) {
 
 .manuskript__autor {
   margin: 0.2rem 0 0;
-  font-size: var(--groesse-hand-s);
+  color: var(--vh-gedaempft);
+  font-size: var(--groesse-xs);
 }
 
 .manuskript__aktionen {

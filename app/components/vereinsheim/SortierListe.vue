@@ -23,7 +23,7 @@ async function verschieben(index: number, richtung: -1 | 1) {
 async function umschalten(z: Zeile) {
   try {
     await vh.aendern(props.collection, z.id, { status: z.status === 'published' ? 'draft' : 'published' })
-    zeige(z.status === 'published' ? 'Abgehängt – liegt im Fach.' : 'Hängt am Brett!')
+    zeige(z.status === 'published' ? 'Zurückgezogen – ist jetzt ein Entwurf.' : 'Veröffentlicht!')
     await refresh()
   }
   catch (e) {
@@ -32,10 +32,10 @@ async function umschalten(z: Zeile) {
 }
 
 async function loeschen(z: Zeile) {
-  if (!window.confirm(`„${z[props.titelFeld]}“ wirklich in den Papierkorb?`)) return
+  if (!window.confirm(`„${z[props.titelFeld]}“ wirklich löschen?`)) return
   try {
     await vh.loeschen(props.collection, z.id)
-    zeige('Zerknüllt und weg.')
+    zeige('Gelöscht.')
     await refresh()
   }
   catch (e) {
@@ -46,7 +46,7 @@ async function loeschen(z: Zeile) {
 
 <template>
   <div class="sortier">
-    <p v-if="!data.length" class="handschrift sortier__leer">{{ leer }}</p>
+    <p v-if="!data.length" class="sortier__leer">{{ leer }}</p>
     <ol class="sortier__liste">
       <li v-for="(z, i) in data" :key="z.id" class="sortier__zeile">
         <div class="sortier__pfeile">
@@ -58,7 +58,7 @@ async function loeschen(z: Zeile) {
           <p v-if="unterFeld && z[unterFeld]" class="sortier__unter">{{ String(z[unterFeld]).slice(0, 140) }}</p>
           <div class="sortier__aktionen">
             <NuxtLink :to="`${basis}/${z.id}`">Bearbeiten</NuxtLink>
-            <button type="button" @click="umschalten(z)">{{ z.status === 'published' ? 'Abhängen' : 'Ans Brett hängen' }}</button>
+            <button type="button" @click="umschalten(z)">{{ z.status === 'published' ? 'Zurückziehen' : 'Veröffentlichen' }}</button>
             <button type="button" class="sortier__weg" @click="loeschen(z)">Löschen</button>
           </div>
         </div>
@@ -70,10 +70,7 @@ async function loeschen(z: Zeile) {
 
 <style scoped>
 .sortier__leer {
-  display: inline-block;
-  padding: 0.1rem 0.6rem;
-  background: rgb(255 253 247 / 0.85);
-  font-size: var(--groesse-hand-l);
+  color: var(--vh-gedaempft);
 }
 
 .sortier__liste {
@@ -91,12 +88,10 @@ async function loeschen(z: Zeile) {
   align-items: start;
   gap: var(--abstand-m);
   padding: var(--abstand-s) var(--abstand-m);
+  border: 1px solid var(--vh-rand);
+  border-radius: var(--vh-radius);
   background: var(--farbe-weiss);
-  box-shadow: var(--schatten-zettel);
-}
-
-.sortier__zeile:nth-child(odd) {
-  rotate: -0.4deg;
+  box-shadow: var(--vh-schatten);
 }
 
 .sortier__pfeile {
@@ -108,9 +103,9 @@ async function loeschen(z: Zeile) {
 .sortier__pfeile button {
   width: 2rem;
   height: 2rem;
-  border: 1.5px solid var(--farbe-schwarz);
-  border-radius: var(--radius-s);
-  background: var(--farbe-creme);
+  border: 1px solid var(--vh-rand-stark);
+  border-radius: 0.4rem;
+  background: var(--farbe-weiss);
   font: inherit;
   cursor: pointer;
 }

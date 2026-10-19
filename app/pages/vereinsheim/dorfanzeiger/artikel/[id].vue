@@ -98,17 +98,13 @@ const dachzeile = computed(() => {
 
 <template>
   <div>
-    <div class="umschalter" role="group" aria-label="Ansicht">
-      <button type="button" :aria-pressed="ansicht === 'schreiben'" @click="ansicht = 'schreiben'">✎ Schreiben</button>
-      <button type="button" :aria-pressed="ansicht === 'vorschau'" @click="zurVorschau">👀 So sieht’s im Dorfanzeiger aus</button>
-    </div>
-
     <div v-show="ansicht === 'schreiben'">
       <VereinsheimFormularSeite
         :id="id"
         ref="formular"
         collection="artikel"
         :felder="FELDER_ARTIKEL"
+        :gruppen="GRUPPEN_ARTIKEL"
         :beziehungen="beziehungen ?? undefined"
         :vorlage="vorlage"
         :vorbereiten="vorbereiten"
@@ -118,14 +114,20 @@ const dachzeile = computed(() => {
       >
         <template #oben="{ daten }">
           <p v-if="daten.status === 'published'" class="artikel-link">
-            <a :href="`/dorfanzeiger/${daten.slug}`" target="_blank" rel="noopener">→ im Dorfanzeiger ansehen ↗</a>
+            <a :href="`/dorfanzeiger/${daten.slug}`" target="_blank" rel="noopener">Im Dorfanzeiger ansehen ↗</a>
           </p>
+        </template>
+        <template #aktionen>
+          <BasisKnopf groesse="klein" variante="outline" @click="zurVorschau">Vorschau</BasisKnopf>
         </template>
       </VereinsheimFormularSeite>
     </div>
 
     <div v-if="ansicht === 'vorschau'" class="vorschau">
-      <p class="vorschau__hinweis handschrift">Vorschau – noch nicht gespeichert? Erst zurück zum Schreiben und „Ab ins Fach“.</p>
+      <div class="vorschau__leiste">
+        <BasisKnopf groesse="klein" variante="hell" @click="ansicht = 'schreiben'">← Weiter schreiben</BasisKnopf>
+        <p class="vorschau__hinweis">So erscheint der Artikel im Dorfanzeiger. Gespeichert wird erst beim Weiterschreiben mit „Speichern“.</p>
+      </div>
       <article class="vorschau__blatt">
         <BasisKlebeband position="links" farbe="gelb" :drehung="-3" :breite="6" />
         <BasisKlebeband position="rechts" farbe="flieder" :drehung="3" :breite="6" />
@@ -137,57 +139,37 @@ const dachzeile = computed(() => {
 </template>
 
 <style scoped>
-.umschalter {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--abstand-2xs);
-  max-width: 62rem;
-  margin: 0 auto var(--abstand-l);
-}
-
-.umschalter button {
-  padding: 0.5rem 1.1rem;
-  border: 2px solid var(--farbe-lila);
-  border-radius: var(--radius-m);
-  background: var(--farbe-weiss);
-  color: var(--farbe-lila);
-  font-family: var(--schrift-display);
-  font-weight: var(--gewicht-display);
-  font-size: 1.05rem;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.umschalter button[aria-pressed='true'] {
-  background: var(--farbe-lila);
-  color: var(--farbe-creme);
-}
-
 .artikel-link {
-  margin: 0 0 var(--abstand-l);
-  font-family: var(--schrift-hand);
-  font-size: var(--groesse-hand-s);
+  margin: 0;
+  font-size: var(--groesse-xs);
 }
 
 .artikel-link a {
-  color: var(--farbe-orange-text);
+  color: var(--farbe-pfirsich);
 }
 
 .vorschau {
+  margin-block: calc(-1 * var(--abstand-xl));
   margin-inline: calc(-1 * var(--seitenrand));
   padding: var(--abstand-l) var(--seitenrand) var(--abstand-xl);
   background: var(--farbe-lila);
 }
 
-.vorschau__hinweis {
+.vorschau__leiste {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--abstand-s) var(--abstand-m);
   max-width: 47rem;
-  margin: 0 auto var(--abstand-m);
-  font-size: var(--groesse-hand-s);
-  color: var(--farbe-pfirsich);
-  text-align: center;
+  margin: 0 auto var(--abstand-l);
 }
 
+.vorschau__hinweis {
+  flex: 1 1 16rem;
+  margin: 0;
+  color: var(--farbe-pfirsich);
+  font-size: var(--groesse-xs);
+}
 /* wie das schmale Blatt auf der Artikelseite */
 .vorschau__blatt {
   position: relative;

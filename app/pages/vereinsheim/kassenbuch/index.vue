@@ -68,7 +68,7 @@ function belegeGewaehlt(e: Event) {
 async function stempeln(a: Auslage, status: string) {
   try {
     await vh.aendern('auslagen', a.id, { status })
-    zeige(`Gestempelt: ${status}.`)
+    zeige(`Status: ${status}.`)
     await refresh()
   }
   catch (e) {
@@ -79,11 +79,11 @@ async function stempeln(a: Auslage, status: string) {
 
 <template>
   <div class="kasse">
-    <VereinsheimKopf titel="Kassenbuch" :zusatz="ich?.vorstand ? 'Alle Auslagen im Blick' : 'Deine Auslagen'">
+    <VereinsheimKopf titel="Die" hervorhebung="Kasse" :zusatz="ich?.vorstand ? 'Alle Auslagen im Blick' : 'Deine Auslagen'">
       <BasisKnopf @click="offenesFormular = !offenesFormular">{{ offenesFormular ? 'Doch nicht' : '+ Auslage einreichen' }}</BasisKnopf>
     </VereinsheimKopf>
 
-    <BasisNotizzettel v-if="offenesFormular" farbe="pfirsich" befestigung="klammer" :drehung="-0.5" class="kasse__formular">
+    <div v-if="offenesFormular" class="vh-karte kasse__formular">
       <h2>Auslage einreichen</h2>
       <p>Du hast etwas für den Verein bezahlt? Trag es ein und häng ein Foto vom Kassenbon an – wir überweisen es dir zurück.</p>
       <form @submit.prevent="einreichen">
@@ -93,9 +93,9 @@ async function stempeln(a: Auslage, status: string) {
           <input id="belege" type="file" accept="image/*,application/pdf" multiple @change="belegeGewaehlt">
           <ul v-if="belege.length"><li v-for="b in belege" :key="b.name">📎 {{ b.name }}</li></ul>
         </div>
-        <BasisKnopf type="submit" :disabled="sendet">{{ sendet ? 'Wird abgeheftet …' : 'Einreichen' }}</BasisKnopf>
+        <BasisKnopf type="submit" :disabled="sendet">{{ sendet ? 'Wird eingereicht …' : 'Einreichen' }}</BasisKnopf>
       </form>
-    </BasisNotizzettel>
+    </div>
 
     <div class="kassenbuch">
       <div class="kassenbuch__kopf">
@@ -105,14 +105,14 @@ async function stempeln(a: Auslage, status: string) {
         </div>
         <p class="kassenbuch__summe">Offen: <strong>{{ euro(summeOffen) }}</strong></p>
       </div>
-      <p v-if="!liste.length" class="handschrift kassenbuch__leer">Keine offenen Auslagen. Die Kasse stimmt!</p>
+      <p v-if="!liste.length" class="kassenbuch__leer">Keine offenen Auslagen. Die Kasse stimmt!</p>
       <ul class="kassenbuch__zeilen">
         <li v-for="a in liste" :key="a.id" class="eintrag">
           <span class="eintrag__datum">{{ datumLang(a.datum) }}</span>
           <div class="eintrag__text">
             <strong>{{ a.titel }}</strong>
             <span v-if="a.termin" class="eintrag__klein"> · {{ a.termin.titel }}</span>
-            <span v-if="ich?.vorstand && a.user_created" class="eintrag__klein handschrift"> – {{ a.user_created.first_name }} {{ a.user_created.last_name }}</span>
+            <span v-if="ich?.vorstand && a.user_created" class="eintrag__klein"> – {{ a.user_created.first_name }} {{ a.user_created.last_name }}</span>
             <p v-if="a.notiz" class="eintrag__notiz">{{ a.notiz }}</p>
             <p v-if="ich?.vorstand && a.iban" class="eintrag__klein">an {{ a.kontoinhaber_in }}, {{ a.iban }}</p>
             <p class="eintrag__belege">
@@ -138,7 +138,6 @@ async function stempeln(a: Auslage, status: string) {
 
 .kasse__formular {
   margin-bottom: var(--abstand-xl);
-  padding: 3.2rem var(--abstand-l) var(--abstand-l);
 }
 
 .kasse__formular h2 {
@@ -170,14 +169,12 @@ async function stempeln(a: Auslage, status: string) {
   list-style: none;
 }
 
-/* liniertes Kassenbuch mit rotem Rand */
 .kassenbuch {
-  padding: var(--abstand-m) clamp(0.75rem, 3vw, 2rem) var(--abstand-l) clamp(3rem, 6vw, 4.5rem);
-  background:
-    linear-gradient(90deg, transparent clamp(2.2rem, 5vw, 3.6rem), rgb(216 52 42 / 0.5) clamp(2.2rem, 5vw, 3.6rem) calc(clamp(2.2rem, 5vw, 3.6rem) + 2px), transparent calc(clamp(2.2rem, 5vw, 3.6rem) + 2px)),
-    repeating-linear-gradient(180deg, transparent 0 1.9rem, rgb(0 120 191 / 0.18) 1.9rem 1.95rem),
-    #fffef8;
-  box-shadow: var(--schatten-karte);
+  padding: var(--abstand-m) clamp(0.75rem, 3vw, 1.5rem) var(--abstand-l);
+  border: 1px solid var(--vh-rand);
+  border-radius: var(--vh-radius);
+  background: var(--farbe-weiss);
+  box-shadow: var(--vh-schatten);
 }
 
 .kassenbuch__kopf {
@@ -217,7 +214,7 @@ async function stempeln(a: Auslage, status: string) {
 }
 
 .kassenbuch__leer {
-  font-size: var(--groesse-hand-l);
+  font-size: var(--groesse-m);
 }
 
 .kassenbuch__zeilen {
@@ -236,8 +233,7 @@ async function stempeln(a: Auslage, status: string) {
 }
 
 .eintrag__datum {
-  font-family: var(--schrift-hand);
-  font-size: var(--groesse-hand-s);
+  font-size: var(--groesse-xs);
 }
 
 .eintrag__klein {
@@ -262,8 +258,7 @@ async function stempeln(a: Auslage, status: string) {
 }
 
 .eintrag__betrag {
-  font-family: var(--schrift-hand);
-  font-size: var(--groesse-hand-m);
+  font-size: var(--groesse-s);
   white-space: nowrap;
 }
 

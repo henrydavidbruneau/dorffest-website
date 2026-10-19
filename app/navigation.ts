@@ -27,6 +27,7 @@ export const fussnavigation: { titel: string, links: NavLink[] }[] = [
       { text: 'Über uns', to: '/ueber-uns' },
       { text: 'Satzung', to: '/satzung' },
       { text: 'Mitglied werden', to: links.mitgliedWerden },
+      { text: 'Vereinsheim', to: '/vereinsheim' },
     ],
   },
   {

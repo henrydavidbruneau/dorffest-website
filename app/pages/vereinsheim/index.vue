@@ -5,11 +5,14 @@ definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim', vollbreit: tr
 useSeoMeta({ title: 'Vereinsheim', robots: 'noindex, nofollow' })
 
 const { ich } = useVereinsheimIch()
+const post = useVereinsheimPost()
+// die fünf neuesten Mails; aktualisiert sich jede Minute
+const mails = computed(() => (post.listen.value.eingang?.eingerichtet ? post.listen.value.eingang.mails.slice(0, 5) : null))
+useAutoAktualisierung(() => ich.value?.vorstand && post.aktualisieren('eingang'))
 
 interface Post { art: 'antrag' | 'vorschlag' | 'gastbeitrag' | 'leserbrief' | 'anmeldung', titel: string, von: string, wann: string, to: string }
 interface Auslage { id: number, titel: string, betrag: string | number, status: string, datum: string }
 interface Termin { id: number, titel: string, slug: string, beginn: string, ort: string | null }
-interface MailKopf { uid: number, von: string, betreff: string, datum: string, gelesen: boolean }
 
 const WOCHE = { _gte: '$NOW(-7 days)' }
 
@@ -34,13 +37,12 @@ const { data } = useAsyncData('vh-dashboard', async () => {
   ])
 
   // Vorstand: was zuletzt über die Website reinkam · Mitglieder: eigene Einreichungen in der Kasse
-  let post: Post[] = []
+  let eingaenge: Post[] = []
   let auslagen: Auslage[] = []
-  let mails: MailKopf[] | null = null
   if (ich.value?.vorstand) {
-    // echtes Kontakt-Postfach, falls angeschlossen – sonst die Eingänge über die Website
-    const postfach = await $fetch<{ eingerichtet: boolean, mails: MailKopf[] }>('/api/vereinsheim/post', { query: { anzahl: 5 } }).catch(() => null)
-    if (postfach?.eingerichtet) mails = postfach.mails
+    // echtes Kontakt-Postfach, falls angeschlossen (gemerkt für die Post-Seite) – sonst die Eingänge über die Website
+    if (!post.listen.value.eingang) await post.aktualisieren('eingang')
+    else post.aktualisieren('eingang')
     const [antraege, vorschlaege, gast, briefe, anmeldungen] = await Promise.all([
       neueste<{ vorname: string, nachname: string, art: string }>('mitgliedsantraege', 'vorname,nachname,art'),
       neueste<{ name: string, idee: string }>('vorschlaege', 'name,idee'),
@@ -48,7 +50,7 @@ const { data } = useAsyncData('vh-dashboard', async () => {
       neueste<{ name: string, text: string }>('leserbriefe', 'name,text'),
       neueste<{ name: string, personen: number, termin: { id: number, titel: string } | null }>('anmeldungen', 'name,personen,termin.id,termin.titel'),
     ])
-    post = [
+    eingaenge = [
       ...antraege.map(a => ({ art: 'antrag' as const, titel: `Mitgliedsantrag (${a.art === 'regulaer' ? 'regulär' : 'Förder'})`, von: `${a.vorname} ${a.nachname}`, wann: a.date_created, to: '/vereinsheim/mitglieder' })),
       ...vorschlaege.map(v => ({ art: 'vorschlag' as const, titel: v.idee, von: v.name, wann: v.date_created, to: '/vereinsheim/ideensammlung' })),
       ...gast.map(g => ({ art: 'gastbeitrag' as const, titel: `Gastbeitrag: ${g.titel}`, von: g.autor_in, wann: g.date_created, to: '/vereinsheim/dorfanzeiger?reiter=gastbeitraege' })),
@@ -61,7 +63,7 @@ const { data } = useAsyncData('vh-dashboard', async () => {
   }
 
   const [anmeldungen, gastbeitraege, leserbriefe, vorschlaege, ideen, kasse, antraege] = neuIn
-  return { naechster: naechster[0] ?? null, plenum: plenum[0] ?? null, post, mails, auslagen, neu: { anmeldungen, gastbeitraege, leserbriefe, vorschlaege, ideen, kasse, antraege } }
+  return { naechster: naechster[0] ?? null, plenum: plenum[0] ?? null, post: eingaenge, auslagen, neu: { anmeldungen, gastbeitraege, leserbriefe, vorschlaege, ideen, kasse, antraege } }
 }, { server: false })
 
 // Begrüßung je nach Tageszeit: Spruch als Überschrift, Name hervorgehoben
@@ -121,10 +123,10 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
 
         <!-- Vorstand: Post · Mitglieder: eigene Einreichungen -->
         <BasisNotizzettel farbe="pfirsich" radius="l" :drehung="1.5" class="dash__karte">
-          <template v-if="ich?.vorstand && data?.mails">
+          <template v-if="ich?.vorstand && mails">
             <p class="dash__karte-titel"><VereinsheimIcon name="post" class="dash__karte-icon" /> Neue Post</p>
-            <ul v-if="data.mails.length" class="dash__post">
-              <li v-for="m in data.mails" :key="m.uid">
+            <ul v-if="mails.length" class="dash__post">
+              <li v-for="m in mails" :key="m.uid">
                 <NuxtLink to="/vereinsheim/post" class="dash__post-link" :class="{ 'dash__post-link--neu': !m.gelesen }">
                   <VereinsheimIcon name="post" class="dash__post-icon" />
                   <span class="dash__post-text"><strong>{{ m.von }}</strong> · {{ m.betreff }}</span>

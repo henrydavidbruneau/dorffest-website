@@ -35,6 +35,7 @@ const { data: artikel } = await useDorfanzeiger({ hervorgehoben: true, limit: 3 
 .geschah {
   padding-block: var(--abstand-sektion) clamp(4rem, 11vw, 10rem);
   background: var(--farbe-pfirsich);
+  overflow-x: clip;
 }
 
 .geschah__titel {
@@ -110,7 +111,8 @@ const { data: artikel } = await useDorfanzeiger({ hervorgehoben: true, limit: 3 
 
 @media (min-width: 48rem) {
   .geschah__zeitung {
-    margin-inline: calc(-1 * min(4.6vw, 4.125rem));
+    /* breiter als der Inhalt, aber nie über den Seitenrand hinaus (sonst Querscrollen auf Tablets) */
+    margin-inline: calc(-1 * min(4.6vw, 4.125rem, var(--seitenrand) - 0.5rem));
   }
 
   .geschah__artikel {

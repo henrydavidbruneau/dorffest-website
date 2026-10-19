@@ -2,7 +2,7 @@
 // { an, betreff, text, antwortAuf? } – antwortAuf = UID im Eingang (für Verlauf + „beantwortet“)
 export default defineEventHandler(async (event) => {
   rateLimit(event, 'vereinsheim-post', 30, 60 * 60 * 1000)
-  if (!(await ich(event)).vorstand) throw fail(403, 'rechte', 'Senden darf nur der Vorstand.')
+  if (!(await istVorstand(event))) throw fail(403, 'rechte', 'Senden darf nur der Vorstand.')
   const body = await leseBody(event)
   const an = email(body.an)
   const betreff = text(body.betreff, 200)

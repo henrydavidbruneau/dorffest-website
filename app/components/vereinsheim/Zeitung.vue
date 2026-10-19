@@ -9,7 +9,7 @@ defineProps<{ titel: string, zusatz?: string, meta?: string }>()
       <BasisKlebeband position="links" farbe="gelb" :drehung="-3" :breite="6" class="vh-zeitung__tape" />
       <BasisKlebeband position="rechts" farbe="flieder" :drehung="3" :breite="6" class="vh-zeitung__tape" />
       <header class="vh-zeitung__kopf">
-        <p v-if="zusatz" class="vh-zeitung__zusatz handschrift">{{ zusatz }}</p>
+        <p v-if="zusatz" class="vh-zeitung__zusatz">{{ zusatz }}</p>
         <h1 class="vh-zeitung__titel">{{ titel }}</h1>
         <p class="vh-zeitung__meta">
           <span>Der Königsdorfer Dorfanzeiger</span>
@@ -47,8 +47,8 @@ defineProps<{ titel: string, zusatz?: string, meta?: string }>()
 
 .vh-zeitung__zusatz {
   margin: 0;
-  font-size: var(--groesse-hand-m);
-  color: var(--farbe-orange-text);
+  font-size: var(--groesse-s);
+  color: var(--vh-gedaempft);
 }
 
 .vh-zeitung__titel {

@@ -195,6 +195,23 @@ const { data: fragen } = await useFaq()
   line-height: 1.7;
 }
 
+/* mobil: Überschrift und Zettel mittig, ohne Figur (die hängt sonst verloren neben dem Zettel) */
+@media (max-width: 55.99rem) {
+  .fragen__links {
+    align-items: center;
+    gap: 3.75rem;
+    text-align: center;
+  }
+
+  .fragen__notiz {
+    margin-left: 0;
+  }
+
+  .fragen__figur {
+    display: none;
+  }
+}
+
 @media (min-width: 56rem) {
   .fragen__raster {
     grid-template-columns: minmax(0, 1fr) minmax(0, 39rem);

@@ -21,7 +21,7 @@ watch(vorschlaege, liste => liste.forEach((v) => {
   notizen[v.id] ??= v.notiz ?? ''
 }), { immediate: true })
 
-async function aendern(v: Vorschlag, daten: Partial<Vorschlag>, text = 'Ab ins Fach!') {
+async function aendern(v: Vorschlag, daten: Partial<Vorschlag>, text = 'Gespeichert.') {
   try {
     await vh.aendern('vorschlaege', v.id, daten)
     zeige(text)
@@ -36,7 +36,7 @@ async function erinnerungLoeschen(e: Erinnerung) {
   if (!window.confirm(`Erinnerung für ${e.email} löschen?`)) return
   try {
     await vh.loeschen('plenum_erinnerungen', e.id)
-    zeige('Zerknüllt und weg.')
+    zeige('Gelöscht.')
     await erinnerungenLaden()
   }
   catch (err) {
@@ -77,7 +77,7 @@ async function adressenKopieren() {
 
 <template>
   <div class="mit">
-    <VereinsheimKopf titel="Ideensammlung" zusatz="Ideen, Angebote und das Plenum" />
+    <VereinsheimKopf hervorhebung="Ideensammlung" zusatz="Vorschläge von außen, die Ideenwand und die Plenum-Erinnerungen" />
     <VereinsheimReiter
       v-model="reiter"
       :reiter="[
@@ -88,36 +88,36 @@ async function adressenKopieren() {
     />
 
     <ul v-if="reiter === 'vorschlaege'" class="mit__vorschlaege">
-      <li v-if="!vorschlaege.length" class="handschrift mit__leer">Noch keine Vorschläge. Die kommen bestimmt!</li>
-      <li v-for="(v, i) in vorschlaege" :key="v.id">
-        <BasisNotizzettel :farbe="v.status === 'neu' ? 'gelb' : 'weiss'" befestigung="pin" :drehung="i % 2 ? 0.8 : -0.8" class="vorschlag">
+      <li v-if="!vorschlaege.length" class="mit__leer">Noch keine Vorschläge. Die kommen bestimmt!</li>
+      <li v-for="v in vorschlaege" :key="v.id">
+        <div class="vh-karte vorschlag">
           <div class="vorschlag__kopf">
             <VereinsheimStempel :status="v.status" />
             <span v-if="v.dorffest" class="vorschlag__marke">Dorffest</span>
             <span v-if="v.selbst_mitmachen" class="vorschlag__marke">macht selbst mit</span>
           </div>
           <p class="vorschlag__idee">{{ v.idee }}</p>
-          <p class="vorschlag__wer handschrift">– {{ v.name }}, {{ datumLang(v.date_created) }} · <a :href="`mailto:${v.email}?subject=${encodeURIComponent('Deine Idee für Königsdorf')}`">{{ v.email }}</a></p>
+          <p class="vorschlag__wer">– {{ v.name }}, {{ datumLang(v.date_created) }} · <a :href="`mailto:${v.email}?subject=${encodeURIComponent('Deine Idee für Königsdorf')}`">{{ v.email }}</a></p>
           <div class="vorschlag__bearbeiten">
             <BasisFeld :model-value="v.status" label="Stand" :name="`status-${v.id}`" :optionen="STATUS" @update:model-value="aendern(v, { status: String($event) }, 'Umgesteckt!')" />
             <BasisFeld v-model="notizen[v.id]" label="Notiz (intern)" :name="`notiz-${v.id}`" mehrzeilig :zeilen="2" />
             <button type="button" class="vorschlag__speichern" :disabled="(notizen[v.id] ?? '') === (v.notiz ?? '')" @click="aendern(v, { notiz: notizen[v.id] || null })">Notiz ablegen</button>
           </div>
-        </BasisNotizzettel>
+        </div>
       </li>
     </ul>
 
     <VereinsheimPinnwand v-else-if="reiter === 'ideenwand'" collection="ideen" leer="Die Ideenwand ist noch leer." />
 
     <div v-else class="mit__plenum">
-      <BasisNotizzettel farbe="creme" befestigung="pin" :drehung="-0.5" class="plenum-liste">
+      <div class="vh-karte plenum-liste">
         <div class="plenum-liste__kopf">
           <p><strong>{{ aktiveErinnerungen.length }}</strong> möchten ans Plenum erinnert werden (bestätigt).</p>
           <BasisKnopf v-if="aktiveErinnerungen.length" groesse="klein" variante="outline" @click="adressenKopieren">Adressen kopieren (BCC)</BasisKnopf>
         </div>
         <form v-if="aktiveErinnerungen.length" class="plenum-liste__senden" @submit.prevent="erinnern">
           <BasisFeld v-model="zusatz" label="Ein paar Worte dazu (optional)" name="zusatz" mehrzeilig :zeilen="3" hinweis="z.B. was auf der Tagesordnung steht. Datum, Ort und Link kommen automatisch dazu." />
-          <BasisKnopf type="submit" :disabled="sendet">{{ sendet ? 'Wird eingeworfen …' : 'Erinnerung ans nächste Plenum verschicken' }}</BasisKnopf>
+          <BasisKnopf type="submit" :disabled="sendet">{{ sendet ? 'Wird gesendet …' : 'Erinnerung ans nächste Plenum verschicken' }}</BasisKnopf>
           <p v-if="zuletztErinnert" class="plenum-liste__zuletzt">Zuletzt verschickt am {{ datumLang(zuletztErinnert) }}.</p>
         </form>
         <table v-if="erinnerungen.length" class="plenum-liste__tabelle">
@@ -132,8 +132,8 @@ async function adressenKopieren() {
             </tr>
           </tbody>
         </table>
-        <p v-else class="handschrift">Noch niemand eingetragen.</p>
-      </BasisNotizzettel>
+        <p v-else >Noch niemand eingetragen.</p>
+      </div>
     </div>
   </div>
 </template>
@@ -147,7 +147,7 @@ async function adressenKopieren() {
 .mit__leer {
   padding: 0.1rem 0.6rem;
   background: rgb(255 253 247 / 0.85);
-  font-size: var(--groesse-hand-l);
+  font-size: var(--groesse-m);
 }
 
 .mit__vorschlaege {
@@ -161,7 +161,6 @@ async function adressenKopieren() {
 
 .vorschlag {
   height: 100%;
-  padding: 2.6rem var(--abstand-m) var(--abstand-m);
 }
 
 .vorschlag__kopf {
@@ -185,7 +184,7 @@ async function adressenKopieren() {
 
 .vorschlag__wer {
   margin: 0 0 var(--abstand-s);
-  font-size: var(--groesse-hand-s);
+  font-size: var(--groesse-xs);
 }
 
 .vorschlag__bearbeiten {
@@ -265,7 +264,7 @@ async function adressenKopieren() {
 }
 
 .plenum-liste__tabelle td {
-  border-bottom: 1px dashed var(--farbe-spaltenlinie);
+  border-bottom: 1px solid var(--vh-rand);
 }
 
 .plenum-liste__weg {

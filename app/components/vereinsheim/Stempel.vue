@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// Status als Stempel (leicht schief, Tinte in der Farbe des Status)
+// Status als ruhiges Etikett mit Farbpunkt (gerade, gut lesbar)
 const props = defineProps<{ status: string | null | undefined }>()
 
 const STEMPEL: Record<string, { text: string, farbe: string }> = {
-  published: { text: 'am Brett', farbe: '#1f7a3a' },
+  published: { text: 'Veröffentlicht', farbe: '#1f7a3a' },
   draft: { text: 'Entwurf', farbe: '#6b6b6b' },
   archived: { text: 'Archiv', farbe: '#6b6b6b' },
   hidden: { text: 'ausgeblendet', farbe: '#a1260d' },
@@ -33,18 +33,25 @@ const stempel = computed(() => STEMPEL[props.status ?? ''] ?? { text: props.stat
 
 <style scoped>
 .stempel {
-  display: inline-block;
-  padding: 0.1rem 0.5rem;
-  border: 2px solid var(--tinte);
-  border-radius: 0.3rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.65rem 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tinte) 10%, white);
   color: var(--tinte);
-  font-family: var(--schrift-display);
-  font-weight: var(--gewicht-display);
-  font-size: 0.85rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-family: var(--schrift-text);
+  font-weight: var(--gewicht-text-mittel);
+  font-size: 0.8rem;
+  line-height: 1.4;
   white-space: nowrap;
-  rotate: -4deg;
-  opacity: 0.9;
+}
+
+.stempel::before {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
 }
 </style>

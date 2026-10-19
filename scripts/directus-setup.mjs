@@ -419,7 +419,7 @@ const COLLECTIONS = [
       idField(),
       statusField([['published', 'Veröffentlicht'], ['draft', 'Entwurf']], 'draft'),
       str('name', { required: true, width: 'half', max: 80 }),
-      text('zitat', { required: true, max: 160 }),
+      text('zitat', { required: true, max: 400 }),
       file('bild', { note: 'Quadratisch', folder: 'stimmen' }),
       str('bild_alt', { width: 'half', max: 200 }),
       sort(),

@@ -1,11 +1,13 @@
 <script setup lang="ts">
-// Bearbeiten-Seite für einen Eintrag: laden, Formular, „Ab ins Fach“ (speichern),
-// „Ans Brett hängen“ (veröffentlichen), „In den Papierkorb“ (löschen mit Rückfrage).
+// Bearbeiten-Seite für einen Eintrag: laden, Formular, Speichern, Veröffentlichen, Löschen (mit Rückfrage).
+// Mit `gruppen` zweispaltig: links der Text, rechts die Einstellungen, jeweils in Abschnitten.
 const props = withDefaults(defineProps<{
   collection: string
   /** ID oder 'neu' */
   id: string
   felder: FeldDef[]
+  /** Abschnitte; ohne Gruppen ein einfaches Formular */
+  gruppen?: GruppeDef[]
   beziehungen?: Record<string, Record<string, string>>
   /** Startwerte für neue Einträge */
   vorlage?: Record<string, unknown>
@@ -20,7 +22,7 @@ const props = withDefaults(defineProps<{
   loeschen?: boolean
   /** Daten vor dem Speichern ergänzen (z.B. Lesedauer schätzen) */
   vorbereiten?: (daten: Record<string, unknown>) => Record<string, unknown>
-}>(), { beziehungen: undefined, vorlage: () => ({}), titelFeld: 'titel', veroeffentlichen: true, loeschen: true, vorbereiten: undefined })
+}>(), { gruppen: undefined, beziehungen: undefined, vorlage: () => ({}), titelFeld: 'titel', veroeffentlichen: true, loeschen: true, vorbereiten: undefined })
 
 const emit = defineEmits<{ gespeichert: [daten: Record<string, unknown>] }>()
 
@@ -48,7 +50,18 @@ async function laden() {
 }
 watch(() => props.id, laden, { immediate: true })
 
-const titel = computed(() => String(daten.value[props.titelFeld] || (neu.value ? `Neuer ${props.art}` : props.art)))
+const titel = computed(() => String(daten.value[props.titelFeld] || (neu.value ? `Neu: ${props.art}` : props.art)))
+
+// Abschnitte mit ihren Feldern; eingeklappte gehen auf, wenn schon etwas drinsteht
+const abschnitte = computed(() => (props.gruppen ?? []).map(g => ({ ...g, felder: props.felder.filter(f => f.gruppe === g.key) })).filter(g => g.felder.length))
+const haupt = computed(() => abschnitte.value.filter(g => g.seite === 'haupt'))
+const rand = computed(() => abschnitte.value.filter(g => g.seite === 'rand'))
+// nach dem Laden entscheiden (nicht beim Tippen, sonst klappt der Abschnitt unter den Fingern zu)
+const ausgefuellt = (felder: FeldDef[]) => felder.some((f) => {
+  const w = original.value[f.feld]
+  return w !== null && w !== undefined && w !== '' && w !== false && !(Array.isArray(w) && !w.length)
+})
+const ungespeichert = computed(() => status.value === 'bereit' && JSON.stringify(daten.value) !== JSON.stringify(original.value))
 const zuletzt = computed(() => {
   const d = original.value as { date_updated?: string, user_updated?: { first_name?: string } }
   return d.date_updated ? `zuletzt bearbeitet ${datumLang(d.date_updated)}${d.user_updated?.first_name ? ` von ${d.user_updated.first_name}` : ''}` : ''
@@ -72,13 +85,13 @@ async function speichern(neuerStatus?: string) {
   try {
     if (neu.value) {
       const angelegt = await vh.anlegen<{ id: number }>(props.collection, geaendert)
-      zeige(neuerStatus === 'published' ? 'Hängt am Brett!' : 'Ab ins Fach!')
+      zeige(neuerStatus === 'published' ? 'Veröffentlicht!' : 'Gespeichert.')
       emit('gespeichert', { ...daten.value, id: angelegt.id })
       await navigateTo(`${props.zurueck}/${angelegt.id}`, { replace: true })
       return
     }
     if (Object.keys(geaendert).length) await vh.aendern(props.collection, props.id, geaendert)
-    zeige(neuerStatus === 'published' ? 'Hängt am Brett!' : neuerStatus === 'draft' ? 'Wieder abgehängt – liegt im Fach.' : 'Ab ins Fach!')
+    zeige(neuerStatus === 'published' ? 'Veröffentlicht!' : neuerStatus === 'draft' ? 'Zurückgezogen – ist jetzt wieder ein Entwurf.' : 'Gespeichert.')
     emit('gespeichert', daten.value)
     await laden()
   }
@@ -89,10 +102,10 @@ async function speichern(neuerStatus?: string) {
 }
 
 async function wegwerfen() {
-  if (!window.confirm(`Wirklich in den Papierkorb? „${titel.value}“ ist dann weg – das lässt sich nicht rückgängig machen.`)) return
+  if (!window.confirm(`„${titel.value}“ wirklich löschen? Das lässt sich nicht rückgängig machen.`)) return
   try {
     await vh.loeschen(props.collection, props.id)
-    zeige('Zerknüllt und weg.')
+    zeige('Gelöscht.')
     await navigateTo(props.zurueck)
   }
   catch (e) {
@@ -100,130 +113,186 @@ async function wegwerfen() {
   }
 }
 
-defineExpose({ daten, speichern })
+defineExpose({ daten, speichern, ungespeichert })
 </script>
 
 <template>
-  <div class="formular-seite">
-    <NuxtLink :to="zurueck" class="formular-seite__zurueck handschrift">← zurück</NuxtLink>
-    <BasisNotizzettel farbe="creme" tape="mitte" tape-farbe="gelb" :drehung="-0.4" class="formular-seite__blatt">
-      <p v-if="status === 'laedt'" class="handschrift formular-seite__laedt">Moment, ich such’s raus …</p>
-      <template v-else>
-        <header class="formular-seite__kopf">
-          <div>
-            <p class="formular-seite__art handschrift">{{ art }}</p>
-            <h1 class="formular-seite__titel">{{ titel }}</h1>
-            <p v-if="zuletzt" class="formular-seite__zuletzt">{{ zuletzt }}</p>
+  <div class="formular-seite" :class="{ 'formular-seite--zweispaltig': abschnitte.length }">
+    <VereinsheimKopf
+      :titel="status === 'laedt' ? art : titel"
+      :zusatz="[neu ? `${art} anlegen` : `${art} bearbeiten`, zuletzt].filter(Boolean).join(' · ')"
+      :zurueck="{ to: zurueck, text: 'Zur Übersicht' }"
+    >
+      <template v-if="veroeffentlichen && !neu && status !== 'laedt'" #meta>
+        <VereinsheimStempel :status="original.status as string" />
+      </template>
+      <slot v-if="status !== 'laedt'" name="oben" :daten="daten" />
+    </VereinsheimKopf>
+
+    <p v-if="status === 'laedt'" class="vh-leer">Wird geladen …</p>
+    <template v-else>
+      <form novalidate @submit.prevent="speichern()">
+        <!-- zweispaltig in Abschnitten -->
+        <div v-if="abschnitte.length" class="formular-seite__raster">
+          <div class="formular-seite__spalte">
+            <component
+              :is="g.einklappbar ? 'details' : 'section'"
+              v-for="g in haupt"
+              :key="g.key"
+              class="vh-karte abschnitt"
+              :open="g.einklappbar ? ausgefuellt(g.felder) || undefined : undefined"
+            >
+              <component :is="g.einklappbar ? 'summary' : 'h2'" class="vh-karte__titel abschnitt__titel">
+                {{ g.titel }}<span v-if="g.einklappbar && g.hinweis" class="abschnitt__hinweis"> · {{ g.hinweis }}</span>
+              </component>
+              <VereinsheimEditor v-model="daten" :felder="g.felder" :beziehungen="beziehungen" />
+            </component>
+            <slot :daten="daten" />
           </div>
-          <VereinsheimStempel v-if="veroeffentlichen && !neu" :status="original.status as string" />
-        </header>
+          <aside class="formular-seite__spalte formular-seite__spalte--rand">
+            <component
+              :is="g.einklappbar ? 'details' : 'section'"
+              v-for="g in rand"
+              :key="g.key"
+              class="vh-karte abschnitt"
+              :open="g.einklappbar ? ausgefuellt(g.felder) || undefined : undefined"
+            >
+              <component :is="g.einklappbar ? 'summary' : 'h2'" class="vh-karte__titel abschnitt__titel">
+                {{ g.titel }}<span v-if="g.einklappbar && g.hinweis" class="abschnitt__hinweis"> · {{ g.hinweis }}</span>
+              </component>
+              <VereinsheimEditor v-model="daten" :felder="g.felder" :beziehungen="beziehungen" eng />
+            </component>
+          </aside>
+        </div>
 
-        <slot name="oben" :daten="daten" />
-
-        <form novalidate @submit.prevent="speichern()">
+        <!-- einfach -->
+        <div v-else class="vh-karte">
           <VereinsheimEditor v-model="daten" :felder="felder" :beziehungen="beziehungen" />
           <slot :daten="daten" />
+        </div>
 
+        <div class="formular-seite__leiste">
           <p v-if="fehlend.length" class="formular-seite__fehlend" role="alert">
             Da fehlt noch was: {{ fehlend.join(', ') }}
           </p>
           <div class="formular-seite__aktionen">
-            <BasisKnopf type="submit" variante="outline" :disabled="status === 'speichert'">
-              {{ status === 'speichert' ? 'Wird abgelegt …' : 'Ab ins Fach (speichern)' }}
-            </BasisKnopf>
             <template v-if="veroeffentlichen">
-              <BasisKnopf v-if="original.status !== 'published'" :disabled="status === 'speichert'" @click="speichern('published')">
-                Ans Brett hängen (veröffentlichen)
+              <BasisKnopf v-if="original.status !== 'published'" groesse="klein" :disabled="status === 'speichert'" @click="speichern('published')">
+                Veröffentlichen
               </BasisKnopf>
-              <BasisKnopf v-else variante="outline" :disabled="status === 'speichert'" @click="speichern('draft')">
-                Wieder abhängen (Entwurf)
+              <BasisKnopf type="submit" groesse="klein" :variante="original.status === 'published' ? 'gefuellt' : 'outline'" :disabled="status === 'speichert'">
+                {{ status === 'speichert' ? 'Speichert …' : original.status === 'published' || neu ? 'Speichern' : 'Als Entwurf speichern' }}
               </BasisKnopf>
             </template>
-            <button v-if="loeschen && !neu" type="button" class="formular-seite__papierkorb" @click="wegwerfen">
-              🗑️ In den Papierkorb
-            </button>
+            <BasisKnopf v-else type="submit" groesse="klein" :disabled="status === 'speichert'">
+              {{ status === 'speichert' ? 'Speichert …' : 'Speichern' }}
+            </BasisKnopf>
+            <slot name="aktionen" :daten="daten" />
+            <span v-if="ungespeichert" class="formular-seite__ungespeichert">ungespeicherte Änderungen</span>
+            <span class="formular-seite__rechts">
+              <button v-if="veroeffentlichen && original.status === 'published'" type="button" class="vh-aktion" :disabled="status === 'speichert'" @click="speichern('draft')">
+                Zurückziehen (Entwurf)
+              </button>
+              <button v-if="loeschen && !neu" type="button" class="vh-aktion vh-aktion--gefahr" @click="wegwerfen">
+                Löschen
+              </button>
+            </span>
           </div>
-        </form>
-      </template>
-    </BasisNotizzettel>
+        </div>
+      </form>
+    </template>
   </div>
 </template>
 
 <style scoped>
 .formular-seite {
-  max-width: 62rem;
+  max-width: 48rem;
   margin-inline: auto;
 }
 
-.formular-seite__zurueck {
-  display: inline-block;
-  margin-bottom: var(--abstand-s);
-  padding: 0.1rem 0.6rem;
-  background: rgb(255 253 247 / 0.85);
-  color: var(--farbe-schwarz);
-  font-size: var(--groesse-hand-m);
-  text-decoration: none;
+.formular-seite--zweispaltig {
+  max-width: 76rem;
 }
 
-.formular-seite__blatt {
-  padding: var(--abstand-l) clamp(1rem, 4vw, 3rem) var(--abstand-l);
-}
 
-.formular-seite__laedt {
-  font-size: var(--groesse-hand-l);
-}
 
-.formular-seite__kopf {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+
+
+
+
+
+.formular-seite__raster {
+  display: grid;
   gap: var(--abstand-m);
-  margin-bottom: var(--abstand-l);
+  align-items: start;
 }
 
-.formular-seite__art {
+.formular-seite__spalte {
+  display: grid;
+  gap: var(--abstand-m);
+  min-width: 0;
+}
+
+@media (min-width: 64rem) {
+  .formular-seite__raster {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+}
+
+.abschnitt__titel {
+  font-size: var(--groesse-m);
+}
+
+summary.abschnitt__titel {
   margin: 0;
-  font-size: var(--groesse-hand-m);
-  color: var(--farbe-orange-text);
+  cursor: pointer;
 }
 
-.formular-seite__titel {
-  margin: 0;
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  line-height: 1;
-  color: var(--farbe-lila);
+details[open] > summary.abschnitt__titel {
+  margin-bottom: var(--abstand-s);
 }
 
-.formular-seite__zuletzt {
-  margin: var(--abstand-2xs) 0 0;
+.abschnitt__hinweis {
+  color: var(--vh-gedaempft);
+  font-weight: var(--gewicht-text);
   font-size: var(--groesse-xs);
 }
 
+/* Aktionsleiste klebt unten am Fenster */
+.formular-seite__leiste {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: var(--abstand-l) calc(-1 * var(--abstand-xs)) 0;
+  padding: var(--abstand-s) var(--abstand-xs);
+  border-top: 1px solid var(--vh-rand);
+  background: color-mix(in srgb, var(--farbe-creme) 94%, transparent);
+  backdrop-filter: blur(6px);
+}
+
 .formular-seite__fehlend {
-  margin: var(--abstand-m) 0 0;
+  margin: 0 0 var(--abstand-s);
   padding: var(--abstand-xs) var(--abstand-s);
-  background: var(--farbe-pfirsich);
   border-left: 4px solid #a1260d;
+  background: var(--farbe-pfirsich);
 }
 
 .formular-seite__aktionen {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--abstand-s);
-  margin-top: var(--abstand-l);
-  padding-top: var(--abstand-m);
-  border-top: 2px dashed var(--farbe-spaltenlinie);
+  gap: var(--abstand-xs) var(--abstand-s);
 }
 
-.formular-seite__papierkorb {
+.formular-seite__ungespeichert {
+  color: var(--farbe-orange-text);
+  font-size: var(--groesse-xs);
+}
+
+.formular-seite__rechts {
+  display: flex;
+  gap: var(--abstand-m);
   margin-left: auto;
-  padding: 0.4rem 0.8rem;
-  border: 0;
-  background: none;
-  color: #a1260d;
-  font: inherit;
-  text-decoration: underline;
-  cursor: pointer;
+  font-size: var(--groesse-xs);
 }
 </style>

@@ -6,6 +6,8 @@ const props = defineProps<{
   felder: FeldDef[]
   /** Optionen für Felder vom Typ `beziehung`: feld → { id: Beschriftung } */
   beziehungen?: Record<string, Record<string, string>>
+  /** schmale Spalte: alles untereinander */
+  eng?: boolean
 }>()
 
 const sichtbar = computed(() => props.felder.filter(f => !f.wenn || f.wenn(daten.value)))
@@ -44,7 +46,7 @@ const EINGABETYP: Partial<Record<FeldDef['typ'], string>> = { zahl: 'number', da
 </script>
 
 <template>
-  <div class="editor">
+  <div class="editor" :class="{ 'editor--eng': eng }">
     <template v-for="f in sichtbar" :key="f.feld">
       <label v-if="f.typ === 'janein'" class="editor__janein" :class="{ 'editor__feld--breit': f.breit }">
         <input type="checkbox" :checked="!!daten[f.feld]" @change="daten = { ...daten, [f.feld]: ($event.target as HTMLInputElement).checked }">
@@ -81,7 +83,7 @@ const EINGABETYP: Partial<Record<FeldDef['typ'], string>> = { zahl: 'number', da
         :zeilen="4"
         :optionen="f.typ === 'auswahl' || f.typ === 'beziehung' ? optionen(f) : undefined"
         class="editor__feld"
-        :class="{ 'editor__feld--breit': f.breit || f.typ === 'mehrzeilig' }"
+        :class="{ 'editor__feld--breit': f.breit || f.typ === 'mehrzeilig', 'editor__feld--gross': f.gross }"
       />
     </template>
   </div>
@@ -92,6 +94,12 @@ const EINGABETYP: Partial<Record<FeldDef['typ'], string>> = { zahl: 'number', da
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
   gap: var(--abstand-m) var(--abstand-l);
+}
+
+/* in der schmalen Randspalte alles untereinander */
+.editor--eng {
+  grid-template-columns: 1fr;
+  gap: var(--abstand-s);
 }
 
 .editor__feld--breit {
@@ -115,5 +123,6 @@ const EINGABETYP: Partial<Record<FeldDef['typ'], string>> = { zahl: 'number', da
 
 .editor__janein small {
   font-size: var(--groesse-xs);
+  color: var(--vh-gedaempft);
 }
 </style>

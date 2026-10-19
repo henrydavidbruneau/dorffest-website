@@ -1,5 +1,21 @@
 <script setup lang="ts">
+// Grundwerte fürs Teilen (WhatsApp, Signal …) und für Suchmaschinen; Seiten überschreiben sie
+const route = useRoute()
+const url = useRequestURL()
+const kanonisch = computed(() => `${url.origin}${route.path === '/' ? '/' : route.path.replace(/\/$/, '')}`)
+
+useSeoMeta({
+  ogSiteName: 'Königsdorf rückt zusammen',
+  ogLocale: 'de_DE',
+  ogType: 'website',
+  ogUrl: kanonisch,
+  ogImage: `${url.origin}/fotos/dorffest-buffet.webp`,
+  ogImageAlt: 'Das große Buffet beim Dorffest in Königsdorf',
+  twitterCard: 'summary_large_image',
+})
+
 useHead({
+  link: [{ rel: 'canonical', href: kanonisch }],
   // früh setzen, damit Einblend-Animationen ihren Startzustand nur mit JavaScript bekommen
   script: [{ innerHTML: 'document.documentElement.classList.add(\'js\')', tagPosition: 'head' }],
   titleTemplate: (titel?: string) =>

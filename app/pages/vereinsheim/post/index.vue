@@ -4,32 +4,48 @@
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
 useSeoMeta({ title: 'Post · Vereinsheim', robots: 'noindex, nofollow' })
 
-interface MailKopf { uid: number, von: string, vonAdresse: string, an: string, betreff: string, datum: string, gelesen: boolean, beantwortet: boolean }
-interface Mail extends MailKopf { text: string, anhaenge: { name: string, groesse: number }[] }
-
 const { ich } = useVereinsheimIch()
 const { zeige, fehler } = useVereinsheimMeldung()
 const verein = useVerein()
+const post = useVereinsheimPost()
 
-const ordner = ref<'eingang' | 'gesendet'>('eingang')
-const { data, status, refresh } = useAsyncData(
-  'vh-post',
-  () => $fetch<{ eingerichtet: boolean, webmail: string, mails: MailKopf[] }>('/api/vereinsheim/post', { query: { ordner: ordner.value } }),
-  { server: false, watch: [ordner] },
-)
-watch(ordner, () => {
+const ordner = ref<PostOrdner>('eingang')
+const data = computed(() => post.listen.value[ordner.value] ?? null)
+const laedtListe = computed(() => !!post.laedt.value[ordner.value])
+
+// Gemerkte Liste sofort zeigen, im Hintergrund nachschauen; danach jede Minute
+onMounted(() => post.aktualisieren(ordner.value))
+watch(ordner, (o) => {
   offen.value = null
   entwurf.value = null
+  post.aktualisieren(o)
+})
+useAutoAktualisierung(() => post.aktualisieren(ordner.value))
+
+async function frischHolen() {
+  await post.aktualisieren(ordner.value, true)
+  if (!post.fehler.value) zeige('Postfach ist aktuell.')
+}
+
+// „vor 2 Min. aktualisiert“ – tickt mit
+const jetzt = ref(Date.now())
+useAutoAktualisierung(() => (jetzt.value = Date.now()), 15_000)
+const aktualisiertText = computed(() => {
+  if (!data.value) return ''
+  const s = Math.round((jetzt.value - data.value.um) / 1000)
+  return s < 60 ? 'gerade aktualisiert' : `vor ${Math.round(s / 60)} Min. aktualisiert`
 })
 
-const offen = ref<Mail | null>(null)
+const offen = ref<PostMail | null>(null)
 const laedt = ref<number | null>(null)
 
-async function oeffnen(m: MailKopf) {
-  laedt.value = m.uid
+async function oeffnen(m: PostMailKopf) {
   entwurf.value = null
+  const o = ordner.value
+  laedt.value = m.uid
   try {
-    offen.value = await $fetch<Mail>(`/api/vereinsheim/post/${m.uid}`, { query: { ordner: ordner.value } })
+    const mail = await post.mail(o, m.uid)
+    if (o === ordner.value) offen.value = mail
   }
   catch (e) {
     fehler(e)
@@ -49,7 +65,7 @@ function neueMail() {
   entwurf.value = { an: '', betreff: '', text: gruss.value }
 }
 
-function antworten(m: Mail) {
+function antworten(m: PostMail) {
   const zitat = m.text.split('\n').slice(0, 60).map(z => `> ${z}`).join('\n')
   entwurf.value = {
     an: m.vonAdresse,
@@ -67,7 +83,8 @@ async function senden() {
     zeige(r.weg === 'postfach' ? 'Ab in die Post!' : 'Ab in die Post! (über Brevo verschickt)')
     if (offen.value && entwurf.value.antwortAuf) offen.value = { ...offen.value, beantwortet: true }
     entwurf.value = null
-    await refresh()
+    post.vergessen()
+    await post.aktualisieren(ordner.value, true)
   }
   catch (e) {
     fehler(e)
@@ -89,28 +106,40 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
 
 <template>
   <div class="post">
-    <VereinsheimKopf titel="Post" :zusatz="verein.kontakt_email">
+    <VereinsheimKopf titel="Die" hervorhebung="Post" :zusatz="`Kontakt-Postfach ${verein.kontakt_email}`">
       <template v-if="data?.eingerichtet">
         <BasisKnopf groesse="klein" @click="neueMail">+ Neue Mail</BasisKnopf>
-        <BasisKnopf variante="outline" groesse="klein" @click="refresh()">Briefkasten leeren</BasisKnopf>
+        <BasisKnopf variante="outline" groesse="klein" :disabled="laedtListe" @click="frischHolen">{{ laedtListe ? 'Schaut nach …' : 'Aktualisieren' }}</BasisKnopf>
       </template>
       <BasisKnopf v-if="data?.webmail" :to="data.webmail" target="_blank" variante="outline" groesse="klein">Webmail ↗</BasisKnopf>
     </VereinsheimKopf>
 
-    <BasisNotizzettel v-if="data && !data.eingerichtet" farbe="pfirsich" tape="mitte" :drehung="-0.5" class="post__fehlt">
+    <div v-if="data && !data.eingerichtet" class="vh-karte post__fehlt">
       <h2>Noch kein Postfach angeschlossen</h2>
       <p>Sobald die Zugangsdaten des Postfachs auf Netlify stehen (<code>NUXT_IMAP_HOST</code>, <code>NUXT_IMAP_BENUTZER</code>, <code>NUXT_IMAP_PASSWORT</code>), liegt die Post hier.</p>
-    </BasisNotizzettel>
+    </div>
 
     <template v-else>
-      <VereinsheimReiter v-model="ordner" :reiter="[{ key: 'eingang', text: 'Eingang' }, { key: 'gesendet', text: 'Gesendet' }]" />
+      <div class="post__leiste">
+        <VereinsheimReiter v-model="ordner" :reiter="[{ key: 'eingang', text: 'Eingang' }, { key: 'gesendet', text: 'Gesendet' }]" />
+        <p class="post__stand" aria-live="polite">{{ laedtListe && data ? 'schaut nach neuer Post …' : aktualisiertText }}</p>
+      </div>
 
       <div class="post__raster">
-        <ul class="post__liste" :aria-label="ordner === 'eingang' ? 'Eingang' : 'Gesendet'">
-          <li v-if="status === 'pending'" class="handschrift post__hinweis">Schaue in den Briefkasten …</li>
-          <li v-else-if="!data?.mails.length" class="handschrift post__hinweis">{{ ordner === 'eingang' ? 'Der Briefkasten ist leer.' : 'Noch nichts verschickt.' }}</li>
+        <ul class="post__liste vh-karte" :aria-label="ordner === 'eingang' ? 'Eingang' : 'Gesendet'">
+          <li v-if="!data && laedtListe" class="post__hinweis">Post wird geholt …</li>
+          <li v-else-if="!data && post.fehler.value" class="post__hinweis" role="alert">{{ post.fehler.value }}</li>
+          <li v-else-if="data && !data.mails.length" class="post__hinweis">{{ ordner === 'eingang' ? 'Der Briefkasten ist leer.' : 'Noch nichts verschickt.' }}</li>
           <li v-for="m in data?.mails ?? []" :key="m.uid">
-            <button type="button" class="brief" :class="{ 'brief--neu': !m.gelesen && ordner === 'eingang', 'brief--offen': offen?.uid === m.uid }" :aria-pressed="offen?.uid === m.uid" @click="oeffnen(m)">
+            <button
+              type="button"
+              class="brief"
+              :class="{ 'brief--neu': !m.gelesen && ordner === 'eingang', 'brief--offen': offen?.uid === m.uid }"
+              :aria-pressed="offen?.uid === m.uid"
+              @pointerenter="post.vorladen(ordner, m.uid)"
+              @focus="post.vorladen(ordner, m.uid)"
+              @click="oeffnen(m)"
+            >
               <span class="brief__von">
                 <span v-if="m.beantwortet" class="brief__beantwortet" title="beantwortet">↩</span>
                 {{ ordner === 'eingang' ? m.von : `an ${m.an}` }}
@@ -130,7 +159,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
             <BasisFeld v-model="entwurf.betreff" label="Betreff" name="betreff" required :maxlength="200" />
             <BasisFeld v-model="entwurf.text" label="Text" name="text" mehrzeilig :zeilen="16" required />
             <div class="schreiben__knoepfe">
-              <BasisKnopf type="submit" :disabled="sendet">{{ sendet ? 'Wird eingeworfen …' : 'Senden' }}</BasisKnopf>
+              <BasisKnopf type="submit" :disabled="sendet">{{ sendet ? 'Wird gesendet …' : 'Senden' }}</BasisKnopf>
               <button type="button" class="schreiben__weg" @click="verwerfen">Verwerfen</button>
             </div>
           </form>
@@ -154,7 +183,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
             </div>
           </article>
 
-          <p v-else class="handschrift post__hinweis">← Brief aussuchen oder eine neue Mail schreiben</p>
+          <p v-else class="post__hinweis">Mail links auswählen oder eine neue schreiben.</p>
         </div>
       </div>
     </template>
@@ -168,10 +197,28 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
 }
 
 .post__hinweis {
-  padding: var(--abstand-s);
-  font-size: var(--groesse-hand-m);
-  color: var(--farbe-orange-text);
+  margin: 0;
+  padding: var(--abstand-m);
+  color: var(--vh-gedaempft);
   list-style: none;
+}
+
+.post__leiste {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--abstand-xs) var(--abstand-m);
+  margin-bottom: var(--abstand-m);
+}
+
+.post__leiste :deep(.unterreiter) {
+  margin: 0;
+}
+
+.post__stand {
+  margin: 0;
+  color: var(--vh-gedaempft);
+  font-size: var(--groesse-xs);
 }
 
 .post__fehlt {
@@ -197,8 +244,9 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
   flex-direction: column;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  padding: 0;
   list-style: none;
-  border-top: var(--strich-dicke) dashed var(--farbe-orange);
 }
 
 .brief {
@@ -208,7 +256,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
   width: 100%;
   padding: var(--abstand-xs) var(--abstand-s);
   border: 0;
-  border-bottom: 1px dashed var(--farbe-spaltenlinie);
+  border-bottom: 1px solid var(--vh-rand);
   background: none;
   font: inherit;
   text-align: left;
@@ -221,7 +269,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
 }
 
 .brief--offen {
-  box-shadow: inset 4px 0 0 var(--farbe-orange);
+  box-shadow: inset 4px 0 0 var(--farbe-lila);
 }
 
 .brief__von {
@@ -242,7 +290,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
 
 .brief__zeit {
   font-size: var(--groesse-xs);
-  color: var(--farbe-orange-text);
+  color: var(--vh-gedaempft);
 }
 
 .brief__betreff {
@@ -256,15 +304,18 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
 .post__mail,
 .schreiben {
   padding: var(--abstand-l);
-  border-radius: var(--radius-l);
+  border: 1px solid var(--vh-rand);
+  border-radius: var(--vh-radius);
   background: var(--farbe-weiss);
-  box-shadow: var(--schatten-zettel);
+  box-shadow: var(--vh-schatten);
 }
 
 .post__kopf h2 {
   margin: 0 0 var(--abstand-2xs);
-  font-size: var(--groesse-h4);
-  color: var(--farbe-lila);
+  font-family: var(--schrift-text);
+  font-weight: var(--gewicht-text-fett);
+  font-size: var(--groesse-l);
+  text-transform: none;
 }
 
 .post__kopf p {
@@ -279,7 +330,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
 .post__text {
   margin-top: var(--abstand-m);
   padding-top: var(--abstand-m);
-  border-top: var(--strich-dicke) dashed var(--farbe-orange);
+  border-top: 1px solid var(--vh-rand);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -296,16 +347,12 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
   display: flex;
   flex-direction: column;
   gap: var(--abstand-s);
-  background: var(--farbe-pfirsich);
 }
 
 .schreiben__titel {
   margin: 0;
-  font-family: var(--schrift-display);
-  font-weight: var(--gewicht-display);
-  font-size: var(--groesse-h4);
-  text-transform: uppercase;
-  color: var(--farbe-lila);
+  font-weight: var(--gewicht-text-fett);
+  font-size: var(--groesse-l);
 }
 
 .schreiben__von {

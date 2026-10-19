@@ -69,7 +69,7 @@ async function vereinSpeichern() {
   try {
     await vh.einzelAendern('verein', Object.fromEntries(FELDER_VEREIN.map(f => [f.feld, verein.value[f.feld] ?? null])))
     vereinOriginal.value = JSON.stringify(verein.value)
-    zeige('Ab ins Fach! Die Website zeigt es in ein paar Minuten.')
+    zeige('Gespeichert. Die Website zeigt es in ein paar Minuten.')
   }
   catch (e) {
     fehler(e)
@@ -81,7 +81,7 @@ const ART: Record<string, string> = { foerder: 'Fördermitglied', regulaer: 'reg
 
 <template>
   <div class="mitglieder">
-    <VereinsheimKopf titel="Mitglieder" zusatz="Nur für den Vorstand">
+    <VereinsheimKopf titel="Unsere" hervorhebung="Mitglieder" zusatz="Nur für den Vorstand">
       <template v-if="reiter === 'liste'">
         <BasisKnopf variante="outline" groesse="klein" @click="csv">CSV</BasisKnopf>
         <BasisKnopf groesse="klein" to="/vereinsheim/mitglieder/neu">+ Mitglied</BasisKnopf>
@@ -90,11 +90,11 @@ const ART: Record<string, string> = { foerder: 'Fördermitglied', regulaer: 'reg
     <VereinsheimReiter v-model="reiter" :reiter="[{ key: 'antraege', text: 'Anträge', anzahl: offen.length }, { key: 'liste', text: `Mitgliederliste (${aktive.length})` }, { key: 'verein', text: 'Vereinsdaten' }]" />
 
     <div v-if="reiter === 'antraege'">
-      <p v-if="!offen.length" class="handschrift mitglieder__leer">Keine offenen Anträge. Der Vorstand darf Kuchen essen.</p>
+      <p v-if="!offen.length" class="mitglieder__leer">Keine offenen Anträge. Der Vorstand darf Kuchen essen.</p>
       <ul class="antraege">
         <li v-for="a in offen" :key="a.id">
-          <BasisNotizzettel farbe="weiss" befestigung="klammer" :drehung="-0.6" class="antrag">
-            <p class="antrag__art handschrift">{{ ART[a.art] }} · {{ euro(a.beitrag_jahr) }} im Jahr</p>
+          <div class="vh-karte antrag">
+            <p class="antrag__art">{{ ART[a.art] }} · {{ euro(a.beitrag_jahr) }} im Jahr</p>
             <h2>{{ a.vorname }} {{ a.nachname }}</h2>
             <p>{{ a.strasse }}, {{ a.plz }} {{ a.ort }}<br><a :href="`mailto:${a.email}`">{{ a.email }}</a>{{ a.telefon ? ` · ${a.telefon}` : '' }}</p>
             <p v-if="a.art === 'regulaer'" class="antrag__plenum">{{ a.plenum_besucht ? '✓ war laut eigener Angabe schon beim Plenum' : '⚠ noch nicht beim Plenum gewesen' }}</p>
@@ -104,7 +104,7 @@ const ART: Record<string, string> = { foerder: 'Fördermitglied', regulaer: 'reg
               <BasisKnopf :disabled="arbeitet" @click="entscheiden(a, 'annehmen')">Aufnehmen</BasisKnopf>
               <BasisKnopf variante="outline" :disabled="arbeitet" @click="entscheiden(a, 'ablehnen')">Ablehnen</BasisKnopf>
             </div>
-          </BasisNotizzettel>
+          </div>
         </li>
       </ul>
       <details v-if="entschieden.length" class="mitglieder__erledigt">
@@ -118,13 +118,13 @@ const ART: Record<string, string> = { foerder: 'Fördermitglied', regulaer: 'reg
       </details>
     </div>
 
-    <BasisNotizzettel v-else-if="reiter === 'verein'" farbe="creme" tape="mitte" :drehung="-0.4" class="vereinsdaten">
+    <div v-else-if="reiter === 'verein'" class="vh-karte vereinsdaten">
       <p>Diese Angaben stehen auf der Website (Fuß, Kontakt, Mitglied werden) und in den Mails.</p>
       <form @submit.prevent="vereinSpeichern">
         <VereinsheimEditor v-model="verein" :felder="FELDER_VEREIN" />
-        <BasisKnopf type="submit" :disabled="JSON.stringify(verein) === vereinOriginal">Ab ins Fach (speichern)</BasisKnopf>
+        <BasisKnopf type="submit" :disabled="JSON.stringify(verein) === vereinOriginal">Speichern</BasisKnopf>
       </form>
-    </BasisNotizzettel>
+    </div>
 
     <div v-else class="liste">
       <table class="liste__tabelle">
@@ -142,7 +142,7 @@ const ART: Record<string, string> = { foerder: 'Fördermitglied', regulaer: 'reg
           </tr>
         </tbody>
       </table>
-      <p v-if="!data.mitglieder.length" class="handschrift">Noch keine Mitglieder eingetragen.</p>
+      <p v-if="!data.mitglieder.length" >Noch keine Mitglieder eingetragen.</p>
     </div>
   </div>
 </template>
@@ -157,7 +157,7 @@ const ART: Record<string, string> = { foerder: 'Fördermitglied', regulaer: 'reg
   display: inline-block;
   padding: 0.1rem 0.6rem;
   background: rgb(255 253 247 / 0.85);
-  font-size: var(--groesse-hand-l);
+  font-size: var(--groesse-m);
 }
 
 .antraege {
@@ -171,7 +171,6 @@ const ART: Record<string, string> = { foerder: 'Fördermitglied', regulaer: 'reg
 
 .antrag {
   height: 100%;
-  padding: 3.2rem var(--abstand-m) var(--abstand-m);
 }
 
 .antrag h2 {
@@ -185,8 +184,8 @@ const ART: Record<string, string> = { foerder: 'Fördermitglied', regulaer: 'reg
 }
 
 .antrag__art {
-  font-size: var(--groesse-hand-m);
-  color: var(--farbe-orange-text);
+  font-size: var(--groesse-s);
+  color: var(--vh-gedaempft);
 }
 
 .antrag__nachricht {
@@ -256,7 +255,7 @@ const ART: Record<string, string> = { foerder: 'Fördermitglied', regulaer: 'reg
 }
 
 .liste__tabelle td {
-  border-bottom: 1px dashed var(--farbe-spaltenlinie);
+  border-bottom: 1px solid var(--vh-rand);
 }
 
 .liste__rueckstand {

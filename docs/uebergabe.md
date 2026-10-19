@@ -24,9 +24,21 @@ wo wir gerade sind und was als Nächstes kommt.
   auf das Postfach angelegt (vorher hatte die Domain ohne Umlaute gar keine Mail!). Bruno hat Empfang
   und Antworten erfolgreich getestet. `NUXT_IMAP_*` sind auf Netlify gesetzt (Passwort als Secret).
 
+## Zuletzt erledigt (19.10.2026, zweite Session)
+
+- **Vereinsheim übersichtlicher:** lila Seitenköpfe mit Hervorhebung, Navigation mit „Diverses“ (Ideensammlung, Über uns,
+  Mitglieder), neuer Login ohne Tür, „Tschüss“ führt zur Website, kaum noch Reenie Beanie bei Funktionen,
+  ruhige Formulare (durchgezogene Rahmen), Bearbeiten-Seiten zweispaltig mit Abschnitten und fester Aktionsleiste,
+  Markdown-Werkzeugleiste, Terminliste neu (nach Monat, Kalenderblatt, Anmelde-Balken, Menü „⋯“).
+- **Post schneller + automatisch aktuell:** siehe `DIRECTUS.md` → Post. Noch auf Netlify mit dem echten Postfach testen.
+- Footer: „Vereinsheim“ als normaler Link unter „Verein“. Stimmen-Zitate bis 400 Zeichen (lange werden kleiner gesetzt).
+- Phase 8 begonnen: SEO-Grundwerte (og:*, Canonical), `robots.txt`, Mobil: Hero mittig, „Fragen?“ ohne Figur und
+  zentriert, Newsletter-Zettel im Dorfanzeiger mobil gerade, Querscrollen bei Tablets behoben.
+
 ## Offen / als Nächstes
 
-1. **Phase 8:** rechtliche Seiten mit echten Inhalten, 404, SEO-Meta je Seite prüfen, Feinschliff Mobile.
+1. **Phase 8:** rechtliche Seiten mit echten Inhalten (Impressum: Vorstand, Registereintrag, Verantwortliche*r nach
+   § 18 MStV – Angaben von Bruno nötig), Mobil-Feinschliff weiter Seite für Seite.
 2. **Datenschutz** (`app/inhalte/datenschutz.md`, Entwurf): Brevo, Cloudflare Turnstile, Directus
    (Hetzner) und das Lesen/Senden des Kontakt-Postfachs (IONOS) ergänzen. Bruno fragen, bevor es live geht.
 3. Vor dem Livegang `/komponenten` löschen; Stimmen-Zitate (außer Thomas) sind noch Platzhalter;

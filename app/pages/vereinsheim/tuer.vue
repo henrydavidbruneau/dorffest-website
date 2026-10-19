@@ -1,13 +1,13 @@
 <script setup lang="ts">
-// Eingang zum Vereinsheim: Holztür mit Schild, Login auf einem Karteikärtchen.
-// Nach dem Anmelden geht die Tür kurz auf (ohne Animation bei reduced motion).
+// Eingang zum Vereinsheim: schlichte Anmeldekarte auf lila Grund (Benutzername oder E-Mail + Passwort)
 definePageMeta({ layout: false })
 useSeoMeta({ title: 'Vereinsheim', robots: 'noindex, nofollow' })
 
 const route = useRoute()
 const { ich, laden } = useVereinsheimIch()
+const verein = useVerein()
 const form = reactive({ kennung: '', passwort: '', turnstile: '' })
-const status = ref<'bereit' | 'sendet' | 'auf' | 'fehler'>('bereit')
+const status = ref<'bereit' | 'sendet' | 'fehler'>('bereit')
 const fehler = ref('')
 
 const weiter = computed(() => {
@@ -26,9 +26,7 @@ async function reinkommen() {
   try {
     await $fetch('/api/vereinsheim/login', { method: 'POST', body: { ...form } })
     await laden()
-    status.value = 'auf'
-    const ruhig = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    setTimeout(() => navigateTo(weiter.value), ruhig ? 0 : 900)
+    await navigateTo(weiter.value)
   }
   catch (e) {
     fehler.value = vhFehlertext(e)
@@ -39,168 +37,139 @@ async function reinkommen() {
 </script>
 
 <template>
-  <main class="tuer-seite">
-    <div class="tuer" :class="{ 'tuer--auf': status === 'auf' }">
-      <div class="tuer__licht" aria-hidden="true" />
-      <div class="tuer__blatt">
-        <div class="tuer__schild">
-          <img src="/logo-mobil.svg" alt="Königsdorf rückt zusammen" width="512" height="245" class="tuer__logo">
-          <h1 class="tuer__titel">Vereinsheim</h1>
-          <p class="tuer__untertitel handschrift">nur für Mitglieder &amp; Freund*innen</p>
-        </div>
+  <main class="login">
+    <div class="login__karte">
+      <header class="login__kopf">
+        <img src="/logo-mobil.svg" alt="Königsdorf rückt zusammen" width="512" height="245" class="login__logo">
+        <h1 class="login__titel">Vereinsheim</h1>
+        <p class="login__text">Der interne Bereich für Mitglieder: Termine, Dorfanzeiger, Kasse und mehr.</p>
+      </header>
 
-        <BasisNotizzettel farbe="creme" befestigung="pin" :drehung="-1.5" class="tuer__karte">
-          <p v-if="route.query.tschuess && status === 'bereit'" class="tuer__hinweis handschrift" role="status">
-            Tschüss! Bis bald im Vereinsheim.
-          </p>
-          <form class="tuer__form" novalidate @submit.prevent="reinkommen">
-            <BasisFeld v-model="form.kennung" label="Benutzername oder E-Mail" name="kennung" autocomplete="username" required />
-            <BasisFeld v-model="form.passwort" label="Passwort" type="password" name="passwort" autocomplete="current-password" required />
-            <BasisTurnstile v-model="form.turnstile" />
-            <p v-if="status === 'fehler'" class="tuer__fehler" role="alert">{{ fehler }}</p>
-            <BasisKnopf type="submit" :disabled="status === 'sendet' || status === 'auf'">
-              {{ status === 'sendet' ? 'Schlüssel dreht sich …' : status === 'auf' ? 'Komm rein!' : 'Reinkommen' }}
-            </BasisKnopf>
-          </form>
-          <p class="tuer__klein">
-            Passwort vergessen oder noch kein Zugang? Schreib dem Vorstand:
-            <a href="mailto:kontakt@koenigsdorf-rueckt-zusammen.de">kontakt@koenigsdorf-rueckt-zusammen.de</a>
-          </p>
-        </BasisNotizzettel>
+      <form class="login__form" novalidate @submit.prevent="reinkommen">
+        <BasisFeld v-model="form.kennung" label="Benutzername oder E-Mail" name="kennung" autocomplete="username" required />
+        <BasisFeld v-model="form.passwort" label="Passwort" type="password" name="passwort" autocomplete="current-password" required />
+        <BasisTurnstile v-model="form.turnstile" />
+        <p v-if="status === 'fehler'" class="login__fehler" role="alert">{{ fehler }}</p>
+        <BasisKnopf type="submit" class="login__knopf" :disabled="status === 'sendet'">
+          {{ status === 'sendet' ? 'Anmelden …' : 'Anmelden' }}
+        </BasisKnopf>
+      </form>
 
-        <span class="tuer__klinke" aria-hidden="true" />
-      </div>
+      <p class="login__hilfe">
+        Passwort vergessen oder noch kein Zugang? Schreib dem Vorstand:<br>
+        <a :href="`mailto:${verein.kontakt_email}`">{{ verein.kontakt_email }}</a>
+      </p>
     </div>
-    <NuxtLink to="/" class="tuer__zurueck">← zurück zur Website</NuxtLink>
+    <NuxtLink to="/" class="login__zurueck">← zurück zur Website</NuxtLink>
   </main>
 </template>
 
 <style scoped>
-.tuer-seite {
-  --holz: #6e4526;
-  --holz-hell: #93603a;
-  display: grid;
-  place-items: center;
+.login {
+  --farbe-fokus: var(--farbe-gelb);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: var(--abstand-m);
   min-height: 100svh;
   padding: var(--abstand-l) var(--seitenrand);
-  background:
-    linear-gradient(180deg, transparent 82%, rgb(0 0 0 / 0.25) 82%),
-    var(--farbe-lila);
+  background: var(--farbe-lila);
 }
 
-.tuer {
-  position: relative;
-  width: min(30rem, 100%);
-  perspective: 1600px;
+.login__karte {
+  --farbe-fokus: var(--farbe-lila);
+  width: min(26rem, 100%);
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  border-radius: 1.25rem;
+  background: var(--farbe-creme);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 0.3);
 }
 
-/* warmes Licht hinter der Tür, sichtbar wenn sie aufgeht */
-.tuer__licht {
-  position: absolute;
-  inset: 0;
-  border-radius: 12rem 12rem 0.5rem 0.5rem;
-  background: radial-gradient(circle at 50% 40%, var(--farbe-gelb), var(--farbe-orange));
+.login__kopf {
+  margin-bottom: var(--abstand-m);
+  text-align: center;
 }
 
-.tuer__blatt {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--abstand-m);
-  padding: var(--abstand-l) var(--abstand-m) var(--abstand-xl);
-  border: 3px solid #3d2513;
-  border-radius: 12rem 12rem 0.5rem 0.5rem;
-  background:
-    repeating-linear-gradient(90deg, rgb(0 0 0 / 0.07) 0 2px, transparent 2px 3.5rem),
-    repeating-linear-gradient(90deg, rgb(255 255 255 / 0.04) 0 1px, transparent 1px 7px),
-    linear-gradient(180deg, var(--holz-hell), var(--holz));
-  box-shadow: 0 12px 30px rgb(0 0 0 / 0.35);
-  transform-origin: left center;
-  transition: transform 0.9s cubic-bezier(0.5, 0, 0.3, 1);
-}
-
-.tuer--auf .tuer__blatt {
-  transform: rotateY(-75deg);
-}
-
-.tuer__schild {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: var(--abstand-s) var(--abstand-m);
-  border: 2px solid var(--farbe-schwarz);
-  border-radius: var(--radius-m);
-  background: var(--farbe-gelb);
-  box-shadow: 3px 3px 0 rgb(0 0 0 / 0.35);
-  rotate: 1deg;
-}
-
-.tuer__logo {
+.login__logo {
+  display: block;
   width: 7rem;
+  margin-inline: auto;
   height: auto;
 }
 
-.tuer__titel {
-  margin: 0.2rem 0 0;
-  font-size: clamp(2rem, 6vw, 3rem);
+.login__titel {
+  margin: var(--abstand-s) 0 0;
+  font-size: clamp(2.25rem, 7vw, 2.75rem);
   line-height: 1;
-  color: var(--farbe-schwarz);
+  color: var(--farbe-lila);
 }
 
-.tuer__untertitel {
-  margin: 0;
-  font-size: var(--groesse-hand-s);
-  color: var(--farbe-orange-text);
+.login__text {
+  margin: var(--abstand-xs) 0 0;
+  font-size: var(--groesse-xs);
+  color: #6b6259;
 }
 
-.tuer__karte {
-  width: 100%;
-  padding: 2.8rem var(--abstand-m) var(--abstand-m);
-}
-
-.tuer__form {
+.login__form {
   display: flex;
   flex-direction: column;
   gap: var(--abstand-s);
 }
 
-.tuer__hinweis {
-  margin: 0 0 var(--abstand-xs);
-  font-size: var(--groesse-hand-m);
-  color: var(--farbe-lila);
+/* Felder wie im Vereinsheim: durchgezogener, heller Rahmen */
+.login__form :deep(.feld__label) {
+  font-family: var(--schrift-text);
+  font-weight: var(--gewicht-text-mittel);
+  font-size: var(--groesse-xs);
+  text-transform: none;
 }
 
-.tuer__fehler {
+.login__form :deep(.feld__optional) {
+  display: none;
+}
+
+.login__form :deep(.feld__eingabe) {
+  border: 1.5px solid #c9bfb0;
+  border-radius: 0.6rem;
+  background: var(--farbe-weiss);
+}
+
+.login__form :deep(.feld__eingabe:focus) {
+  border-color: var(--farbe-lila);
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(122 42 126 / 0.18);
+}
+
+.login__knopf {
+  width: 100%;
+  margin-top: var(--abstand-2xs);
+}
+
+.login__fehler {
   margin: 0;
-  color: #a1260d;
-  font-weight: var(--gewicht-text-normal);
-}
-
-.tuer__klein {
-  margin: var(--abstand-s) 0 0;
+  padding: var(--abstand-xs) var(--abstand-s);
+  border-left: 4px solid #a1260d;
+  background: var(--farbe-pfirsich);
   font-size: var(--groesse-xs);
 }
 
-.tuer__klinke {
-  position: absolute;
-  right: 1.4rem;
-  top: 58%;
-  width: 1.1rem;
-  height: 2.8rem;
-  border-radius: 0.6rem;
-  background: linear-gradient(90deg, #c9a14a, #f0d27a, #a77f2c);
-  box-shadow: 0 2px 4px rgb(0 0 0 / 0.4);
+.login__hilfe {
+  margin: var(--abstand-m) 0 0;
+  padding-top: var(--abstand-s);
+  border-top: 1px solid #e4dccf;
+  color: #6b6259;
+  font-size: var(--groesse-xs);
+  text-align: center;
 }
 
-.tuer__zurueck {
-  color: var(--farbe-creme);
+.login__hilfe a {
+  color: var(--farbe-lila);
+  overflow-wrap: anywhere;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .tuer__blatt {
-    transition: none;
-  }
+.login__zurueck {
+  color: var(--farbe-pfirsich);
+  font-size: var(--groesse-xs);
 }
 </style>

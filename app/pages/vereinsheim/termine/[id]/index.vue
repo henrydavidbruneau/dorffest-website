@@ -8,11 +8,11 @@ const VORLAGE = { status: 'draft', uhrzeit_folgt: false, hervorgehoben: false, a
 </script>
 
 <template>
-  <VereinsheimFormularSeite :id="id" collection="termine" :felder="FELDER_TERMIN" :vorlage="VORLAGE" zurueck="/vereinsheim/termine" art="Termin">
+  <VereinsheimFormularSeite :id="id" collection="termine" :felder="FELDER_TERMIN" :gruppen="GRUPPEN_TERMIN" :vorlage="VORLAGE" zurueck="/vereinsheim/termine" art="Termin">
     <template #oben="{ daten }">
       <p v-if="id !== 'neu'" class="termin-links">
-        <NuxtLink :to="`/vereinsheim/termine/${id}/anmeldungen`">→ Anmeldungen &amp; Rundmail</NuxtLink>
-        <a v-if="daten.status === 'published'" :href="`/termine/${daten.slug}`" target="_blank" rel="noopener">→ auf der Website ansehen ↗</a>
+        <BasisKnopf :to="`/vereinsheim/termine/${id}/anmeldungen`" groesse="klein" variante="outline">Anmeldungen &amp; Rundmail</BasisKnopf>
+        <a v-if="daten.status === 'published'" :href="`/termine/${daten.slug}`" target="_blank" rel="noopener">Auf der Website ansehen ↗</a>
       </p>
     </template>
   </VereinsheimFormularSeite>
@@ -22,13 +22,13 @@ const VORLAGE = { status: 'draft', uhrzeit_folgt: false, hervorgehoben: false, a
 .termin-links {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--abstand-m);
-  margin: 0 0 var(--abstand-l);
-  font-family: var(--schrift-hand);
-  font-size: var(--groesse-hand-s);
+  align-items: center;
+  gap: var(--abstand-s) var(--abstand-m);
+  margin: 0;
+  font-size: var(--groesse-xs);
 }
 
-.termin-links a {
-  color: var(--farbe-orange-text);
+.termin-links > a:not(.knopf) {
+  color: var(--farbe-pfirsich);
 }
 </style>

@@ -11,7 +11,7 @@ const { data: neu } = useAsyncData('vh-dorfanzeiger-neu', async () => ({
 </script>
 
 <template>
-  <VereinsheimZeitung titel="Redaktion" zusatz="von Nachbar*innen für Nachbar*innen">
+  <VereinsheimZeitung titel="Redaktion">
     <template #ressorts>
       <VereinsheimReiter
         v-model="reiter"

@@ -229,5 +229,27 @@ const t = texte.start.hero
   .hero__zeile2 {
     white-space: normal;
   }
+
+  /* mobil ist der Inhalt kürzer als der Bildschirm: senkrecht mittig statt oben mit viel Luft darunter */
+  .hero {
+    display: grid;
+    align-content: center;
+    padding-block: var(--abstand-l) clamp(4rem, 12vw, 5rem);
+  }
+
+  /* Figur und Inhalt in derselben Zelle: die Figur bleibt oben links neben „Verein für Zusammenhalt“ */
+  .hero__figur,
+  .hero__inhalt {
+    grid-area: 1 / 1;
+  }
+
+  .hero__figur {
+    position: relative;
+    top: auto;
+    left: auto;
+    align-self: start;
+    justify-self: start;
+    margin: -0.75rem 0 0 0.5rem;
+  }
 }
 </style>

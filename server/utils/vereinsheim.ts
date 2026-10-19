@@ -155,11 +155,16 @@ export async function directusPerson<T>(event: H3Event, pfad: string, anfrage: P
 
 /** Wer ist angemeldet? Vorstand = darf `mitglieder` lesen (Policy `Vorstand`). */
 export async function ich(event: H3Event): Promise<VereinsheimIch> {
-  const user = await directusPerson<Omit<VereinsheimIch, 'vorstand'>>(event, '/users/me', {
-    query: { fields: 'id,first_name,last_name,email,benutzername' },
-  })
-  const vorstand = await directusPerson(event, '/items/mitglieder', { query: { limit: 0 } }).then(() => true, () => false)
+  const [user, vorstand] = await Promise.all([
+    directusPerson<Omit<VereinsheimIch, 'vorstand'>>(event, '/users/me', { query: { fields: 'id,first_name,last_name,email,benutzername' } }),
+    istVorstand(event),
+  ])
   return { ...user, vorstand }
+}
+
+/** Nur die Vorstands-Frage (eine Anfrage an Directus statt zwei) */
+export function istVorstand(event: H3Event): Promise<boolean> {
+  return directusPerson(event, '/items/mitglieder', { query: { limit: 0 } }).then(() => true, () => false)
 }
 
 /** Für die Middleware: am Anfang einer Vereinsheim-Anfrage einmal erneuern, wenn nur noch das Refresh-Cookie da ist */

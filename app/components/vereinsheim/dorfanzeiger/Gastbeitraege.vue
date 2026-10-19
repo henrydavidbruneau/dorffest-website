@@ -111,7 +111,7 @@ async function entscheiden(b: Brief, aktion: 'annehmen' | 'ablehnen') {
 <template>
   <div class="gast">
     <section class="gast__links" aria-labelledby="links-titel">
-      <BasisNotizzettel farbe="gelb" befestigung="pin" :drehung="-0.8" class="gast__zettel">
+      <div class="vh-karte gast__zettel">
         <h2 id="links-titel">Link für einen Gastbeitrag</h2>
         <p>Der Link ist privat: Wer ihn hat, kann einen Beitrag einreichen. Gib ihn nur der Person, die schreiben soll.</p>
         <form class="gast__form" @submit.prevent="linkErstellen">
@@ -123,11 +123,11 @@ async function entscheiden(b: Brief, aktion: 'annehmen' | 'ablehnen') {
           <BasisKnopf type="submit">Link erstellen &amp; kopieren</BasisKnopf>
         </form>
         <p v-if="neuerLink" class="gast__neu">
-          <span class="handschrift">Frisch gedruckt:</span>
+          <span>Frisch gedruckt:</span>
           <code>{{ neuerLink }}</code>
           <button type="button" @click="kopieren(neuerLink)">nochmal kopieren</button>
         </p>
-      </BasisNotizzettel>
+      </div>
 
       <div v-if="data.einladungen.length" class="gast__liste-links">
         <h3>Alle Links</h3>
@@ -144,12 +144,12 @@ async function entscheiden(b: Brief, aktion: 'annehmen' | 'ablehnen') {
 
     <section class="gast__eingang" aria-labelledby="eingang-titel">
       <h2 id="eingang-titel" class="gast__korb">📥 Posteingang <span v-if="eingang.length">({{ eingang.length }})</span></h2>
-      <p v-if="!eingang.length" class="handschrift gast__leer">Keine neuen Briefe. Vielleicht mal einen Link verschicken?</p>
+      <p v-if="!eingang.length" class="gast__leer">Keine neuen Briefe. Vielleicht mal einen Link verschicken?</p>
       <ul class="gast__briefe">
         <li v-for="b in eingang" :key="b.id" class="brief" :class="{ 'brief--offen': offen === b.id }">
           <button type="button" class="brief__umschlag" :aria-expanded="offen === b.id" @click="oeffnen(b)">
             <span class="brief__marke" aria-hidden="true">✉</span>
-            <span class="brief__von handschrift">von {{ b.autor_in }}{{ b.einladung ? ` (Link für ${b.einladung.name})` : '' }}</span>
+            <span class="brief__von">von {{ b.autor_in }}{{ b.einladung ? ` (Link für ${b.einladung.name})` : '' }}</span>
             <span class="brief__titel">{{ b.titel }}</span>
             <span class="brief__meta">{{ b.ressort?.name ?? 'ohne Rubrik' }} · {{ datumLang(b.date_created) }}{{ b.bild ? ' · mit Foto' : '' }}</span>
           </button>
@@ -198,10 +198,6 @@ async function entscheiden(b: Brief, aktion: 'annehmen' | 'ablehnen') {
   gap: var(--abstand-l);
   max-width: var(--inhaltsbreite);
   margin-inline: auto;
-}
-
-.gast__zettel {
-  padding: 2.6rem var(--abstand-m) var(--abstand-m);
 }
 
 .gast h2 {
@@ -266,7 +262,7 @@ async function entscheiden(b: Brief, aktion: 'annehmen' | 'ablehnen') {
   align-items: center;
   gap: 0.3rem var(--abstand-s);
   padding: var(--abstand-2xs) 0;
-  border-bottom: 1px dashed var(--farbe-spaltenlinie);
+  border-bottom: 1px solid var(--vh-rand);
   font-size: var(--groesse-xs);
 }
 
@@ -282,7 +278,7 @@ async function entscheiden(b: Brief, aktion: 'annehmen' | 'ablehnen') {
 }
 
 .gast__leer {
-  font-size: var(--groesse-hand-l);
+  font-size: var(--groesse-m);
   padding: 0.1rem 0.6rem;
   background: rgb(255 253 247 / 0.85);
 }
@@ -329,7 +325,7 @@ async function entscheiden(b: Brief, aktion: 'annehmen' | 'ablehnen') {
 }
 
 .brief__von {
-  font-size: var(--groesse-hand-m);
+  font-size: var(--groesse-s);
 }
 
 .brief__titel {

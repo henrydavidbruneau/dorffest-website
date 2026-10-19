@@ -2,6 +2,11 @@
 const { data: stimmen } = await useStimmen()
 const aktivId = ref<number | null>(null)
 const aktiv = computed(() => stimmen.value.find(s => s.id === aktivId.value) ?? stimmen.value[0] ?? null)
+// Zitate dürfen bis 400 Zeichen lang sein – längere werden kleiner gesetzt
+const laenge = computed(() => {
+  const n = aktiv.value?.zitat.length ?? 0
+  return n > 260 ? 'sehr-lang' : n > 160 ? 'lang' : ''
+})
 </script>
 
 <template>
@@ -24,7 +29,7 @@ const aktiv = computed(() => stimmen.value.find(s => s.id === aktivId.value) ?? 
           Stimmen aus dem <BasisHervorhebung>Verein</BasisHervorhebung>
         </h2>
         <figure :key="`zitat-${aktiv.id}`" class="stimmen__zitat" aria-live="polite">
-          <blockquote class="handschrift">{{ aktiv.zitat }}</blockquote>
+          <blockquote class="handschrift" :class="laenge && `stimmen__text--${laenge}`">{{ aktiv.zitat }}</blockquote>
           <figcaption>{{ aktiv.name }}</figcaption>
         </figure>
 
@@ -80,6 +85,14 @@ const aktiv = computed(() => stimmen.value.find(s => s.id === aktivId.value) ?? 
   margin: 0;
   font-size: clamp(2rem, 4.1vw, 3.7rem);
   line-height: 1.12;
+}
+
+.stimmen__zitat .stimmen__text--lang {
+  font-size: clamp(1.75rem, 3vw, 2.75rem);
+}
+
+.stimmen__zitat .stimmen__text--sehr-lang {
+  font-size: clamp(1.5rem, 2.3vw, 2.1rem);
 }
 
 .stimmen__zitat figcaption {

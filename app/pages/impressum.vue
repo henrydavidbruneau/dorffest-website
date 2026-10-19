@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import impressum from '~/inhalte/impressum.md?raw'
 
-useSeoMeta({ title: 'Impressum', robots: 'noindex' })
+useSeoMeta({ title: 'Impressum', description: 'Impressum des Vereins „Königsdorf rückt zusammen e.V.“', robots: 'noindex' })
 </script>
 
 <template>

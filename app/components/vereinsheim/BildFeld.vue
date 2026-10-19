@@ -26,7 +26,7 @@ async function hochladen(e: Event) {
 
 <template>
   <div class="bildfeld">
-    <span class="bildfeld__label">{{ label }}</span>
+    <span class="bildfeld__label vh-label">{{ label }}</span>
     <div class="bildfeld__reihe">
       <figure v-if="wert" class="bildfeld__polaroid">
         <img :src="vh.bild(wert, 400)" alt="Aktuelles Bild">
@@ -48,11 +48,6 @@ async function hochladen(e: Event) {
   gap: var(--abstand-2xs);
 }
 
-.bildfeld__label {
-  font-family: var(--schrift-display);
-  font-weight: var(--gewicht-display);
-  text-transform: uppercase;
-}
 
 .bildfeld__reihe {
   display: flex;
@@ -71,8 +66,8 @@ async function hochladen(e: Event) {
 
 .bildfeld__polaroid img {
   display: block;
-  width: 9rem;
-  height: 7rem;
+  width: 8rem;
+  height: 6rem;
   object-fit: cover;
 }
 
@@ -106,6 +101,7 @@ input:focus-visible + .bildfeld__knopf {
 
 .bildfeld__hinweis {
   margin: 0;
+  color: var(--vh-gedaempft);
   font-size: var(--groesse-xs);
 }
 </style>

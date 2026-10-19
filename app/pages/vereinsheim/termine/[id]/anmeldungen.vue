@@ -42,10 +42,10 @@ async function umschalten(a: Anmeldung) {
 }
 
 async function loeschen(a: Anmeldung) {
-  if (!window.confirm(`Anmeldung von ${a.name} wirklich in den Papierkorb?`)) return
+  if (!window.confirm(`Anmeldung von ${a.name} wirklich löschen?`)) return
   try {
     await vh.loeschen('anmeldungen', a.id)
-    zeige('Zerknüllt und weg.')
+    zeige('Gelöscht.')
     await refresh()
   }
   catch (e) {
@@ -86,8 +86,7 @@ watch(() => data.value?.termin, (t) => {
 
 <template>
   <div class="anm">
-    <NuxtLink :to="`/vereinsheim/termine/${id}`" class="anm__zurueck handschrift">← zum Termin</NuxtLink>
-    <VereinsheimKopf :titel="data?.termin.titel ?? 'Anmeldungen'" :zusatz="data?.termin.beginn ? datumAusgeschrieben(data.termin.beginn) : undefined">
+    <VereinsheimKopf :titel="data?.termin.titel ?? 'Anmeldungen'" :zusatz="`Anmeldungen${data?.termin.beginn ? ` · ${datumAusgeschrieben(data.termin.beginn)}` : ''}`" :zurueck="{ to: `/vereinsheim/termine/${id}`, text: 'Zum Termin' }">
       <BasisKnopf variante="outline" groesse="klein" @click="csv">CSV</BasisKnopf>
       <BasisKnopf variante="outline" groesse="klein" @click="drucken">Liste drucken</BasisKnopf>
     </VereinsheimKopf>
@@ -101,7 +100,8 @@ watch(() => data.value?.termin, (t) => {
         · {{ angemeldet.length }} Anmeldungen
       </p>
 
-      <table v-if="data?.anmeldungen.length" class="anm__tabelle">
+      <div v-if="data?.anmeldungen.length" class="anm__scroll">
+      <table class="anm__tabelle">
         <thead>
           <tr><th>Name</th><th>Pers.</th><th>Mitbringen</th><th>Nachricht</th><th class="anm__nicht-drucken">E-Mail</th><th class="anm__nicht-drucken"><span class="nur-screenreader">Aktionen</span></th><th class="anm__nur-drucken">da?</th></tr>
         </thead>
@@ -120,7 +120,8 @@ watch(() => data.value?.termin, (t) => {
           </tr>
         </tbody>
       </table>
-      <p v-else class="handschrift anm__leer">Noch niemand angemeldet. Sag’s im Infochannel weiter!</p>
+      </div>
+      <p v-else class="anm__leer">Noch niemand angemeldet. Sag’s im Infochannel weiter!</p>
 
       <section v-if="mitbringen.length" class="anm__mitbringen">
         <h2>Wer bringt was mit?</h2>
@@ -131,13 +132,13 @@ watch(() => data.value?.termin, (t) => {
     </div>
 
     <section class="anm__rundmail anm__nicht-drucken" aria-labelledby="rundmail-titel">
-      <BasisNotizzettel farbe="pfirsich" befestigung="pin" :drehung="-0.8" class="anm__rundmail-zettel">
+      <div class="vh-karte anm__rundmail-zettel">
         <h2 id="rundmail-titel">Mail an alle Angemeldeten</h2>
         <p>Jede*r bekommt die Mail einzeln mit persönlicher Anrede („Hallo …“) und unserem Gruß darunter.</p>
         <form class="anm__form" @submit.prevent="rundmail">
           <BasisFeld v-model="mail.betreff" label="Betreff" name="betreff" required :maxlength="200" />
           <BasisFeld v-model="mail.text" label="Text" name="text" required mehrzeilig :zeilen="7" />
-          <BasisKnopf type="submit" :disabled="sendet || !angemeldet.length">{{ sendet ? 'Wird eingeworfen …' : `An ${angemeldet.length} schicken` }}</BasisKnopf>
+          <BasisKnopf type="submit" :disabled="sendet || !angemeldet.length">{{ sendet ? 'Wird gesendet …' : `An ${angemeldet.length} schicken` }}</BasisKnopf>
         </form>
         <div v-if="data?.rundmails.length" class="anm__protokoll">
           <h3>Schon verschickt</h3>
@@ -147,7 +148,7 @@ watch(() => data.value?.termin, (t) => {
             </li>
           </ul>
         </div>
-      </BasisNotizzettel>
+      </div>
     </section>
   </div>
 </template>
@@ -158,24 +159,16 @@ watch(() => data.value?.termin, (t) => {
   margin-inline: auto;
 }
 
-.anm__zurueck {
-  display: inline-block;
-  margin-bottom: var(--abstand-s);
-  padding: 0.1rem 0.6rem;
-  background: rgb(255 253 247 / 0.85);
-  color: var(--farbe-schwarz);
-  font-size: var(--groesse-hand-m);
-  text-decoration: none;
+.anm__scroll {
+  overflow-x: auto;
 }
 
-/* kariertes Papier */
 .anm__blatt {
   padding: var(--abstand-l) clamp(0.75rem, 3vw, 2rem);
-  background:
-    repeating-linear-gradient(0deg, rgb(0 0 0 / 0.06) 0 1px, transparent 1px 1.25rem),
-    repeating-linear-gradient(90deg, rgb(0 0 0 / 0.06) 0 1px, transparent 1px 1.25rem),
-    var(--farbe-weiss);
-  box-shadow: var(--schatten-karte);
+  border: 1px solid var(--vh-rand);
+  border-radius: var(--vh-radius);
+  background: var(--farbe-weiss);
+  box-shadow: var(--vh-schatten);
 }
 
 .anm__summe {
@@ -185,7 +178,6 @@ watch(() => data.value?.termin, (t) => {
 
 .anm__striche {
   margin-right: 0.6rem;
-  font-family: var(--schrift-hand);
   font-size: 2rem;
   letter-spacing: 0.1em;
   color: var(--farbe-lila);
@@ -227,7 +219,7 @@ watch(() => data.value?.termin, (t) => {
 }
 
 .anm__tabelle td {
-  border-bottom: 1px dashed var(--farbe-spaltenlinie);
+  border-bottom: 1px solid var(--vh-rand);
 }
 
 .anm__ab td {
@@ -256,7 +248,7 @@ watch(() => data.value?.termin, (t) => {
 }
 
 .anm__leer {
-  font-size: var(--groesse-hand-l);
+  font-size: var(--groesse-m);
 }
 
 .anm__mitbringen h2,
@@ -268,7 +260,6 @@ watch(() => data.value?.termin, (t) => {
 
 .anm__rundmail-zettel {
   margin-top: var(--abstand-xl);
-  padding: 2.6rem var(--abstand-l) var(--abstand-l);
 }
 
 .anm__rundmail h2 {
@@ -299,11 +290,7 @@ watch(() => data.value?.termin, (t) => {
 
 @media print {
   .anm__nicht-drucken,
-  .anm__zurueck {
-    display: none !important;
-  }
-
-  .anm__nur-drucken {
+    .anm__nur-drucken {
     display: table-cell;
   }
 
