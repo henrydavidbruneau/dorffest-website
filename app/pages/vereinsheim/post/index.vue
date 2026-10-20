@@ -122,6 +122,8 @@ async function markierungOeffnen(m: PostMarkierung) {
 // ---------- Schreiben ----------
 interface Entwurf { an: string, cc: string, betreff: string, text: string, antwortAuf?: number }
 const entwurf = ref<Entwurf | null>(null)
+// Text beim Öffnen – nur wer etwas geändert hat, wird beim Verwerfen gefragt
+let entwurfAnfang = ''
 const sendet = ref(false)
 
 const gruss = computed(() => `\n\nViele Grüße\n${ich.value?.first_name ?? ''}\nfür Königsdorf rückt zusammen e.V.\n${verein.value.kontakt_email}`)
@@ -129,6 +131,7 @@ const gruss = computed(() => `\n\nViele Grüße\n${ich.value?.first_name ?? ''}\
 function neueMail() {
   offen.value = null
   entwurf.value = { an: '', cc: '', betreff: '', text: gruss.value }
+  entwurfAnfang = gruss.value
 }
 
 /** `alle`: die übrigen Empfänger (An + Kopie) kommen in „Kopie an“ */
@@ -141,6 +144,7 @@ function antworten(m: PostMail, alle = false) {
     text: `Hallo ${m.von.split(' ')[0]},\n\n${gruss.value}\n\nAm ${datumLang(m.datum)} schrieb ${m.von}:\n${zitat}`,
     antwortAuf: offenOrdner.value === 'eingang' ? m.uid : undefined,
   }
+  entwurfAnfang = entwurf.value.text
 }
 
 async function senden() {
@@ -179,8 +183,24 @@ async function loeschen(m: PostMail) {
 }
 
 function verwerfen() {
-  if (entwurf.value && entwurf.value.text.trim() !== gruss.value.trim() && !window.confirm('Entwurf wegwerfen?')) return
+  if (entwurf.value && entwurf.value.text.trim() !== entwurfAnfang.trim() && !window.confirm('Entwurf wegwerfen?')) return
   entwurf.value = null
+}
+
+// ---------- Handy: Liste und Mail nacheinander statt untereinander ----------
+const raster = ref<HTMLElement | null>(null)
+const schmal = () => window.matchMedia('(max-width: 760px)').matches
+// beim Öffnen einer Mail / eines Entwurfs nach oben, damit man nicht unter dem Verlauf landet
+watch(() => [offen.value?.uid, !!entwurf.value], async () => {
+  if (!import.meta.client || !schmal() || (!offen.value && !entwurf.value)) return
+  await nextTick()
+  const oben = raster.value?.getBoundingClientRect().top ?? 0
+  if (oben < 0 || oben > window.innerHeight / 2) window.scrollTo({ top: window.scrollY + oben - 16, behavior: 'instant' })
+})
+
+function zurueck() {
+  if (entwurf.value) return verwerfen()
+  offen.value = null
 }
 
 function wann(iso: string) {
@@ -192,9 +212,11 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
 
 <template>
   <div class="post">
-    <VereinsheimKopf titel="Die" hervorhebung="Post" :zusatz="`Kontakt-Postfach ${verein.kontakt_email}`">
+    <VereinsheimKopf titel="Die" hervorhebung="Post">
+      <template #meta>
+        Kontakt-Postfach.<template v-if="data?.webmail"> Zum Webmail <a :href="data.webmail" target="_blank" rel="noopener" class="post__webmail">hier entlang</a>.</template>
+      </template>
       <BasisKnopf v-if="data?.eingerichtet" variante="outline" groesse="klein" :disabled="laedtListe" @click="frischHolen">{{ laedtListe ? 'Schaut nach …' : 'Aktualisieren' }}</BasisKnopf>
-      <BasisKnopf v-if="data?.webmail" :to="data.webmail" variante="outline" groesse="klein" target="_blank" rel="noopener">Webmail ↗</BasisKnopf>
       <BasisKnopf v-if="data?.eingerichtet" groesse="klein" @click="neueMail">+ Neue Mail</BasisKnopf>
       <BasisKnopf to="/vereinsheim/post/rundbrief" groesse="klein">+ Neuer Rundbrief</BasisKnopf>
     </VereinsheimKopf>
@@ -210,7 +232,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
         <p class="post__stand" aria-live="polite">{{ laedtListe && data ? 'schaut nach neuer Post …' : aktualisiertText }}</p>
       </div>
 
-      <div class="post__raster">
+      <div ref="raster" class="post__raster" :class="{ 'post__raster--detail': offen || entwurf }">
         <!-- Für mich: Markierungen statt Ordnerliste -->
         <ul v-if="reiter === 'fuermich'" class="post__liste vh-karte" aria-label="Für mich markiert">
           <li v-if="!mk.markierungen.value" class="post__hinweis">Wird geholt …</li>
@@ -259,6 +281,10 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
         </ul>
 
         <div class="post__rechts">
+          <!-- nur auf dem Handy: Liste ist ausgeblendet, solange eine Mail oder ein Entwurf offen ist -->
+          <button v-if="offen || entwurf" type="button" class="post__zurueck" @click="zurueck">
+            ← {{ entwurf && offen ? 'Zurück zur Mail' : 'Zurück zur Liste' }}
+          </button>
           <!-- Schreiben -->
           <form v-if="entwurf" class="schreiben" @submit.prevent="senden">
             <p class="schreiben__titel">{{ entwurf.antwortAuf ? 'Antwort' : 'Neue Mail' }}</p>
@@ -369,6 +395,24 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
   margin: 0 0 var(--abstand-2xs);
   font-size: var(--groesse-h4);
   color: var(--farbe-lila);
+}
+
+.post__webmail {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.post__zurueck {
+  display: none;
+  margin-bottom: var(--abstand-s);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--farbe-lila);
+  font: inherit;
+  font-weight: var(--gewicht-text-fett);
+  cursor: pointer;
 }
 
 .post__raster {
@@ -622,6 +666,19 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
 @media (max-width: 760px) {
   .post__raster {
     grid-template-columns: 1fr;
+  }
+
+  /* Mail oder Entwurf offen: nur das zeigen, Liste über „Zurück“ */
+  .post__raster--detail .post__liste {
+    display: none;
+  }
+
+  .post__zurueck {
+    display: inline-block;
+  }
+
+  .post__raster:not(.post__raster--detail) .post__rechts {
+    display: none;
   }
 }
 </style>
