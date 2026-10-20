@@ -2,6 +2,8 @@
 // Kontakt-Postfach (nur Vorstand): ein kleines Mailprogramm – Eingang/Gesendet lesen,
 // antworten (auch allen), löschen (Papierkorb) und neue Mails schreiben. Absender ist immer die Kontakt-Adresse des Vereins.
 // Mails lassen sich für eine Person markieren: sie sieht sie hervorgehoben und im Reiter „Für mich“.
+import type { KontextEintrag } from '~/utils/kontextmenue'
+
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
 useSeoMeta({ title: 'Post · Vereinsheim', robots: 'noindex, nofollow' })
 
@@ -147,6 +149,18 @@ function antworten(m: PostMail, alle = false) {
   entwurfAnfang = entwurf.value.text
 }
 
+function weiterleiten(m: PostMail) {
+  const kopf = [`Von: ${m.von} <${m.vonAdresse}>`, `Datum: ${datumLang(m.datum)}, ${uhrzeit(m.datum)} Uhr`, `Betreff: ${m.betreff}`, `An: ${m.an}`].join('\n')
+  const anhaenge = m.anhaenge.length ? `\n\n(Anhänge nicht mit weitergeleitet: ${m.anhaenge.map(a => a.name).join(', ')} – dafür das Webmail nehmen)` : ''
+  entwurf.value = {
+    an: '',
+    cc: '',
+    betreff: /^(fwd?|wg):/i.test(m.betreff) ? m.betreff : `Fwd: ${m.betreff}`,
+    text: `${gruss.value}\n\n---------- Weitergeleitete Nachricht ----------\n${kopf}\n\n${m.text}${anhaenge}`,
+  }
+  entwurfAnfang = entwurf.value.text
+}
+
 async function senden() {
   if (!entwurf.value) return
   sendet.value = true
@@ -203,6 +217,51 @@ function zurueck() {
   offen.value = null
 }
 
+// ---------- Rechtsklick-Menü an den Mails ----------
+const kontext = ref<{ x: number, y: number, ordner: PostOrdner, uid: number, gelesen: boolean | null, markierung: PostMarkierung | null } | null>(null)
+
+function kontextOeffnen(e: MouseEvent, ordner: PostOrdner, uid: number | null, gelesen: boolean | null, markierung: PostMarkierung | null = null) {
+  if (!uid) return
+  e.preventDefault()
+  // Tastatur (Kontextmenü-Taste/Umschalt+F10): am Eintrag statt an der Mausposition
+  const ort = e.clientX || e.clientY ? { x: e.clientX, y: e.clientY } : (() => {
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    return { x: r.left + 24, y: r.bottom - 8 }
+  })()
+  kontext.value = { ...ort, ordner, uid, gelesen, markierung }
+  post.vorladen(ordner, uid)
+}
+
+/** Mail öffnen und dann `tun` mit ihr */
+async function mitMail(ordner: PostOrdner, uid: number, tun: (m: PostMail) => unknown) {
+  await oeffnen(ordner, uid)
+  if (offen.value?.uid === uid && offenOrdner.value === ordner) await tun(offen.value)
+}
+
+const kontextGruppen = computed<KontextEintrag[][]>(() => {
+  const k = kontext.value
+  if (!k) return []
+  const { ordner, uid } = k
+  const eingang = ordner === 'eingang'
+  return [
+    [
+      { text: eingang ? 'Antworten' : 'Nochmal schreiben', aktion: () => mitMail(ordner, uid, m => antworten(m)) },
+      ...(eingang ? [{ text: 'Allen antworten', aktion: () => mitMail(ordner, uid, m => antworten(m, m.weitere.length > 0)) }] : []),
+      { text: 'Weiterleiten', aktion: () => mitMail(ordner, uid, weiterleiten) },
+    ],
+    [
+      { text: '📌 Markieren für …', aktion: () => mitMail(ordner, uid, () => markierenStarten()) },
+      ...(k.markierung ? [{ text: 'Markierung erledigt ✓', aktion: () => erledigen(k.markierung!) }] : []),
+      ...(eingang && k.gelesen !== null
+        ? [{ text: k.gelesen ? 'Als ungelesen markieren' : 'Als gelesen markieren', aktion: () => post.gelesen(ordner, uid, !k.gelesen).catch(fehler) }]
+        : []),
+    ],
+    [
+      { text: 'Löschen', gefahr: true, aktion: () => mitMail(ordner, uid, loeschen) },
+    ],
+  ]
+})
+
 function wann(iso: string) {
   return Date.now() - Date.parse(iso) < 86_400_000 ? uhrzeit(iso) : tagMonat(iso)
 }
@@ -244,6 +303,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
               :class="{ 'brief--offen': offen?.messageId === m.message_id }"
               :aria-pressed="offen?.messageId === m.message_id"
               @click="markierungOeffnen(m)"
+              @contextmenu="kontextOeffnen($event, m.ordner, m.uid, null, m)"
             >
               <span class="brief__von">{{ m.von }}</span>
               <span class="brief__zeit">{{ laedt === m.uid ? '…' : m.datum ? wann(m.datum) : '' }}</span>
@@ -266,6 +326,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
               @pointerenter="post.vorladen(listenOrdner, m.uid)"
               @focus="post.vorladen(listenOrdner, m.uid)"
               @click="oeffnen(listenOrdner, m.uid)"
+              @contextmenu="kontextOeffnen($event, listenOrdner, m.uid, m.gelesen, mk.zurMail(m.messageId).find(x => x.fuer?.id === ich?.id) ?? null)"
             >
               <span class="brief__von">
                 <span v-if="m.beantwortet" class="brief__beantwortet" title="beantwortet">↩</span>
@@ -287,7 +348,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
           </button>
           <!-- Schreiben -->
           <form v-if="entwurf" class="schreiben" @submit.prevent="senden">
-            <p class="schreiben__titel">{{ entwurf.antwortAuf ? 'Antwort' : 'Neue Mail' }}</p>
+            <p class="schreiben__titel">{{ entwurf.antwortAuf ? 'Antwort' : /^fwd?:/i.test(entwurf.betreff) ? 'Weiterleiten' : 'Neue Mail' }}</p>
             <p class="schreiben__von">von <strong>{{ verein.kontakt_email }}</strong></p>
             <BasisFeld v-model="entwurf.an" label="An" name="an" type="email" required />
             <BasisFeld v-model="entwurf.cc" label="Kopie an (optional)" name="cc" hinweis="mehrere Adressen mit Komma trennen" />
@@ -305,6 +366,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
               <div class="post__aktionen" role="toolbar" aria-label="Mail bearbeiten">
                 <BasisKnopf groesse="klein" @click="antworten(offen)">{{ offenOrdner === 'eingang' ? 'Antworten' : 'Nochmal schreiben' }}</BasisKnopf>
                 <BasisKnopf v-if="offenOrdner === 'eingang' && offen.weitere.length" variante="outline" groesse="klein" @click="antworten(offen, true)">Allen antworten</BasisKnopf>
+                <BasisKnopf variante="outline" groesse="klein" @click="weiterleiten(offen)">Weiterleiten</BasisKnopf>
                 <BasisKnopf v-if="offen.messageId" variante="outline" groesse="klein" :aria-expanded="markierenOffen" @click="markierenStarten">📌 Markieren für …</BasisKnopf>
                 <button type="button" class="post__loeschen" :disabled="loescht" @click="loeschen(offen)">{{ loescht ? 'Wird gelöscht …' : 'Löschen' }}</button>
               </div>
@@ -352,6 +414,8 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
         </div>
       </div>
     </template>
+
+    <VereinsheimKontextmenue v-if="kontext" :key="`${kontext.x}-${kontext.y}-${kontext.uid}`" :x="kontext.x" :y="kontext.y" :gruppen="kontextGruppen" label="Mail" @schliessen="kontext = null" />
   </div>
 </template>
 

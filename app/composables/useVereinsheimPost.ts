@@ -67,7 +67,14 @@ export function useVereinsheimPost() {
     return r
   }
 
-  return { listen, laedt, fehler, aktualisieren, mail, vorladen, vergessen, loeschen }
+  /** als (un)gelesen markieren; die Liste zeigt es sofort */
+  async function gelesen(ordner: PostOrdner, uid: number, wert: boolean) {
+    await $fetch(`/api/vereinsheim/post/${uid}`, { method: 'PATCH', query: { ordner }, body: { gelesen: wert } })
+    const stand = listen.value[ordner]
+    if (stand) listen.value = { ...listen.value, [ordner]: { ...stand, mails: stand.mails.map(m => (m.uid === uid ? { ...m, gelesen: wert } : m)) } }
+  }
+
+  return { listen, laedt, fehler, aktualisieren, mail, vorladen, vergessen, loeschen, gelesen }
 }
 
 /** `arbeit` jede Minute ausführen, solange die Seite sichtbar ist – und sofort, wenn man zurückkommt */

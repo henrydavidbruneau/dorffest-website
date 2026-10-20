@@ -299,3 +299,12 @@ export async function loeschePost(ordner: Ordner, uid: number): Promise<{ papier
   mailSpeicher.delete(`${ordner}:${uid}`)
   return ergebnis
 }
+
+/** Gelesen-Status setzen (wie im Webmail; das Vereinsheim selbst liest mit PEEK und ändert ihn nicht) */
+export async function setzeGelesen(ordner: Ordner, uid: number, gelesen: boolean) {
+  await verbinden(imap => mitOrdner(imap, ordner, true, () => gelesen
+    ? imap.messageFlagsAdd(String(uid), ['\\Seen'], { uid: true })
+    : imap.messageFlagsRemove(String(uid), ['\\Seen'], { uid: true })))
+  zwischenspeicher.clear()
+  mailSpeicher.delete(`${ordner}:${uid}`)
+}
