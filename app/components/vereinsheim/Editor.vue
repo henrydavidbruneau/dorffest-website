@@ -67,6 +67,7 @@ const EINGABETYP: Partial<Record<FeldDef['typ'], string>> = { zahl: 'number', da
         :label="f.label"
         :hinweis="f.hinweis"
         :pflicht="f.pflicht"
+        :bild-ordner="f.ordner"
         class="editor__feld editor__feld--breit"
         @update:model-value="daten = { ...daten, [f.feld]: $event }"
       />

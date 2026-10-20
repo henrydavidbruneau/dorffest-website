@@ -5,10 +5,9 @@ const t = texte.ueberUns
 
 // Bildreihe: läuft rechts aus dem Bild, auf schmalen Bildschirmen wischbar
 const bilder = [
-  { src: '/fotos/dorffest-buffet.webp', alt: 'Viele Menschen am Dorfbuffet beim ersten Dorffest', breite: 760 },
-  { src: '/fotos/kleidertausch-plakat.webp', alt: 'Plakat zum Kleidertausch im JuMa', breite: 470 },
-  { src: '/fotos/verein-siebdruck.webp', alt: 'Siebdruck mit dem Dorf-Motiv', breite: 600 },
-  { src: '/fotos/kinder-dosenwerfen.webp', alt: 'Ein Kind beim Dosenwerfen auf dem Mini-Jahrmarkt', breite: 600 },
+  { src: '/fotos/team-dorffest.webp', alt: 'Das Helfer*innen-Team vom Dorffest in weißen T-Shirts vor dem Bierwagen', breite: 552 },
+  { src: '/fotos/was-uns-verbindet.webp', alt: 'Wand „Was uns verbindet“ mit vielen bunten, handbeschriebenen Zetteln', breite: 552 },
+  { src: '/fotos/dorffest-gelaende.webp', alt: 'Das Dorffest-Gelände von oben: Wiese mit Zelten und Bierbänken neben der Kirche', breite: 552 },
 ]
 </script>
 

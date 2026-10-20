@@ -187,6 +187,17 @@ textarea {
   }
 }
 
+/* ==Wort== im Markdown (Dorfanzeiger, Termine): wie <BasisHervorhebung> in Flieder */
+mark.hervorhebung {
+  padding: 0.08em 0.25em 0.04em;
+  border-radius: 0.12em 0.12em 0.42em 0.12em;
+  background: var(--farbe-flieder);
+  color: var(--farbe-weiss);
+  font-weight: var(--gewicht-text-fett);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
 /* Vereinsheim: gerenderter Markdown-Text in Vorschauen (wie im Dorfanzeiger) */
 .vh-text > :first-child { margin-top: 0; }
 .vh-text p { margin: 0 0 0.9em; }

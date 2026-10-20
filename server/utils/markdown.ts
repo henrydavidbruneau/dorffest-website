@@ -19,6 +19,9 @@ function sichereUrl(url: string, bild = false) {
 const ASSET = /\/assets\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\?.*)?$/
 
 function directusBild(href: string): string | null {
+  // im Vereinsheim hochgeladen: /bilder/<id>
+  const eigen = href.match(/^\/bilder\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\?.*)?$/)
+  if (eigen) return eigen[1]!
   const { directusUrl } = useRuntimeConfig()
   const basis = directusUrl.replace(/\/+$/, '')
   const treffer = href.match(ASSET)
@@ -39,6 +42,22 @@ function bildHtml(token: Tokens.Image) {
 }
 
 const markdown = new Marked({ gfm: true })
+
+// ==Wort== = Hervorhebung (Flieder-Kasten wie <BasisHervorhebung>)
+markdown.use({
+  extensions: [{
+    name: 'hervorhebung',
+    level: 'inline',
+    start: (src: string) => src.indexOf('=='),
+    tokenizer(src: string) {
+      const treffer = /^==(?=\S)([^=\n]+?)==/.exec(src)
+      if (treffer) return { type: 'hervorhebung', raw: treffer[0], tokens: this.lexer.inlineTokens(treffer[1]!) }
+    },
+    renderer(token) {
+      return `<mark class="hervorhebung">${this.parser.parseInline(token.tokens!)}</mark>`
+    },
+  }],
+})
 
 markdown.use({
   renderer: {

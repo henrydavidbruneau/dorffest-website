@@ -31,6 +31,7 @@ const WERKZEUGE_MAIL: Werkzeug[] = [
 const WERKZEUGE_ARTIKEL: Werkzeug[] = [
   { text: 'B', titel: 'Fett', vor: '**', nach: '**', platzhalter: 'fetter Text' },
   { text: 'I', titel: 'Kursiv', vor: '*', nach: '*', platzhalter: 'kursiver Text' },
+  { text: 'H̲', titel: 'Hervorhebung', vor: '==', nach: '==', platzhalter: 'Wort' },
   { text: 'H', titel: 'Zwischenüberschrift', vor: '## ', zeile: true, platzhalter: 'Zwischenüberschrift' },
   { text: '🔗', titel: 'Link', vor: '[', nach: '](https://)', platzhalter: 'Linktext' },
   { text: '❝', titel: 'Zitat', vor: '> ', zeile: true, platzhalter: 'Zitat' },
@@ -93,7 +94,9 @@ async function bildHochladen(e: Event) {
   try {
     const klein = await fotoVerkleinern(datei, 1600)
     const id = await vh.hochladen(klein, datei.name.replace(/\.\w+$/, '.jpg'), props.bildOrdner)
-    await blockEinfuegen(`![${datei.name.replace(/\.\w+$/, '')}](/bilder/${id}?width=1200&format=jpg "`, 'Bildunterschrift (oder leer lassen)', '")')
+    // Mails brauchen eine feste Größe als JPG, die Website baut sich die Größen selbst
+    const url = props.art === 'mail' ? `/bilder/${id}?width=1200&format=jpg` : `/bilder/${id}`
+    await blockEinfuegen(`![${datei.name.replace(/\.\w+$/, '')}](${url} "`, 'Bildunterschrift (oder leer lassen)', '")')
   }
   catch (err) {
     fehler(err)

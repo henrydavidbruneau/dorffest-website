@@ -1,4 +1,4 @@
-// Mails im Look der Website (wie die Gastbeitrag-Seite): lila Rahmen, Creme-Karte mit Klebestreifen,
+// Mails im Look der Website: lila Rahmen, Creme-Karte, Logo zentriert darunter,
 // Kopfzeile wie im Dorfanzeiger, Begrüßung in Handschrift, große Überschrift mit Hervorhebung,
 // Gruß unter gestrichelter Linie. Geschrieben wird Klartext (Leerzeile = Absatz) mit wenigen Zeichen:
 //   Hallo Marta,               erster Absatz = Begrüßung (Handschrift)
@@ -152,9 +152,6 @@ export function mailHtml(text: string, { basis, rubrik, abmelden, grosserGruss, 
     + `<td style="padding:0 0 8px;font-family:${DISPLAY};font-size:15px;font-weight:900;text-transform:uppercase;color:#16140F">Königsdorf rückt zusammen</td>`
     + `<td align="right" style="padding:0 0 8px;font-family:${DISPLAY};font-size:15px;font-weight:900;text-transform:uppercase;color:#16140F">${esc(rubrik ?? '')}</td>`
     + '</tr></table>'
-  // Klebestreifen oben auf der Karte (gelb links, flieder rechts – wie auf den Zetteln der Website)
-  const tape = (farbe: string, seite: 'left' | 'right', drehung: number) =>
-    `<td align="${seite}" style="padding:0 36px"><div style="display:inline-block;width:96px;height:22px;background:${farbe};transform:rotate(${drehung}deg)">&nbsp;</div></td>`
   const fuss = [
     `<a href="${esc(basis)}/impressum" style="color:${PFIRSICH}">Impressum</a>`,
     `<a href="${esc(basis)}/datenschutz" style="color:${PFIRSICH}">Datenschutz</a>`,
@@ -170,18 +167,17 @@ ${vorschau ? `<div style="display:none;max-height:0;overflow:hidden">${esc(vorsc
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${LILA}">
 <tr><td align="center" style="padding:28px 12px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:620px">
-    <tr><td style="padding:0 0 22px">
-      <a href="${esc(basis)}"><img src="${esc(basis)}/mail/logo.png" width="150" height="72" alt="Königsdorf rückt zusammen" style="display:block;border:0;color:${CREME};font-family:${DISPLAY};font-size:22px;font-weight:900"></a>
-    </td></tr>
     <tr><td style="background:${CREME};border-radius:18px">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${tape('#FADF84', 'left', -2)}${tape('#C9B8F2', 'right', 1.5)}</tr></table>
-      <div style="padding:22px 32px 34px;font-family:${SCHRIFT};font-size:16px;font-weight:300;line-height:1.65;color:#16140F">
+      <div style="padding:34px 32px;font-family:${SCHRIFT};font-size:16px;font-weight:300;line-height:1.65;color:#16140F">
 ${kopf}
 ${inhalt}
 ${gruss}
       </div>
     </td></tr>
-    <tr><td align="center" style="padding:18px 4px 0;font-family:${SCHRIFT};font-size:12px;line-height:1.6;color:${PFIRSICH}">${fuss}</td></tr>
+    <tr><td align="center" style="padding:26px 0 0">
+      <a href="${esc(basis)}"><img src="${esc(basis)}/mail/logo.png" width="150" height="72" alt="Königsdorf rückt zusammen" style="display:block;margin:0 auto;border:0;color:${CREME};font-family:${DISPLAY};font-size:22px;font-weight:900"></a>
+    </td></tr>
+    <tr><td align="center" style="padding:16px 4px 0;font-family:${SCHRIFT};font-size:12px;line-height:1.6;color:${PFIRSICH}">${fuss}</td></tr>
   </table>
 </td></tr>
 </table>

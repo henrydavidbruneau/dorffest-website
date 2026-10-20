@@ -13,7 +13,7 @@ export interface FeldDef {
   optionen?: Record<string, string>
   /** Auswahl: Beschriftung für „nichts gewählt“ (Standard „– nichts –“) */
   leerText?: string
-  /** Bild: Directus-Ordner */
+  /** Bild bzw. Bilder im Markdown: Directus-Ordner */
   ordner?: string
   maxlength?: number
   /** nur zeigen, wenn … */
@@ -95,7 +95,7 @@ export const FELDER_ARTIKEL: FeldDef[] = [
   { feld: 'bild', gruppe: 'bild', label: 'Foto', typ: 'bild', ordner: 'artikel' },
   { feld: 'bild_alt', gruppe: 'bild', label: 'Was ist auf dem Bild?', typ: 'text', wenn: d => !!d.bild, maxlength: 200 },
   { feld: 'bildunterschrift', gruppe: 'bild', label: 'Bildunterschrift', typ: 'text', wenn: d => !!d.bild },
-  { feld: 'inhalt', gruppe: 'text', label: 'Text', typ: 'markdown', breit: true, pflicht: true, hinweis: 'Bild mit Unterschrift: ![Alt](url "Unterschrift") · Zitat: > … und > — Quelle' },
+  { feld: 'inhalt', gruppe: 'text', label: 'Text', typ: 'markdown', breit: true, pflicht: true, ordner: 'artikel', hinweis: '==Wort== = Hervorhebung · Bild über 🖼 (Unterschrift in den Anführungszeichen) · Zitat: > … und > — Quelle' },
   { feld: 'aufruf_titel', gruppe: 'aufruf', label: 'Titel', typ: 'text', maxlength: 120 },
   { feld: 'aufruf_text', gruppe: 'aufruf', label: 'Text', typ: 'mehrzeilig', wenn: d => !!d.aufruf_titel },
   { feld: 'aufruf_knopf', gruppe: 'aufruf', label: 'Knopf-Text', typ: 'text', wenn: d => !!d.aufruf_titel, maxlength: 40 },
