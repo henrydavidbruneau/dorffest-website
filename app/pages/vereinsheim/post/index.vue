@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Kontakt-Postfach (nur Vorstand): ein kleines Mailprogramm – Eingang/Gesendet lesen,
-// antworten und neue Mails schreiben. Absender ist immer die Kontakt-Adresse des Vereins.
+// antworten (auch allen), löschen (Papierkorb) und neue Mails schreiben. Absender ist immer die Kontakt-Adresse des Vereins.
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
 useSeoMeta({ title: 'Post · Vereinsheim', robots: 'noindex, nofollow' })
 
@@ -54,7 +54,7 @@ async function oeffnen(m: PostMailKopf) {
 }
 
 // ---------- Schreiben ----------
-interface Entwurf { an: string, betreff: string, text: string, antwortAuf?: number }
+interface Entwurf { an: string, cc: string, betreff: string, text: string, antwortAuf?: number }
 const entwurf = ref<Entwurf | null>(null)
 const sendet = ref(false)
 
@@ -62,13 +62,15 @@ const gruss = computed(() => `\n\nViele Grüße\n${ich.value?.first_name ?? ''}\
 
 function neueMail() {
   offen.value = null
-  entwurf.value = { an: '', betreff: '', text: gruss.value }
+  entwurf.value = { an: '', cc: '', betreff: '', text: gruss.value }
 }
 
-function antworten(m: PostMail) {
+/** `alle`: die übrigen Empfänger (An + Kopie) kommen in „Kopie an“ */
+function antworten(m: PostMail, alle = false) {
   const zitat = m.text.split('\n').slice(0, 60).map(z => `> ${z}`).join('\n')
   entwurf.value = {
     an: m.vonAdresse,
+    cc: alle ? m.weitere.join(', ') : '',
     betreff: /^(re|aw):/i.test(m.betreff) ? m.betreff : `Re: ${m.betreff}`,
     text: `Hallo ${m.von.split(' ')[0]},\n\n${gruss.value}\n\nAm ${datumLang(m.datum)} schrieb ${m.von}:\n${zitat}`,
     antwortAuf: ordner.value === 'eingang' ? m.uid : undefined,
@@ -79,7 +81,8 @@ async function senden() {
   if (!entwurf.value) return
   sendet.value = true
   try {
-    const r = await $fetch<{ weg: 'postfach' | 'brevo' }>('/api/vereinsheim/post/senden', { method: 'POST', body: entwurf.value })
+    const cc = entwurf.value.cc.split(/[,;\s]+/).filter(Boolean)
+    const r = await $fetch<{ weg: 'postfach' | 'brevo' }>('/api/vereinsheim/post/senden', { method: 'POST', body: { ...entwurf.value, cc } })
     zeige(r.weg === 'postfach' ? 'Ab in die Post!' : 'Ab in die Post! (über Brevo verschickt)')
     if (offen.value && entwurf.value.antwortAuf) offen.value = { ...offen.value, beantwortet: true }
     entwurf.value = null
@@ -90,6 +93,21 @@ async function senden() {
     fehler(e)
   }
   sendet.value = false
+}
+
+const loescht = ref(false)
+async function loeschen(m: PostMail) {
+  if (!window.confirm(`„${m.betreff}“ in den Papierkorb legen?`)) return
+  loescht.value = true
+  try {
+    const r = await post.loeschen(ordner.value, m.uid)
+    if (offen.value?.uid === m.uid) offen.value = null
+    zeige(r.papierkorb ? 'Liegt im Papierkorb (im Webmail zurückholbar).' : 'Gelöscht.')
+  }
+  catch (e) {
+    fehler(e)
+  }
+  loescht.value = false
 }
 
 function verwerfen() {
@@ -108,6 +126,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
   <div class="post">
     <VereinsheimKopf titel="Die" hervorhebung="Post" :zusatz="`Kontakt-Postfach ${verein.kontakt_email}`">
       <BasisKnopf v-if="data?.eingerichtet" variante="outline" groesse="klein" :disabled="laedtListe" @click="frischHolen">{{ laedtListe ? 'Schaut nach …' : 'Aktualisieren' }}</BasisKnopf>
+      <BasisKnopf v-if="data?.webmail" :to="data.webmail" variante="outline" groesse="klein" target="_blank" rel="noopener">Webmail ↗</BasisKnopf>
       <BasisKnopf v-if="data?.eingerichtet" groesse="klein" @click="neueMail">+ Neue Mail</BasisKnopf>
       <BasisKnopf to="/vereinsheim/post/rundbrief" groesse="klein">+ Neuer Rundbrief</BasisKnopf>
     </VereinsheimKopf>
@@ -154,6 +173,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
             <p class="schreiben__titel">{{ entwurf.antwortAuf ? 'Antwort' : 'Neue Mail' }}</p>
             <p class="schreiben__von">von <strong>{{ verein.kontakt_email }}</strong></p>
             <BasisFeld v-model="entwurf.an" label="An" name="an" type="email" required />
+            <BasisFeld v-model="entwurf.cc" label="Kopie an (optional)" name="cc" hinweis="mehrere Adressen mit Komma trennen" />
             <BasisFeld v-model="entwurf.betreff" label="Betreff" name="betreff" required :maxlength="200" />
             <BasisFeld v-model="entwurf.text" label="Text" name="text" mehrzeilig :zeilen="16" required />
             <div class="schreiben__knoepfe">
@@ -165,6 +185,11 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
           <!-- Lesen -->
           <article v-else-if="offen" class="post__mail" aria-live="polite">
             <header class="post__kopf">
+              <div class="post__aktionen" role="toolbar" aria-label="Mail bearbeiten">
+                <BasisKnopf groesse="klein" @click="antworten(offen)">{{ ordner === 'eingang' ? 'Antworten' : 'Nochmal schreiben' }}</BasisKnopf>
+                <BasisKnopf v-if="ordner === 'eingang' && offen.weitere.length" variante="outline" groesse="klein" @click="antworten(offen, true)">Allen antworten</BasisKnopf>
+                <button type="button" class="post__loeschen" :disabled="loescht" @click="loeschen(offen)">{{ loescht ? 'Wird gelöscht …' : 'Löschen' }}</button>
+              </div>
               <h2>{{ offen.betreff }}</h2>
               <p>
                 <strong>{{ offen.von }}</strong> &lt;{{ offen.vonAdresse }}&gt;<br>
@@ -174,11 +199,10 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
             </header>
             <div class="post__text">{{ offen.text || '(kein Text)' }}</div>
             <p v-if="offen.anhaenge.length" class="post__anhaenge">
-              📎 {{ offen.anhaenge.map(a => `${a.name} (${kb(a.groesse)})`).join(' · ') }} – Anhänge im Webmail öffnen
+              📎 {{ offen.anhaenge.map(a => `${a.name} (${kb(a.groesse)})`).join(' · ') }} –
+              <a v-if="data?.webmail" :href="data.webmail" target="_blank" rel="noopener">Anhänge im Webmail öffnen</a>
+              <template v-else>Anhänge im Webmail öffnen</template>
             </p>
-            <div class="post__aktionen">
-              <BasisKnopf groesse="klein" @click="antworten(offen)">{{ ordner === 'eingang' ? 'Antworten' : 'Nochmal schreiben' }}</BasisKnopf>
-            </div>
           </article>
 
           <p v-else class="post__hinweis">Mail links auswählen oder eine neue schreiben.</p>
@@ -338,7 +362,25 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
 }
 
 .post__aktionen {
-  margin-top: var(--abstand-l);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--abstand-xs) var(--abstand-s);
+  margin-bottom: var(--abstand-m);
+  padding-bottom: var(--abstand-s);
+  border-bottom: 1px solid var(--vh-rand);
+}
+
+.post__loeschen {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #a1260d;
+  font: inherit;
+  font-size: var(--groesse-s);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .schreiben {

@@ -4,7 +4,7 @@
 
 export type PostOrdner = 'eingang' | 'gesendet'
 export interface PostMailKopf { uid: number, von: string, vonAdresse: string, an: string, betreff: string, datum: string, gelesen: boolean, beantwortet: boolean }
-export interface PostMail extends PostMailKopf { text: string, anhaenge: { name: string, groesse: number }[] }
+export interface PostMail extends PostMailKopf { text: string, anhaenge: { name: string, groesse: number }[], weitere: string[] }
 interface Stand { eingerichtet: boolean, webmail: string, mails: PostMailKopf[], um: number }
 
 const ALLE_MINUTE = 60_000
@@ -58,7 +58,16 @@ export function useVereinsheimPost() {
     mails.value = {}
   }
 
-  return { listen, laedt, fehler, aktualisieren, mail, vorladen, vergessen }
+  /** Mail in den Papierkorb; verschwindet sofort aus der Liste */
+  async function loeschen(ordner: PostOrdner, uid: number) {
+    const r = await $fetch<{ papierkorb: boolean }>(`/api/vereinsheim/post/${uid}`, { method: 'DELETE', query: { ordner } })
+    const stand = listen.value[ordner]
+    if (stand) listen.value = { ...listen.value, [ordner]: { ...stand, mails: stand.mails.filter(m => m.uid !== uid) } }
+    mails.value = Object.fromEntries(Object.entries(mails.value).filter(([k]) => k !== `${ordner}:${uid}`))
+    return r
+  }
+
+  return { listen, laedt, fehler, aktualisieren, mail, vorladen, vergessen, loeschen }
 }
 
 /** `arbeit` jede Minute ausführen, solange die Seite sichtbar ist – und sofort, wenn man zurückkommt */

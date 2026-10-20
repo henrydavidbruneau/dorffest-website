@@ -6,6 +6,7 @@
 // Danach eine Kopie in den „Gesendet“-Ordner und das Original als beantwortet markieren –
 // so sieht man im Webmail genauso, was das Vereinsheim verschickt hat.
 // Zugangsdaten nur als Umgebungsvariablen (NUXT_IMAP_*), nie im Code oder Frontend.
+import { domainToASCII } from 'node:url'
 import { ImapFlow } from 'imapflow'
 import { simpleParser } from 'mailparser'
 import nodemailer from 'nodemailer'
@@ -29,6 +30,19 @@ export interface PostMail extends MailKopf {
   anhaenge: { name: string, groesse: number }[]
   messageId: string | null
   references: string[]
+  /** weitere Empfänger (An + Kopie) für „Allen antworten“, ohne Absender und ohne das eigene Postfach */
+  weitere: string[]
+}
+
+/** Adresse vergleichbar machen (klein, Umlaut-Domain als xn--…) */
+function normalAdresse(adresse: string) {
+  const [lokal, domain] = adresse.trim().toLowerCase().split('@')
+  return domain ? `${lokal}@${domainToASCII(domain) || domain}` : adresse.trim().toLowerCase()
+}
+
+function eigeneAdressen() {
+  const { mailVon, imapBenutzer } = useRuntimeConfig()
+  return new Set([mailVon, imapBenutzer].filter(Boolean).map(normalAdresse))
 }
 
 export function postfachKonfig() {
@@ -161,6 +175,12 @@ export async function ladeMail(ordner: Ordner, uid: number): Promise<PostMail> {
     const text = m.text?.trim()
       || (typeof m.html === 'string' ? m.html.replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim() : '')
     const references = Array.isArray(m.references) ? m.references : m.references ? [m.references] : []
+    const liste = (feld: typeof m.to) => (Array.isArray(feld) ? feld : feld ? [feld] : []).flatMap(f => f.value.map(v => v.address ?? '')).filter(Boolean)
+    const absender = normalAdresse(m.replyTo?.value[0]?.address ?? von?.address ?? '')
+    const eigene = eigeneAdressen()
+    const weitere = [...new Map([...liste(m.to), ...liste(m.cc)].map(a => [normalAdresse(a), a] as const)).entries()]
+      .filter(([n]) => n !== absender && !eigene.has(n))
+      .map(([, a]) => a)
     return {
       uid,
       von: von?.name || von?.address || 'unbekannt',
@@ -174,6 +194,7 @@ export async function ladeMail(ordner: Ordner, uid: number): Promise<PostMail> {
       anhaenge: m.attachments.map(a => ({ name: a.filename ?? 'Anhang', groesse: a.size })),
       messageId: m.messageId ?? null,
       references,
+      weitere,
     }
   }))
   if (mailSpeicher.size > 100) mailSpeicher.clear()
@@ -183,6 +204,8 @@ export async function ladeMail(ordner: Ordner, uid: number): Promise<PostMail> {
 
 export interface NeueMail {
   an: string
+  /** Kopie an (z.B. bei „Allen antworten“) */
+  cc?: string[]
   betreff: string
   text: string
   /** UID der Mail im Eingang, auf die geantwortet wird */
@@ -200,6 +223,7 @@ export async function sendePost(neu: NeueMail): Promise<{ weg: 'postfach' | 'bre
   const nachricht = {
     from: { name: mailVonName, address: mailVon },
     to: neu.an,
+    ...(neu.cc?.length ? { cc: neu.cc } : {}),
     subject: neu.betreff,
     text: neu.text,
     date: new Date(),
@@ -220,7 +244,7 @@ export async function sendePost(neu: NeueMail): Promise<{ weg: 'postfach' | 'bre
     await $fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: { 'api-key': brevoApiKey, 'accept': 'application/json' },
-      body: { sender: { email: mailVon, name: mailVonName }, to: [{ email: neu.an }], subject: neu.betreff, textContent: neu.text, tags: ['vereinsheim-post'] },
+      body: { sender: { email: mailVon, name: mailVonName }, to: [{ email: neu.an }], ...(neu.cc?.length ? { cc: neu.cc.map(email => ({ email })) } : {}), subject: neu.betreff, textContent: neu.text, tags: ['vereinsheim-post'] },
     }).catch((err) => {
       console.error('[postfach] Brevo:', err?.data ?? err)
       throw fail(502, 'senden', 'Die Mail konnte gerade nicht verschickt werden.')
@@ -241,4 +265,35 @@ export async function sendePost(neu: NeueMail): Promise<{ weg: 'postfach' | 'bre
   zwischenspeicher.clear()
   mailSpeicher.clear()
   return { weg }
+}
+
+/** Papierkorb des Postfachs (IONOS: „Papierkorb“), einmal je Funktions-Instanz gesucht */
+let papierkorb: string | null | undefined
+async function papierkorbPfad(imap: ImapFlow): Promise<string | null> {
+  if (papierkorb !== undefined) return papierkorb
+  const ordner = await imap.list()
+  const treffer = ordner.find(o => o.specialUse === '\\Trash')
+    ?? ordner.find(o => /^(papierkorb|gelöschte objekte|gelöschte elemente|trash|deleted items|deleted messages)$/i.test(o.name))
+  papierkorb = treffer?.path ?? null
+  return papierkorb
+}
+
+/** Mail in den Papierkorb legen (wie im Webmail; dort lässt sie sich zurückholen). Ohne Papierkorb: endgültig löschen */
+export async function loeschePost(ordner: Ordner, uid: number): Promise<{ papierkorb: boolean }> {
+  const ergebnis = await verbinden(async (imap) => {
+    const ziel = await papierkorbPfad(imap)
+    return mitOrdner(imap, ordner, true, async () => {
+      if (ziel) {
+        const verschoben = await imap.messageMove(String(uid), ziel, { uid: true })
+        if (!verschoben) throw fail(404, 'mail', 'Diese Mail gibt es nicht (mehr).')
+        return { papierkorb: true }
+      }
+      const weg = await imap.messageDelete(String(uid), { uid: true })
+      if (!weg) throw fail(404, 'mail', 'Diese Mail gibt es nicht (mehr).')
+      return { papierkorb: false }
+    })
+  })
+  zwischenspeicher.clear()
+  mailSpeicher.delete(`${ordner}:${uid}`)
+  return ergebnis
 }
