@@ -262,6 +262,32 @@ const kontextGruppen = computed<KontextEintrag[][]>(() => {
   ]
 })
 
+// Punktemenü über der Mail
+const mehr = ref<{ x: number, y: number } | null>(null)
+function mehrOeffnen(e: MouseEvent) {
+  const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+  mehr.value = mehr.value ? null : { x: r.right - 220, y: r.bottom + 6 }
+}
+const mehrGruppen = computed<KontextEintrag[][]>(() => {
+  const m = offen.value
+  if (!m) return []
+  const eingang = offenOrdner.value === 'eingang'
+  const kopf = data.value?.mails.find(x => x.uid === m.uid)
+  return [
+    [
+      ...(eingang && m.weitere.length ? [{ text: `Nur ${m.von.split(' ')[0]} antworten`, aktion: () => antworten(m) }] : []),
+      { text: 'Weiterleiten', aktion: () => weiterleiten(m) },
+    ],
+    eingang && kopf
+      ? [{ text: kopf.gelesen ? 'Als ungelesen markieren' : 'Als gelesen markieren', aktion: () => post.gelesen('eingang', m.uid, !kopf.gelesen).then(() => zeige(kopf.gelesen ? 'Als ungelesen markiert.' : 'Als gelesen markiert.'), fehler) }]
+      : [],
+  ]
+})
+
+function datumKurz(iso: string) {
+  return `${datumLang(iso)} ${uhrzeit(iso)}`
+}
+
 function wann(iso: string) {
   return Date.now() - Date.parse(iso) < 86_400_000 ? uhrzeit(iso) : tagMonat(iso)
 }
@@ -363,14 +389,29 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
           <!-- Lesen -->
           <article v-else-if="offen" class="post__mail" aria-live="polite">
             <header class="post__kopf">
-              <div class="post__aktionen" role="toolbar" aria-label="Mail bearbeiten">
-                <BasisKnopf groesse="klein" @click="antworten(offen)">{{ offenOrdner === 'eingang' ? 'Antworten' : 'Nochmal schreiben' }}</BasisKnopf>
-                <BasisKnopf v-if="offenOrdner === 'eingang' && offen.weitere.length" variante="outline" groesse="klein" @click="antworten(offen, true)">Allen antworten</BasisKnopf>
-                <BasisKnopf variante="outline" groesse="klein" @click="weiterleiten(offen)">Weiterleiten</BasisKnopf>
-                <BasisKnopf v-if="offen.messageId" variante="outline" groesse="klein" :aria-expanded="markierenOffen" @click="markierenStarten">📌 Markieren für …</BasisKnopf>
-                <button type="button" class="post__loeschen" :disabled="loescht" @click="loeschen(offen)">{{ loescht ? 'Wird gelöscht …' : 'Löschen' }}</button>
+              <h2>{{ offen.betreff }}</h2>
+              <div class="post__kopfzeile">
+                <p class="post__absender">
+                  <strong>{{ offen.von }}</strong> &lt;{{ offen.vonAdresse }}&gt;<br>
+                  <span class="post__an"><strong>An</strong> {{ offen.an }}</span>
+                  <span v-if="offen.beantwortet" class="post__beantwortet"> · beantwortet</span>
+                </p>
+                <div class="post__rechtsoben">
+                  <span class="post__datum">{{ datumKurz(offen.datum) }}</span>
+                  <div class="post__aktionen" role="toolbar" aria-label="Mail bearbeiten">
+                    <VereinsheimSymbolKnopf symbol="loeschen" tipp="Löschen" :disabled="loescht" @click="loeschen(offen)" />
+                    <VereinsheimSymbolKnopf
+                      v-if="offenOrdner === 'eingang' && offen.weitere.length"
+                      symbol="alle"
+                      tipp="Allen antworten"
+                      @click="antworten(offen, true)"
+                    />
+                    <VereinsheimSymbolKnopf v-else symbol="antworten" :tipp="offenOrdner === 'eingang' ? 'Antworten' : 'Nochmal schreiben'" @click="antworten(offen)" />
+                    <VereinsheimSymbolKnopf v-if="offen.messageId" symbol="markieren" tipp="Markieren für …" :aria-expanded="markierenOffen" @click="markierenStarten" />
+                    <VereinsheimSymbolKnopf symbol="mehr" tipp="Mehr" rechts aria-haspopup="menu" :aria-expanded="!!mehr" @click="mehrOeffnen" />
+                  </div>
+                </div>
               </div>
-
               <form v-if="markierenOffen" class="markieren" @submit.prevent="markierenSpeichern">
                 <label class="markieren__feld">
                   <span class="vh-label">Für wen?</span>
@@ -395,12 +436,6 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
                 </li>
               </ul>
 
-              <h2>{{ offen.betreff }}</h2>
-              <p>
-                <strong>{{ offen.von }}</strong> &lt;{{ offen.vonAdresse }}&gt;<br>
-                an {{ offen.an }} · {{ datumAusgeschrieben(offen.datum) }}, {{ uhrzeit(offen.datum) }} Uhr
-                <span v-if="offen.beantwortet" class="post__beantwortet">· beantwortet</span>
-              </p>
             </header>
             <div class="post__text">{{ offen.text || '(kein Text)' }}</div>
             <p v-if="offen.anhaenge.length" class="post__anhaenge">
@@ -415,6 +450,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
       </div>
     </template>
 
+    <VereinsheimKontextmenue v-if="mehr" :x="mehr.x" :y="mehr.y" :gruppen="mehrGruppen" label="Mehr" @schliessen="mehr = null" />
     <VereinsheimKontextmenue v-if="kontext" :key="`${kontext.x}-${kontext.y}-${kontext.uid}`" :x="kontext.x" :y="kontext.y" :gruppen="kontextGruppen" label="Mail" @schliessen="kontext = null" />
   </div>
 </template>
@@ -609,14 +645,36 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
   font-size: var(--groesse-xs);
 }
 
-.post__aktionen {
+.post__kopfzeile {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--abstand-xs) var(--abstand-s);
-  margin-bottom: var(--abstand-m);
-  padding-bottom: var(--abstand-s);
-  border-bottom: 1px solid var(--vh-rand);
+  justify-content: space-between;
+  gap: var(--abstand-xs) var(--abstand-m);
+  margin-bottom: var(--abstand-s);
+}
+
+.post__absender {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.post__rechtsoben {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  margin-left: auto;
+}
+
+.post__datum {
+  color: var(--vh-gedaempft);
+  font-size: var(--groesse-xs);
+}
+
+.post__aktionen {
+  display: flex;
+  gap: 0.1rem;
+  margin-right: -0.5rem;
 }
 
 .markieren {
@@ -682,17 +740,6 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
   cursor: pointer;
 }
 
-.post__loeschen {
-  margin-left: auto;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: #a1260d;
-  font: inherit;
-  font-size: var(--groesse-s);
-  text-decoration: underline;
-  cursor: pointer;
-}
 
 .schreiben {
   display: flex;
