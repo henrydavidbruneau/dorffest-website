@@ -1,6 +1,6 @@
 // Kontakt-Postfach im Vereinsheim (nur Vorstand): Liste und geöffnete Mails bleiben im Browser
 // gemerkt (Dashboard und Post-Seite teilen sie), damit beim Wiederkommen sofort etwas dasteht.
-// Solange die Seite sichtbar ist, schaut sie jede Minute nach neuer Post.
+// Das Postfach schaut alle 3 Minuten nach neuer Post, solange es sichtbar ist; das Dashboard nur beim Öffnen.
 
 export type PostOrdner = 'eingang' | 'gesendet'
 export interface PostMailKopf { uid: number, messageId: string | null, von: string, vonAdresse: string, an: string, betreff: string, datum: string, gelesen: boolean, beantwortet: boolean }

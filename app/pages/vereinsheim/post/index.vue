@@ -34,7 +34,8 @@ watch(reiter, () => {
   entwurf.value = null
   post.aktualisieren(listenOrdner.value)
 })
-useAutoAktualisierung(() => Promise.all([post.aktualisieren(listenOrdner.value), markierungenLaden()]))
+// alle 3 Minuten (jede Abfrage kostet Netlify-Rechenzeit); sofort geht's über „Aktualisieren“
+useAutoAktualisierung(() => Promise.all([post.aktualisieren(listenOrdner.value), markierungenLaden()]), 3 * 60_000)
 
 async function frischHolen() {
   await Promise.all([post.aktualisieren(listenOrdner.value, true), markierungenLaden()])
@@ -47,7 +48,8 @@ useAutoAktualisierung(() => (jetzt.value = Date.now()), 15_000)
 const aktualisiertText = computed(() => {
   if (!data.value) return ''
   const s = Math.round((jetzt.value - data.value.um) / 1000)
-  return s < 60 ? 'gerade aktualisiert' : `vor ${Math.round(s / 60)} Min. aktualisiert`
+  const min = Math.floor(s / 60)
+  return min < 1 ? 'gerade aktualisiert' : `vor ${min} ${min === 1 ? 'Minute' : 'Minuten'} aktualisiert`
 })
 
 // ---------- Markierungen ----------
@@ -377,7 +379,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
             <p class="schreiben__titel">{{ entwurf.antwortAuf ? 'Antwort' : /^fwd?:/i.test(entwurf.betreff) ? 'Weiterleiten' : 'Neue Mail' }}</p>
             <p class="schreiben__von">von <strong>{{ verein.kontakt_email }}</strong></p>
             <BasisFeld v-model="entwurf.an" label="An" name="an" type="email" required />
-            <BasisFeld v-model="entwurf.cc" label="Kopie an (optional)" name="cc" hinweis="mehrere Adressen mit Komma trennen" />
+            <BasisFeld v-model="entwurf.cc" label="Kopie an" name="cc" hinweis="mehrere Adressen mit Komma trennen" />
             <BasisFeld v-model="entwurf.betreff" label="Betreff" name="betreff" required :maxlength="200" />
             <BasisFeld v-model="entwurf.text" label="Text" name="text" mehrzeilig :zeilen="16" required />
             <div class="schreiben__knoepfe">

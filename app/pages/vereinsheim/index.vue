@@ -7,17 +7,16 @@ useSeoMeta({ title: 'Vereinsheim', robots: 'noindex, nofollow' })
 
 const { ich } = useVereinsheimIch()
 const post = useVereinsheimPost()
-// die fünf neuesten Mails; aktualisiert sich jede Minute
+// die fünf neuesten Mails; einmal beim Öffnen geholt (spart Netlify-Rechenzeit), frisch dann im Postfach
 const mails = computed(() => (post.listen.value.eingang?.eingerichtet ? post.listen.value.eingang.mails.slice(0, 5) : null))
-useAutoAktualisierung(() => ich.value?.vorstand && post.aktualisieren('eingang'))
 
 // Reiter „Für mich“: Mails, die jemand im Postfach für mich markiert hat
 const mk = usePostMarkierungen()
-const postReiter = ref<'neu' | 'fuermich'>('neu')
+const postReiter = ref<'allgemein' | 'fuermich'>('allgemein')
 const fuerMich = computed(() => (mk.markierungen.value ?? []).filter(m => m.fuer?.id === ich.value?.id))
-const markierungenLaden = () => ich.value?.vorstand && mk.laden().catch(() => {})
-onMounted(markierungenLaden)
-useAutoAktualisierung(markierungenLaden)
+onMounted(() => ich.value?.vorstand && mk.laden().catch(() => {}))
+// gelesen? – aus der Eingangsliste (Markierungen kennen nur die Message-ID)
+const ungelesen = (messageId: string) => post.listen.value.eingang?.mails.some(m => m.messageId === messageId && !m.gelesen) ?? false
 
 interface Post { art: 'antrag' | 'vorschlag' | 'gastbeitrag' | 'leserbrief' | 'anmeldung', titel: string, von: string, wann: string, to: string }
 interface Auslage { id: number, titel: string, betrag: string | number, status: string, datum: string }
@@ -148,7 +147,7 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
           <template v-else-if="ich?.vorstand && mails">
             <p class="dash__karte-titel"><VereinsheimIcon name="post" class="dash__karte-icon" /> Neue Post</p>
             <div class="dash__reiter" role="tablist" aria-label="Post">
-              <button type="button" role="tab" :aria-selected="postReiter === 'neu'" @click="postReiter = 'neu'">Neu</button>
+              <button type="button" role="tab" :aria-selected="postReiter === 'allgemein'" @click="postReiter = 'allgemein'">Allgemein</button>
               <button type="button" role="tab" :aria-selected="postReiter === 'fuermich'" @click="postReiter = 'fuermich'">
                 Für mich<span v-if="fuerMich.length" class="dash__reiter-zahl">{{ fuerMich.length }}</span>
               </button>
@@ -156,7 +155,7 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
             <template v-if="postReiter === 'fuermich'">
               <ul v-if="fuerMich.length" class="dash__post">
                 <li v-for="m in fuerMich.slice(0, 5)" :key="m.id">
-                  <NuxtLink to="/vereinsheim/post?reiter=fuermich" class="dash__post-link dash__post-link--neu">
+                  <NuxtLink to="/vereinsheim/post?reiter=fuermich" class="dash__post-link" :class="{ 'dash__post-link--neu': ungelesen(m.message_id) }">
                     <span class="dash__post-icon dash__post-pin" aria-hidden="true">📌</span>
                     <span class="dash__post-text"><strong>{{ m.von }}</strong> · {{ m.betreff }} <small>– von {{ personName(m.user_created) }}</small></span>
                     <span class="dash__post-zeit">{{ seit(m.date_created) }}</span>
@@ -380,10 +379,6 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
   border-bottom: 1px dashed rgb(0 0 0 / 0.15);
 }
 
-.dash__post-link:hover .dash__post-link--neu .dash__post-text {
-  font-weight: var(--gewicht-text-normal);
-}
-
 .dash__post-icon {
   align-self: center;
   width: 1.4rem;
@@ -395,8 +390,14 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
   text-decoration: underline;
 }
 
-.dash__post-link--neu .dash__post-text {
+/* gelesen = normal, ungelesen = fett (wie im Postfach) */
+.dash__post-text strong {
   font-weight: var(--gewicht-text-normal);
+}
+
+.dash__post-link--neu .dash__post-text,
+.dash__post-link--neu .dash__post-text strong {
+  font-weight: var(--gewicht-text-fett);
 }
 
 .dash__post-icon {
