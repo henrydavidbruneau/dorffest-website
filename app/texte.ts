@@ -3,7 +3,7 @@
 export const texte = {
   meta: {
     beschreibung:
-      'Königsdorf rückt zusammen e.V.: Wir sind Nachbarinnen und Nachbarn, die Feste, Begegnungen und gemeinsame Aktionen im Dorf organisieren – offen für alle, von uns für uns.',
+      'Wir sind Nachbarinnen und Nachbarn, die Feste, Begegnungen und gemeinsame Aktionen im Dorf organisieren – offen für alle, von uns für uns.',
   },
 
   start: {
