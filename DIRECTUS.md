@@ -536,6 +536,11 @@ Ohne echte E-Mail gibt es kein „Passwort vergessen“ – dann setzt ein Admin
 - **Rundbriefe** (`rundbriefe`: `status` entwurf/verschickt, `betreff`, `text`, `verschickt_am`, `empfaenger_anzahl`,
   `brevo_kampagne`): Entwürfe speichert das Vereinsheim direkt (nur Vorstand), nach dem Versand schreibt die Route
   den Eintrag fort. Die Liste zeigt den Brevo-Status je Kampagne – „angehalten“ heißt: im Brevo-Konto nachsehen.
+- **Post-Markierungen** (`post_markierungen`: `message_id`, `ordner`, `uid`, `betreff`, `von`, `datum`, `fuer` → User,
+  `notiz`, `erledigt`; wer markiert hat = `user_created`): im Vereinsheim → Post eine Mail „für“ eine Person markieren
+  (Auswahl: aktive Konten mit Rolle Vorstand/Administrator – dafür liest der Vorstand `directus_users.role` und
+  `directus_roles`). Zugeordnet wird über die Message-ID (bleibt beim Verschieben gleich), geöffnet über `ordner` + `uid`.
+  Die Person sieht die Mail hervorgehoben und im Reiter „Für mich“; „erledigt ✓“ setzt `erledigt`. Nur Vorstand.
 - **Rundbrief-Bilder:** Upload im Vereinsheim in den Ordner `rundbrief`; die Server-Policy darf ihn lesen,
   in der Mail als `/bilder/<id>?width=1200&format=jpg`.
 - **Mail-Design:** alle Mails (außer den persönlichen aus „Post“) kommen als HTML im Website-Look

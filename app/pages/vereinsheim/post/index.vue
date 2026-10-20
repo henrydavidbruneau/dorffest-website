@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Kontakt-Postfach (nur Vorstand): ein kleines Mailprogramm – Eingang/Gesendet lesen,
 // antworten (auch allen), löschen (Papierkorb) und neue Mails schreiben. Absender ist immer die Kontakt-Adresse des Vereins.
+// Mails lassen sich für eine Person markieren: sie sieht sie hervorgehoben und im Reiter „Für mich“.
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
 useSeoMeta({ title: 'Post · Vereinsheim', robots: 'noindex, nofollow' })
 
@@ -8,22 +9,33 @@ const { ich } = useVereinsheimIch()
 const { zeige, fehler } = useVereinsheimMeldung()
 const verein = useVerein()
 const post = useVereinsheimPost()
+const mk = usePostMarkierungen()
 
-const ordner = ref<PostOrdner>('eingang')
-const data = computed(() => post.listen.value[ordner.value] ?? null)
-const laedtListe = computed(() => !!post.laedt.value[ordner.value])
+type Reiter = PostOrdner | 'fuermich'
+const reiter = ref<Reiter>('eingang')
+// Ordner der Liste (bei „Für mich“ bleibt der Eingang die Grundlage für Kopf und Webmail-Link)
+const listenOrdner = computed<PostOrdner>(() => (reiter.value === 'gesendet' ? 'gesendet' : 'eingang'))
+const data = computed(() => post.listen.value[listenOrdner.value] ?? null)
+const laedtListe = computed(() => !!post.laedt.value[listenOrdner.value])
+
+function markierungenLaden() {
+  return mk.laden().catch(() => {}) // Collection fehlt noch → Postfach geht trotzdem
+}
 
 // Gemerkte Liste sofort zeigen, im Hintergrund nachschauen; danach jede Minute
-onMounted(() => post.aktualisieren(ordner.value))
-watch(ordner, (o) => {
+onMounted(() => {
+  post.aktualisieren(listenOrdner.value)
+  markierungenLaden()
+})
+watch(reiter, () => {
   offen.value = null
   entwurf.value = null
-  post.aktualisieren(o)
+  post.aktualisieren(listenOrdner.value)
 })
-useAutoAktualisierung(() => post.aktualisieren(ordner.value))
+useAutoAktualisierung(() => Promise.all([post.aktualisieren(listenOrdner.value), markierungenLaden()]))
 
 async function frischHolen() {
-  await post.aktualisieren(ordner.value, true)
+  await Promise.all([post.aktualisieren(listenOrdner.value, true), markierungenLaden()])
   if (!post.fehler.value) zeige('Postfach ist aktuell.')
 }
 
@@ -36,21 +48,75 @@ const aktualisiertText = computed(() => {
   return s < 60 ? 'gerade aktualisiert' : `vor ${Math.round(s / 60)} Min. aktualisiert`
 })
 
-const offen = ref<PostMail | null>(null)
-const laedt = ref<number | null>(null)
+// ---------- Markierungen ----------
+const fuerMich = computed(() => (mk.markierungen.value ?? []).filter(m => m.fuer?.id === ich.value?.id))
+const reiterListe = computed(() => [
+  { key: 'eingang', text: 'Eingang' },
+  { key: 'gesendet', text: 'Gesendet' },
+  { key: 'fuermich', text: 'Für mich', anzahl: fuerMich.value.length },
+])
+const markiertFuerMich = (messageId: string | null) => mk.zurMail(messageId).some(m => m.fuer?.id === ich.value?.id)
+const vorname = (p: PostPerson | null) => (p?.id === ich.value?.id ? 'dich' : p?.first_name || personName(p))
 
-async function oeffnen(m: PostMailKopf) {
-  entwurf.value = null
-  const o = ordner.value
-  laedt.value = m.uid
+const markierenOffen = ref(false)
+const markierung = reactive({ fuer: '', notiz: '' })
+const markiert = ref(false)
+async function markierenStarten() {
+  markierenOffen.value = !markierenOffen.value
+  if (markierenOffen.value) await mk.personenLaden().catch(fehler)
+}
+async function markierenSpeichern() {
+  if (!offen.value || !markierung.fuer) return
+  markiert.value = true
   try {
-    const mail = await post.mail(o, m.uid)
-    if (o === ordner.value) offen.value = mail
+    await mk.markieren(offen.value, offenOrdner.value, markierung.fuer, markierung.notiz)
+    const p = mk.personen.value?.find(x => x.id === markierung.fuer)
+    zeige(`Für ${p?.id === ich.value?.id ? 'dich' : personName(p)} markiert.`)
+    markierenOffen.value = false
+    Object.assign(markierung, { fuer: '', notiz: '' })
+  }
+  catch (e) {
+    fehler(e)
+  }
+  markiert.value = false
+}
+async function erledigen(m: PostMarkierung) {
+  try {
+    await mk.erledigen(m.id)
+    zeige('Markierung erledigt.')
+  }
+  catch (e) {
+    fehler(e)
+  }
+}
+
+// ---------- Lesen ----------
+const offen = ref<PostMail | null>(null)
+const offenOrdner = ref<PostOrdner>('eingang')
+const laedt = ref<number | null>(null)
+const offenMarkierungen = computed(() => mk.zurMail(offen.value?.messageId))
+
+async function oeffnen(ordner: PostOrdner, uid: number) {
+  entwurf.value = null
+  markierenOffen.value = false
+  const r = reiter.value
+  laedt.value = uid
+  try {
+    const mail = await post.mail(ordner, uid)
+    if (r === reiter.value) {
+      offen.value = mail
+      offenOrdner.value = ordner
+    }
   }
   catch (e) {
     fehler(e)
   }
   laedt.value = null
+}
+
+async function markierungOeffnen(m: PostMarkierung) {
+  if (!m.uid) return zeige('Diese Mail lässt sich hier nicht öffnen – bitte im Webmail suchen.', 'fehler')
+  await oeffnen(m.ordner, m.uid)
 }
 
 // ---------- Schreiben ----------
@@ -73,7 +139,7 @@ function antworten(m: PostMail, alle = false) {
     cc: alle ? m.weitere.join(', ') : '',
     betreff: /^(re|aw):/i.test(m.betreff) ? m.betreff : `Re: ${m.betreff}`,
     text: `Hallo ${m.von.split(' ')[0]},\n\n${gruss.value}\n\nAm ${datumLang(m.datum)} schrieb ${m.von}:\n${zitat}`,
-    antwortAuf: ordner.value === 'eingang' ? m.uid : undefined,
+    antwortAuf: offenOrdner.value === 'eingang' ? m.uid : undefined,
   }
 }
 
@@ -87,7 +153,7 @@ async function senden() {
     if (offen.value && entwurf.value.antwortAuf) offen.value = { ...offen.value, beantwortet: true }
     entwurf.value = null
     post.vergessen()
-    await post.aktualisieren(ordner.value, true)
+    await post.aktualisieren(listenOrdner.value, true)
   }
   catch (e) {
     fehler(e)
@@ -100,7 +166,9 @@ async function loeschen(m: PostMail) {
   if (!window.confirm(`„${m.betreff}“ in den Papierkorb legen?`)) return
   loescht.value = true
   try {
-    const r = await post.loeschen(ordner.value, m.uid)
+    const r = await post.loeschen(offenOrdner.value, m.uid)
+    // Markierungen der Mail gleich mit abhaken
+    await Promise.all(mk.zurMail(m.messageId).map(x => mk.erledigen(x.id).catch(() => {})))
     if (offen.value?.uid === m.uid) offen.value = null
     zeige(r.papierkorb ? 'Liegt im Papierkorb (im Webmail zurückholbar).' : 'Gelöscht.')
   }
@@ -138,31 +206,54 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
 
     <template v-else>
       <div class="post__leiste">
-        <VereinsheimReiter v-model="ordner" :reiter="[{ key: 'eingang', text: 'Eingang' }, { key: 'gesendet', text: 'Gesendet' }]" />
+        <VereinsheimReiter v-model="reiter" :reiter="reiterListe" />
         <p class="post__stand" aria-live="polite">{{ laedtListe && data ? 'schaut nach neuer Post …' : aktualisiertText }}</p>
       </div>
 
       <div class="post__raster">
-        <ul class="post__liste vh-karte" :aria-label="ordner === 'eingang' ? 'Eingang' : 'Gesendet'">
+        <!-- Für mich: Markierungen statt Ordnerliste -->
+        <ul v-if="reiter === 'fuermich'" class="post__liste vh-karte" aria-label="Für mich markiert">
+          <li v-if="!mk.markierungen.value" class="post__hinweis">Wird geholt …</li>
+          <li v-else-if="!fuerMich.length" class="post__hinweis">Nichts für dich markiert. Gönn dir einen Kaffee.</li>
+          <li v-for="m in fuerMich" :key="m.id">
+            <button
+              type="button"
+              class="brief brief--fuer-mich"
+              :class="{ 'brief--offen': offen?.messageId === m.message_id }"
+              :aria-pressed="offen?.messageId === m.message_id"
+              @click="markierungOeffnen(m)"
+            >
+              <span class="brief__von">{{ m.von }}</span>
+              <span class="brief__zeit">{{ laedt === m.uid ? '…' : m.datum ? wann(m.datum) : '' }}</span>
+              <span class="brief__betreff">{{ m.betreff }}</span>
+              <span class="brief__markierung">📌 von {{ personName(m.user_created) }}{{ m.notiz ? `: „${m.notiz}“` : '' }}</span>
+            </button>
+          </li>
+        </ul>
+
+        <ul v-else class="post__liste vh-karte" :aria-label="reiter === 'eingang' ? 'Eingang' : 'Gesendet'">
           <li v-if="!data && laedtListe" class="post__hinweis">Post wird geholt …</li>
           <li v-else-if="!data && post.fehler.value" class="post__hinweis" role="alert">{{ post.fehler.value }}</li>
-          <li v-else-if="data && !data.mails.length" class="post__hinweis">{{ ordner === 'eingang' ? 'Der Briefkasten ist leer.' : 'Noch nichts verschickt.' }}</li>
+          <li v-else-if="data && !data.mails.length" class="post__hinweis">{{ reiter === 'eingang' ? 'Der Briefkasten ist leer.' : 'Noch nichts verschickt.' }}</li>
           <li v-for="m in data?.mails ?? []" :key="m.uid">
             <button
               type="button"
               class="brief"
-              :class="{ 'brief--neu': !m.gelesen && ordner === 'eingang', 'brief--offen': offen?.uid === m.uid }"
-              :aria-pressed="offen?.uid === m.uid"
-              @pointerenter="post.vorladen(ordner, m.uid)"
-              @focus="post.vorladen(ordner, m.uid)"
-              @click="oeffnen(m)"
+              :class="{ 'brief--neu': !m.gelesen && reiter === 'eingang', 'brief--offen': offen?.uid === m.uid && offenOrdner === listenOrdner, 'brief--fuer-mich': markiertFuerMich(m.messageId) }"
+              :aria-pressed="offen?.uid === m.uid && offenOrdner === listenOrdner"
+              @pointerenter="post.vorladen(listenOrdner, m.uid)"
+              @focus="post.vorladen(listenOrdner, m.uid)"
+              @click="oeffnen(listenOrdner, m.uid)"
             >
               <span class="brief__von">
                 <span v-if="m.beantwortet" class="brief__beantwortet" title="beantwortet">↩</span>
-                {{ ordner === 'eingang' ? m.von : `an ${m.an}` }}
+                {{ reiter === 'eingang' ? m.von : `an ${m.an}` }}
               </span>
               <span class="brief__zeit">{{ laedt === m.uid ? '…' : wann(m.datum) }}</span>
               <span class="brief__betreff">{{ m.betreff }}</span>
+              <span v-if="mk.zurMail(m.messageId).length" class="brief__markierung">
+                📌 für {{ mk.zurMail(m.messageId).map(x => vorname(x.fuer)).join(', ') }}
+              </span>
             </button>
           </li>
         </ul>
@@ -186,10 +277,36 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
           <article v-else-if="offen" class="post__mail" aria-live="polite">
             <header class="post__kopf">
               <div class="post__aktionen" role="toolbar" aria-label="Mail bearbeiten">
-                <BasisKnopf groesse="klein" @click="antworten(offen)">{{ ordner === 'eingang' ? 'Antworten' : 'Nochmal schreiben' }}</BasisKnopf>
-                <BasisKnopf v-if="ordner === 'eingang' && offen.weitere.length" variante="outline" groesse="klein" @click="antworten(offen, true)">Allen antworten</BasisKnopf>
+                <BasisKnopf groesse="klein" @click="antworten(offen)">{{ offenOrdner === 'eingang' ? 'Antworten' : 'Nochmal schreiben' }}</BasisKnopf>
+                <BasisKnopf v-if="offenOrdner === 'eingang' && offen.weitere.length" variante="outline" groesse="klein" @click="antworten(offen, true)">Allen antworten</BasisKnopf>
+                <BasisKnopf v-if="offen.messageId" variante="outline" groesse="klein" :aria-expanded="markierenOffen" @click="markierenStarten">📌 Markieren für …</BasisKnopf>
                 <button type="button" class="post__loeschen" :disabled="loescht" @click="loeschen(offen)">{{ loescht ? 'Wird gelöscht …' : 'Löschen' }}</button>
               </div>
+
+              <form v-if="markierenOffen" class="markieren" @submit.prevent="markierenSpeichern">
+                <label class="markieren__feld">
+                  <span class="vh-label">Für wen?</span>
+                  <select v-model="markierung.fuer" required>
+                    <option value="" disabled>{{ mk.personen.value ? '– bitte wählen –' : 'lädt …' }}</option>
+                    <option v-for="p in mk.personen.value ?? []" :key="p.id" :value="p.id">{{ personName(p) }}{{ p.id === ich?.id ? ' (ich)' : '' }}</option>
+                  </select>
+                </label>
+                <label class="markieren__feld markieren__feld--breit">
+                  <span class="vh-label">Hinweis (optional)</span>
+                  <input v-model="markierung.notiz" type="text" maxlength="300" placeholder="z.B. Kannst du das übernehmen?">
+                </label>
+                <BasisKnopf type="submit" groesse="klein" :disabled="markiert || !markierung.fuer">{{ markiert ? 'Markiert …' : 'Markieren' }}</BasisKnopf>
+              </form>
+
+              <ul v-if="offenMarkierungen.length" class="post__markierungen">
+                <li v-for="m in offenMarkierungen" :key="m.id" :class="{ 'post__markierung--ich': m.fuer?.id === ich?.id }">
+                  📌 <strong>für {{ m.fuer?.id === ich?.id ? 'dich' : personName(m.fuer) }}</strong>
+                  · markiert von {{ m.user_created?.id === ich?.id ? 'dir' : personName(m.user_created) }}, {{ tagMonat(m.date_created) }}
+                  <template v-if="m.notiz">· „{{ m.notiz }}“</template>
+                  <button type="button" class="post__erledigt" @click="erledigen(m)">erledigt ✓</button>
+                </li>
+              </ul>
+
               <h2>{{ offen.betreff }}</h2>
               <p>
                 <strong>{{ offen.von }}</strong> &lt;{{ offen.vonAdresse }}&gt;<br>
@@ -301,6 +418,29 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
   white-space: nowrap;
 }
 
+.brief--fuer-mich {
+  background: #efe9fc;
+  box-shadow: inset 4px 0 0 var(--farbe-flieder);
+}
+
+.brief--fuer-mich:hover,
+.brief--fuer-mich.brief--offen {
+  background: var(--farbe-pfirsich);
+}
+
+.brief--fuer-mich.brief--offen {
+  box-shadow: inset 4px 0 0 var(--farbe-lila);
+}
+
+.brief__markierung {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  color: var(--farbe-lila);
+  font-size: var(--groesse-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .brief__beantwortet {
   color: var(--farbe-orange-text);
 }
@@ -369,6 +509,69 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
   margin-bottom: var(--abstand-m);
   padding-bottom: var(--abstand-s);
   border-bottom: 1px solid var(--vh-rand);
+}
+
+.markieren {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--abstand-xs) var(--abstand-s);
+  margin-bottom: var(--abstand-m);
+  padding: var(--abstand-s);
+  border-radius: 0.6rem;
+  background: #efe9fc;
+}
+
+.markieren__feld {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.markieren__feld--breit {
+  flex: 1 1 14rem;
+}
+
+.markieren select,
+.markieren input {
+  padding: 0.45rem 0.6rem;
+  border: 1.5px solid var(--vh-rand-stark);
+  border-radius: 0.5rem;
+  background: var(--farbe-weiss);
+  font: inherit;
+  font-size: var(--groesse-s);
+}
+
+.post__markierungen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0 0 var(--abstand-m);
+  padding: 0;
+  list-style: none;
+  font-size: var(--groesse-xs);
+}
+
+.post__markierungen li {
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.5rem;
+  background: var(--farbe-pfirsich);
+}
+
+.post__markierungen .post__markierung--ich {
+  background: #efe9fc;
+  box-shadow: inset 4px 0 0 var(--farbe-flieder);
+}
+
+.post__erledigt {
+  margin-left: 0.4rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--farbe-lila);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .post__loeschen {

@@ -16,6 +16,8 @@ export type Ordner = 'eingang' | 'gesendet'
 
 export interface MailKopf {
   uid: number
+  /** Message-ID (für Markierungen; bleibt beim Verschieben gleich) */
+  messageId: string | null
   von: string
   vonAdresse: string
   an: string
@@ -28,7 +30,6 @@ export interface MailKopf {
 export interface PostMail extends MailKopf {
   text: string
   anhaenge: { name: string, groesse: number }[]
-  messageId: string | null
   references: string[]
   /** weitere Empfänger (An + Kopie) für „Allen antworten“, ohne Absender und ohne das eigene Postfach */
   weitere: string[]
@@ -148,6 +149,7 @@ export async function ladePost(ordner: Ordner = 'eingang', anzahl = 30, frisch =
       const von = n.envelope?.from?.[0]
       ergebnis.push({
         uid: n.uid,
+        messageId: n.envelope?.messageId ?? null,
         von: von?.name || von?.address || 'unbekannt',
         vonAdresse: von?.address ?? '',
         an: adressen(n.envelope?.to),

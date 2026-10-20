@@ -3,7 +3,7 @@
 // Solange die Seite sichtbar ist, schaut sie jede Minute nach neuer Post.
 
 export type PostOrdner = 'eingang' | 'gesendet'
-export interface PostMailKopf { uid: number, von: string, vonAdresse: string, an: string, betreff: string, datum: string, gelesen: boolean, beantwortet: boolean }
+export interface PostMailKopf { uid: number, messageId: string | null, von: string, vonAdresse: string, an: string, betreff: string, datum: string, gelesen: boolean, beantwortet: boolean }
 export interface PostMail extends PostMailKopf { text: string, anhaenge: { name: string, groesse: number }[], weitere: string[] }
 interface Stand { eingerichtet: boolean, webmail: string, mails: PostMailKopf[], um: number }
 
@@ -89,4 +89,66 @@ export function useAutoAktualisierung(arbeit: () => unknown, abstand = ALLE_MINU
     if (uhr) clearInterval(uhr)
     document.removeEventListener('visibilitychange', sichtbarkeit)
   })
+}
+
+// ---------- Markierungen: Mail für eine Person markieren (Directus `post_markierungen`) ----------
+export interface PostPerson { id: string, first_name: string | null, last_name: string | null }
+export interface PostMarkierung {
+  id: number
+  message_id: string
+  ordner: PostOrdner
+  uid: number | null
+  betreff: string | null
+  von: string | null
+  datum: string | null
+  notiz: string | null
+  erledigt: boolean
+  date_created: string
+  fuer: PostPerson | null
+  user_created: PostPerson | null
+}
+
+const MARKIERUNG_FELDER = 'id,message_id,ordner,uid,betreff,von,datum,notiz,erledigt,date_created,fuer.id,fuer.first_name,fuer.last_name,user_created.id,user_created.first_name,user_created.last_name'
+
+export const personName = (p: PostPerson | null | undefined) => (p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'jemand' : 'jemand')
+
+export function usePostMarkierungen() {
+  // offene (nicht erledigte) Markierungen aller Personen
+  const markierungen = useState<PostMarkierung[] | null>('vh-post-markierungen', () => null)
+  const personen = useState<PostPerson[] | null>('vh-post-personen', () => null)
+
+  async function laden() {
+    markierungen.value = await vh.liste<PostMarkierung>('post_markierungen', {
+      fields: MARKIERUNG_FELDER, filter: { erledigt: { _eq: false } }, sort: '-date_created', limit: 300,
+    })
+  }
+
+  /** Wer kann markiert werden? Alle mit Rolle Vorstand (nur sie sehen das Postfach) */
+  async function personenLaden() {
+    if (personen.value) return
+    const basis = { fields: 'id,first_name,last_name', sort: 'first_name', limit: -1 }
+    personen.value = await vh.users<PostPerson>({ ...basis, filter: { status: { _eq: 'active' }, role: { name: { _in: ['Vorstand', 'Administrator'] } } } })
+      // ältere Rechte (directus-setup.mjs noch nicht gelaufen): alle aktiven Konten
+      .catch(() => vh.users<PostPerson>({ ...basis, filter: { status: { _eq: 'active' } } }))
+  }
+
+  function zurMail(messageId: string | null | undefined) {
+    return messageId ? (markierungen.value ?? []).filter(m => m.message_id === messageId) : []
+  }
+
+  async function markieren(mail: PostMail, ordner: PostOrdner, fuer: string, notiz: string) {
+    if (!mail.messageId) throw new Error('Diese Mail hat keine Message-ID und lässt sich nicht markieren.')
+    await vh.anlegen('post_markierungen', {
+      message_id: mail.messageId, ordner, uid: mail.uid, betreff: mail.betreff.slice(0, 255), von: mail.von.slice(0, 255),
+      datum: mail.datum, fuer, notiz: notiz.trim().slice(0, 300) || null,
+    })
+    await laden()
+  }
+
+  async function erledigen(id: number) {
+    await vh.aendern('post_markierungen', id, { erledigt: true })
+    markierungen.value = (markierungen.value ?? []).filter(m => m.id !== id)
+  }
+
+  return { markierungen, personen, laden, personenLaden, zurMail, markieren, erledigen }
 }

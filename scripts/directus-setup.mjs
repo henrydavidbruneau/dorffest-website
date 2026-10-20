@@ -272,6 +272,24 @@ const COLLECTIONS = [
     relations: [{ field: 'termin', related_collection: 'termine', schema: { on_delete: 'CASCADE' } }],
   },
   {
+    collection: 'post_markierungen',
+    meta: { icon: 'push_pin', note: 'Mails im Kontakt-Postfach für eine Person markiert (Vereinsheim → Post). Wer markiert hat = user_created.', display_template: '{{betreff}} → {{fuer.first_name}}' },
+    fields: [
+      idField(),
+      str('message_id', { required: true, max: 998, note: 'Message-ID der Mail (bleibt beim Verschieben gleich)' }),
+      select('ordner', [['eingang', 'Eingang'], ['gesendet', 'Gesendet']], { def: 'eingang' }),
+      int('uid', { note: 'IMAP-UID im Ordner (zum schnellen Öffnen)' }),
+      str('betreff', { max: 255 }),
+      str('von', { max: 255 }),
+      timestamp('datum', { note: 'Datum der Mail' }),
+      m2o('fuer', 'directus_users', { type: 'uuid', required: true, note: 'für wen', template: '{{first_name}} {{last_name}}' }),
+      str('notiz', { max: 300, note: 'kurzer Hinweis, z.B. „Kannst du das übernehmen?“' }),
+      bool('erledigt'),
+      ...systemFields(),
+    ],
+    relations: [{ field: 'fuer', related_collection: 'directus_users', schema: { on_delete: 'CASCADE' } }],
+  },
+  {
     collection: 'rundbriefe',
     meta: { icon: 'campaign', note: 'Rundbriefe (Newsletter) aus dem Vereinsheim: Entwürfe und verschickte, zum Ansehen und Duplizieren. Versand über Brevo.', display_template: '{{betreff}}' },
     fields: [
@@ -763,7 +781,9 @@ const PERMISSIONS = {
   Vorstand: [
     ...COLLECTIONS.flatMap((c) => all(c.collection)),
     ...all('directus_files'),
-    { collection: 'directus_users', action: 'read', fields: ['id', 'first_name', 'last_name', 'email', 'avatar', 'benutzername', 'status', 'last_access'] },
+    { collection: 'directus_users', action: 'read', fields: ['id', 'first_name', 'last_name', 'email', 'avatar', 'benutzername', 'status', 'last_access', 'role'] },
+    // Post markieren: nur Personen mit Rolle Vorstand zur Auswahl (sie sehen das Postfach)
+    { collection: 'directus_roles', action: 'read', fields: ['id', 'name'] },
   ],
 }
 

@@ -4,7 +4,7 @@
 const COLLECTIONS = new Set([
   'termine', 'anmeldungen', 'beitraege', 'termin_rundmails', 'ressorts', 'ausgaben', 'artikel',
   'kleinanzeigen', 'leserbriefe', 'gastbeitrag_einladungen', 'gastbeitraege', 'stimmen', 'faq', 'ideen',
-  'vorschlaege', 'plenum_erinnerungen', 'mitgliedsantraege', 'mitglieder', 'auslagen', 'auslagen_belege', 'verein', 'rundbriefe',
+  'vorschlaege', 'plenum_erinnerungen', 'mitgliedsantraege', 'mitglieder', 'auslagen', 'auslagen_belege', 'verein', 'rundbriefe', 'post_markierungen',
 ])
 
 function erlaubt(teile: string[], methode: string): boolean {
