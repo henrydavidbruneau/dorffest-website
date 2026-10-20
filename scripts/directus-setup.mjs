@@ -549,7 +549,7 @@ const COLLECTIONS = [
       idField(),
       statusField([['eingereicht', 'Eingereicht'], ['angenommen', 'Angenommen'], ['abgelehnt', 'Abgelehnt']], 'eingereicht'),
       select('art', [['foerder', 'Fördermitglied'], ['regulaer', 'Reguläres Mitglied']], { required: true }),
-      select('beitrag_stufe', [['foerder_3', 'Förder 3 €/Monat'], ['foerder_5', 'Förder 5 €/Monat'], ['foerder_10', 'Förder 10 €/Monat'], ['standard', 'Standard (24 €+/Jahr)'], ['ermaessigt', 'Ermäßigt (12 €/Jahr)']], { required: true }),
+      select('beitrag_stufe', [['foerder_3', 'Förder 3 €/Monat'], ['foerder_5', 'Förder 5 €/Monat'], ['foerder_10', 'Förder 10 €/Monat'], ['foerder_eigen', 'Förder, eigener Betrag'], ['standard', 'Standard (24 €+/Jahr)'], ['ermaessigt', 'Ermäßigt (12 €/Jahr)']], { required: true }),
       decimal('beitrag_jahr', { required: true, note: '€ im Jahr' }),
       str('vorname', { required: true, width: 'half', max: 80 }),
       str('nachname', { required: true, width: 'half', max: 80 }),

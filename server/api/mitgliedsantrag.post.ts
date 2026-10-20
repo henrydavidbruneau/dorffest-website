@@ -17,6 +17,11 @@ export default defineEventHandler(async (event) => {
     if (!Number.isFinite(wunsch) || wunsch < beitragJahr || wunsch > 10000) throw fail(400, 'beitrag', `Der Beitrag muss mindestens ${beitragJahr} € im Jahr sein.`)
     beitragJahr = Math.round(wunsch)
   }
+  if (beitrag.eigenerBetrag) {
+    const monat = monatsbetrag(body.beitrag_monat)
+    if (!(monat >= FOERDER_MINDESTENS) || monat > 1000) throw fail(400, 'beitrag', `Bitte gib einen Betrag ab ${FOERDER_MINDESTENS} € im Monat ein.`)
+    beitragJahr = Math.round(monat * 12 * 100) / 100
+  }
 
   if (art === 'regulaer' && body.plenum_besucht !== true) {
     throw fail(400, 'plenum', 'Reguläres Mitglied wirst du, wenn du schon einmal beim Plenum dabei warst. Bis dahin kannst du Fördermitglied werden.')
@@ -50,7 +55,8 @@ export default defineEventHandler(async (event) => {
 
   const konto = await ladeVerein()
   const artText = art === 'foerder' ? 'Fördermitglied' : 'reguläres Mitglied'
-  const betrag = beitrag.art === 'foerder' ? `${beitrag.monat} € im Monat (${beitragJahr} € im Jahr)` : `${beitragJahr} € im Jahr`
+  const eur = (n: number) => `${n.toLocaleString('de-DE', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })} €`
+  const betrag = beitrag.art === 'foerder' ? `${eur(beitragJahr / 12)} im Monat (${eur(beitragJahr)} im Jahr)` : `${eur(beitragJahr)} im Jahr`
   const zweck = `Mitgliedsbeitrag ${antrag.vorname} ${antrag.nachname}`
   await sendeMailStill({
     an: antrag.email,

@@ -14,6 +14,7 @@ const form = reactive({
   art: 'foerder' as Mitgliedsart,
   beitrag_stufe: 'foerder_5' as BeitragStufe,
   beitrag_jahr: '' as string | number,
+  beitrag_monat: '' as string | number,
   plenum_besucht: null as boolean | null,
   vorname,
   nachname: rest.join(' '),
@@ -36,6 +37,13 @@ const kannAbsenden = computed(() => form.art === 'foerder' || form.plenum_besuch
 watch(() => form.art, (art) => {
   form.beitrag_stufe = art === 'foerder' ? 'foerder_5' : 'standard'
   form.beitrag_jahr = ''
+  form.beitrag_monat = ''
+})
+
+// Jahresbeitrag für die Danke-Box
+const jahresbeitrag = computed(() => {
+  if (gewaehlt.value?.eigenerBetrag) return Math.round(monatsbetrag(form.beitrag_monat) * 12 * 100) / 100 || 0
+  return Number(form.beitrag_jahr) || (gewaehlt.value?.monat ?? 0) * 12
 })
 
 const { status, fehler, senden } = useFormular('/api/mitgliedsantrag')
@@ -47,7 +55,7 @@ async function absenden() {
 }
 
 function euro(n: number) {
-  return `${n.toLocaleString('de-DE')} €`
+  return `${n.toLocaleString('de-DE', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })} €`
 }
 </script>
 
@@ -64,7 +72,7 @@ function euro(n: number) {
         <p class="handschrift danke__gruss">Willkommen im Verein, {{ form.vorname }}!</p>
         <p>Dein Antrag ist bei uns angekommen. Wir melden uns per Mail bei dir.</p>
         <p class="danke__konto">
-          Deinen Beitrag ({{ euro(Number(form.beitrag_jahr) || (gewaehlt?.monat ?? 0) * 12) }} im Jahr) überweist du bitte an:<br>
+          Deinen Beitrag ({{ euro(jahresbeitrag) }} im Jahr) überweist du bitte an:<br>
           <strong>{{ verein.kontoinhaber }}</strong> · IBAN <strong>{{ verein.iban }}</strong><br>
           Verwendungszweck: Mitgliedsbeitrag {{ form.vorname }} {{ form.nachname }}
         </p>
@@ -119,6 +127,20 @@ function euro(n: number) {
               <span v-else class="beitrag__hinweis">{{ euro(o.monat * 12) }} im Jahr</span>
             </label>
           </div>
+          <div v-if="gewaehlt?.eigenerBetrag" class="beitrag__mehr">
+            <BasisFeld
+              v-model="form.beitrag_monat"
+              label="Dein Betrag im Monat in €"
+              type="number"
+              name="beitrag_monat"
+              required
+              :min="FOERDER_MINDESTENS"
+              :max="1000"
+              step="0.01"
+              :placeholder="String(FOERDER_MINDESTENS)"
+              :hinweis="`mindestens ${FOERDER_MINDESTENS} €`"
+            />
+          </div>
           <div v-if="gewaehlt?.mehrMoeglich && form.beitrag_stufe === gewaehlt.stufe" class="beitrag__mehr">
             <BasisFeld
               v-model="form.beitrag_jahr"
@@ -163,7 +185,7 @@ function euro(n: number) {
             <p class="konto__titel">So zahlst du</p>
             <p>Bitte überweis deinen Beitrag auf unser Vereinskonto:</p>
             <p><strong>{{ verein.kontoinhaber }}</strong><br>IBAN <strong class="konto__iban">{{ verein.iban }}</strong></p>
-            <p>Verwendungszweck: Mitgliedsbeitrag + dein Name. Du kannst auch einen Dauerauftrag einrichten.</p>
+            <p>Verwendungszweck: Mitgliedsbeitrag + dein Name.</p>
           </div>
 
           <p v-if="status === 'fehler'" class="fehler" role="alert">{{ fehler }}</p>

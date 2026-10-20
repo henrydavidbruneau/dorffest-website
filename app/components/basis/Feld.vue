@@ -10,6 +10,8 @@ withDefaults(defineProps<{
   placeholder?: string
   min?: number
   max?: number
+  /** Zahlen: Schrittweite, z.B. "0.01" für Cent-Beträge */
+  step?: string
   maxlength?: number
   mehrzeilig?: boolean
   /** Höhe des mehrzeiligen Felds */
@@ -18,7 +20,7 @@ withDefaults(defineProps<{
   optionen?: Record<string, string>
   /** kleiner Hinweis unter dem Feld */
   hinweis?: string
-}>(), { type: 'text', required: false, autocomplete: undefined, placeholder: undefined, min: undefined, max: undefined, maxlength: undefined, mehrzeilig: false, zeilen: 3, optionen: undefined, hinweis: undefined })
+}>(), { type: 'text', required: false, autocomplete: undefined, placeholder: undefined, min: undefined, max: undefined, step: undefined, maxlength: undefined, mehrzeilig: false, zeilen: 3, optionen: undefined, hinweis: undefined })
 
 const id = useId()
 const hinweisId = `${id}-hinweis`
@@ -61,6 +63,7 @@ const hinweisId = `${id}-hinweis`
       :placeholder="placeholder"
       :min="min"
       :max="max"
+      :step="step"
       :maxlength="maxlength"
       :aria-describedby="hinweis ? hinweisId : undefined"
       class="feld__eingabe"
