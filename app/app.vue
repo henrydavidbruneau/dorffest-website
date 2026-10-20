@@ -9,8 +9,11 @@ useSeoMeta({
   ogLocale: 'de_DE',
   ogType: 'website',
   ogUrl: kanonisch,
-  ogImage: `${url.origin}/fotos/dorffest-buffet.webp`,
-  ogImageAlt: 'Das große Buffet beim Dorffest in Königsdorf',
+  ogImage: `${url.origin}/vorschau.png`,
+  ogImageType: 'image/png',
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
+  ogImageAlt: 'Königsdorf rückt zusammen – Verein für Zusammenhalt',
   twitterCard: 'summary_large_image',
 })
 
