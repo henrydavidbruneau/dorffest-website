@@ -15,7 +15,7 @@ export default defineNuxtConfig({
         {
           name: 'description',
           content:
-            'Königsdorf rückt zusammen e.V.: Nachbar*innen, die Feste, Treffpunkte und Hilfe im Dorf organisieren.',
+            'Königsdorf rückt zusammen e.V.: Wir sind Nachbarinnen und Nachbarn, die Feste, Begegnungen und gemeinsame Aktionen im Dorf organisieren – offen für alle, von uns für uns.',
         },
       ],
       link: [

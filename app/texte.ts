@@ -3,13 +3,13 @@
 export const texte = {
   meta: {
     beschreibung:
-      'Königsdorf rückt zusammen e.V.: Nachbar*innen, die Feste, Treffpunkte und Hilfe im Dorf organisieren. Offen für alle, von uns für uns.',
+      'Königsdorf rückt zusammen e.V.: Wir sind Nachbarinnen und Nachbarn, die Feste, Begegnungen und gemeinsame Aktionen im Dorf organisieren – offen für alle, von uns für uns.',
   },
 
   start: {
     hero: {
       zusatz: 'Verein für Zusammenhalt',
-      text: 'Wir sind Nachbarinnen und Nachbarn, die Feste, Treffpunkte und Hilfe im Dorf organisieren – offen für alle, von uns für uns. Wie möchtest du dabei sein?',
+      text: 'Wir sind Nachbarinnen und Nachbarn, die Feste, Begegnungen und gemeinsame Aktionen im Dorf organisieren – offen für alle, von uns für uns. Wie möchtest du dabei sein?',
       knopfInfochannel: 'Zum Infochannel',
       knopfWasWirTun: 'Was wir tun',
       hierEntlang: 'hier entlang',
