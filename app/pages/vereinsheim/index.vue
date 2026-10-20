@@ -11,6 +11,14 @@ const post = useVereinsheimPost()
 const mails = computed(() => (post.listen.value.eingang?.eingerichtet ? post.listen.value.eingang.mails.slice(0, 5) : null))
 useAutoAktualisierung(() => ich.value?.vorstand && post.aktualisieren('eingang'))
 
+// Reiter „Für mich“: Mails, die jemand im Postfach für mich markiert hat
+const mk = usePostMarkierungen()
+const postReiter = ref<'neu' | 'fuermich'>('neu')
+const fuerMich = computed(() => (mk.markierungen.value ?? []).filter(m => m.fuer?.id === ich.value?.id))
+const markierungenLaden = () => ich.value?.vorstand && mk.laden().catch(() => {})
+onMounted(markierungenLaden)
+useAutoAktualisierung(markierungenLaden)
+
 interface Post { art: 'antrag' | 'vorschlag' | 'gastbeitrag' | 'leserbrief' | 'anmeldung', titel: string, von: string, wann: string, to: string }
 interface Auslage { id: number, titel: string, betrag: string | number, status: string, datum: string }
 interface Termin { id: number, titel: string, slug: string, beginn: string, ort: string | null }
@@ -139,7 +147,25 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
           </template>
           <template v-else-if="ich?.vorstand && mails">
             <p class="dash__karte-titel"><VereinsheimIcon name="post" class="dash__karte-icon" /> Neue Post</p>
-            <ul v-if="mails.length" class="dash__post">
+            <div class="dash__reiter" role="tablist" aria-label="Post">
+              <button type="button" role="tab" :aria-selected="postReiter === 'neu'" @click="postReiter = 'neu'">Neu</button>
+              <button type="button" role="tab" :aria-selected="postReiter === 'fuermich'" @click="postReiter = 'fuermich'">
+                Für mich<span v-if="fuerMich.length" class="dash__reiter-zahl">{{ fuerMich.length }}</span>
+              </button>
+            </div>
+            <template v-if="postReiter === 'fuermich'">
+              <ul v-if="fuerMich.length" class="dash__post">
+                <li v-for="m in fuerMich.slice(0, 5)" :key="m.id">
+                  <NuxtLink to="/vereinsheim/post?reiter=fuermich" class="dash__post-link dash__post-link--neu">
+                    <span class="dash__post-icon dash__post-pin" aria-hidden="true">📌</span>
+                    <span class="dash__post-text"><strong>{{ m.von }}</strong> · {{ m.betreff }} <small>– von {{ personName(m.user_created) }}</small></span>
+                    <span class="dash__post-zeit">{{ seit(m.date_created) }}</span>
+                  </NuxtLink>
+                </li>
+              </ul>
+              <p v-else class="dash__leer">Nichts für dich markiert.</p>
+            </template>
+            <ul v-else-if="mails.length" class="dash__post">
               <li v-for="m in mails" :key="m.uid">
                 <NuxtLink to="/vereinsheim/post" class="dash__post-link" :class="{ 'dash__post-link--neu': !m.gelesen }">
                   <VereinsheimIcon name="post" class="dash__post-icon" />
@@ -277,6 +303,49 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
   font-size: var(--groesse-h3);
   text-transform: uppercase;
   color: var(--farbe-lila);
+}
+
+.dash__reiter {
+  display: flex;
+  gap: 0.3rem;
+  margin: calc(-1 * var(--abstand-2xs)) 0 var(--abstand-s);
+}
+
+.dash__reiter button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.8rem;
+  border: 1.5px solid var(--farbe-lila);
+  border-radius: 999px;
+  background: none;
+  color: var(--farbe-lila);
+  font: inherit;
+  font-size: var(--groesse-xs);
+  cursor: pointer;
+}
+
+.dash__reiter button[aria-selected='true'] {
+  background: var(--farbe-lila);
+  color: var(--farbe-creme);
+}
+
+.dash__reiter-zahl {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.3rem;
+  height: 1.3rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--farbe-flieder);
+  color: var(--farbe-weiss);
+  font-size: 0.75rem;
+  font-weight: var(--gewicht-text-fett);
+}
+
+.dash__post-pin {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .dash__karte-icon {
