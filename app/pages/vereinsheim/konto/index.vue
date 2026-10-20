@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Mein Profil: Name, Profilbild, Passwort und die Tour zum Wiederholen
+// Mein Profil: Name, Profilbild, Passwort, die Tour zum Wiederholen und Abmelden
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
 useSeoMeta({ title: 'Mein Profil · Vereinsheim', robots: 'noindex, nofollow' })
 
@@ -66,6 +66,20 @@ async function passwortAendern() {
   }
   sendet.value = false
 }
+
+// Abmelden: Sitzung beenden, dann neu laden – so ist auch alles Gemerkte (Post, Profil) aus dem Browser weg
+const meldetAb = ref(false)
+async function abmelden() {
+  meldetAb.value = true
+  try {
+    await $fetch('/api/vereinsheim/logout', { method: 'POST' })
+    window.location.href = '/vereinsheim/tuer'
+  }
+  catch (e) {
+    fehler(e)
+    meldetAb.value = false
+  }
+}
 </script>
 
 <template>
@@ -114,6 +128,12 @@ async function passwortAendern() {
           <BasisFeld v-model="pw.nochmal" label="Neues Passwort nochmal" name="nochmal" type="password" autocomplete="new-password" required />
           <BasisKnopf type="submit" :disabled="sendet">{{ sendet ? 'Wird geändert …' : 'Passwort ändern' }}</BasisKnopf>
         </form>
+      </div>
+
+      <div class="vh-karte konto__karte">
+        <h2>Abmelden</h2>
+        <p class="konto__info konto__tour-text">Am fremden Rechner oder geteilten Handy? Dann hier abmelden. Sonst bleibst du 7 Tage angemeldet.</p>
+        <BasisKnopf variante="outline" :disabled="meldetAb" @click="abmelden">{{ meldetAb ? 'Meldet ab …' : 'Abmelden' }}</BasisKnopf>
       </div>
     </div>
   </div>
