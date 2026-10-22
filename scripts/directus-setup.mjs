@@ -648,6 +648,8 @@ const SYSTEM_FIELDS = {
     },
     // Tour durchs Vereinsheim gemacht oder abgelehnt → wird nicht mehr vorgeschlagen (im Konto wiederholbar)
     timestamp('tour_erledigt_am', { note: 'Vereinsheim-Tour gemacht oder abgelehnt' }),
+    // Popup „Vereinsheim aufs Handy“ (nach der Tour) gesehen → kommt nicht wieder
+    timestamp('app_hinweis_am', { note: 'Popup „Vereinsheim aufs Handy“ gesehen' }),
   ],
 }
 
@@ -817,8 +819,8 @@ const PERMISSIONS = {
     { collection: 'directus_files', action: 'update', fields: ['*'], permissions: { _or: [{ folder: { _null: true } }, { folder: { name: { _neq: 'belege' } } }, { uploaded_by: { _eq: '$CURRENT_USER' } }] } },
     { collection: 'directus_folders', action: 'read', fields: ['*'] },
     // Namen anderer (wer hat angelegt/geprüft), eigenes Konto bearbeiten (Name, Passwort, Profilbild, Tour)
-    { collection: 'directus_users', action: 'read', fields: ['id', 'first_name', 'last_name', 'email', 'avatar', 'benutzername', 'tour_erledigt_am'] },
-    { collection: 'directus_users', action: 'update', fields: ['first_name', 'last_name', 'email', 'password', 'avatar', 'tour_erledigt_am'], permissions: { id: { _eq: '$CURRENT_USER' } } },
+    { collection: 'directus_users', action: 'read', fields: ['id', 'first_name', 'last_name', 'email', 'avatar', 'benutzername', 'tour_erledigt_am', 'app_hinweis_am'] },
+    { collection: 'directus_users', action: 'update', fields: ['first_name', 'last_name', 'email', 'password', 'avatar', 'tour_erledigt_am', 'app_hinweis_am'], permissions: { id: { _eq: '$CURRENT_USER' } } },
   ],
   // Vorstand bekommt zusätzlich zu Mitglied alles (Policies addieren sich)
   Vorstand: [

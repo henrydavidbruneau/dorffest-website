@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Mein Profil: Name, Profilbild, Passwort, Benachrichtigungen, die Tour zum Wiederholen und Abmelden
+// Mein Profil: Name, Profilbild, Passwort, Vereinsheim aufs Handy, Benachrichtigungen, die Tour zum Wiederholen und Abmelden
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
 useSeoMeta({ title: 'Mein Profil · Vereinsheim', robots: 'noindex, nofollow' })
 
@@ -67,6 +67,15 @@ async function passwortAendern() {
   sendet.value = false
 }
 
+// ---------- Vereinsheim aufs Handy (installierbare Web-App) ----------
+const app = useVereinsheimApp()
+onMounted(() => app.erkennen())
+
+async function appInstallieren() {
+  if (await app.installieren()) zeige('Installiert – das Vereinsheim liegt jetzt auf deinem Startbildschirm.')
+  push.pruefen()
+}
+
 // ---------- Benachrichtigungen auf diesem Gerät ----------
 const push = useVereinsheimPush()
 onMounted(() => push.pruefen())
@@ -132,6 +141,12 @@ async function abmelden() {
             <small>Erscheint rund oben in der Navigation. Am besten ein Foto, auf dem man dich erkennt.</small>
           </div>
         </div>
+      </div>
+
+      <div class="vh-karte konto__karte">
+        <h2>Vereinsheim aufs Handy</h2>
+        <VereinsheimAppAnleitung :geraet="app.geraet.value" class="konto__tour-text" />
+        <BasisKnopf v-if="app.geraet.value === 'knopf'" variante="outline" @click="appInstallieren">Installieren</BasisKnopf>
       </div>
 
       <div class="vh-karte konto__karte">

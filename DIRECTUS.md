@@ -384,6 +384,7 @@ Rechte dafür (Mitglied: lesen + eigenes Konto ändern); `termine.wiederholung` 
 (Plätze bei regelmäßigen Terminen je Runde). Fehlt ein Feld einmal, blendet das Vereinsheim es im Formular aus
 und nennt es; Directus meldet unbekannte Felder als „fehlendes Recht“ – die Meldung sagt dann, welches Feld fehlt.
 
+**Neu am 23.10.2026 (ausgeführt):** Feld `directus_users.app_hinweis_am` (Popup „Vereinsheim aufs Handy“ gesehen; Mitglied: lesen + eigenes Konto ändern).
 **Neu am 22.10.2026 (ausgeführt am 22.10.2026):** Collection `push_abos` mit Rechten (Server, Mitglied, Vorstand) und
 Flow „Push: Post-Benachrichtigungen bei Rollenwechsel aus“ (mit Test-User geprüft: Statuswechsel setzt `post` auf `false`).
 

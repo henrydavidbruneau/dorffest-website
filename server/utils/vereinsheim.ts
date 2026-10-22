@@ -188,6 +188,7 @@ export async function ich(event: H3Event): Promise<VereinsheimIch> {
     benutzername: user.benutzername ?? null,
     avatar: user.avatar ?? null,
     tour_erledigt_am: user.tour_erledigt_am ?? null,
+    app_hinweis_am: user.app_hinweis_am ?? null,
     vorstand,
   }
 }

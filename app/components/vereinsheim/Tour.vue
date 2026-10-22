@@ -1,10 +1,12 @@
 <script setup lang="ts">
 // Tour-Oberfläche: Vorschlag als Popup auf dem Dashboard, danach Schritt für Schritt ein Lichtkegel
 // auf das jeweilige Element (`data-tour="…"`) und daneben eine Erklärkarte.
+// Ist die Tour vorbei (gemacht, beendet oder abgelehnt), kommt einmalig „Vereinsheim aufs Handy“.
 const tour = useVereinsheimTour()
 const { aktiv, nr, schritt, schritte, vorschlagen } = tour
 const route = useRoute()
 const { zeige } = useVereinsheimMeldung()
+const { ich } = useVereinsheimIch()
 
 // Vorschlag erst nach einer Sekunde, damit man das Dashboard kurz sieht
 const vorschlagBereit = ref(false)
@@ -16,6 +18,37 @@ watch(zeigeVorschlag, async (ja) => {
   await nextTick()
   vorschlagKarte.value?.focus()
 })
+
+// ---------- Danach einmalig: Vereinsheim aufs Handy ----------
+const app = useVereinsheimApp()
+const appBereit = ref(false)
+const appKarte = ref<HTMLElement | null>(null)
+const appMoeglich = computed(() => route.path === '/vereinsheim' && !aktiv.value && !vorschlagen.value && app.offen.value)
+let appUhr: ReturnType<typeof setTimeout> | undefined
+watch(appMoeglich, (ja) => {
+  clearTimeout(appUhr)
+  appBereit.value = false
+  if (!ja) return
+  app.erkennen()
+  // schon als App unterwegs: nichts zu zeigen (und nichts zu merken – am Rechner käme es dann noch)
+  if (app.geraet.value === 'installiert') return
+  appUhr = setTimeout(async () => {
+    appBereit.value = true
+    await nextTick()
+    appKarte.value?.focus()
+  }, 1200)
+}, { immediate: true })
+const zeigeApp = computed(() => appBereit.value && appMoeglich.value)
+
+async function appFertig(installiert = false) {
+  appBereit.value = false
+  await app.gesehen()
+  zeige(installiert ? 'Super! Und falls du es später noch mal brauchst: „Aufs Handy“ findest du in deinem Profil.' : 'Alles klar. „Vereinsheim aufs Handy“ findest du jederzeit in deinem Profil.')
+}
+
+async function appInstallieren() {
+  await appFertig(await app.installieren())
+}
 
 // ---------- Lichtkegel ----------
 const rahmen = ref<{ top: number, left: number, width: number, height: number } | null>(null)
@@ -84,6 +117,7 @@ watch([aktiv, nr, () => route.path], () => aktiv.value && zeigen())
 
 function taste(e: KeyboardEvent) {
   if (zeigeVorschlag.value && e.key === 'Escape') return tour.spaeter()
+  if (zeigeApp.value && e.key === 'Escape') return appFertig()
   if (!aktiv.value) return
   if (e.key === 'Escape') tour.beenden()
   else if (e.key === 'ArrowRight') weiter()
@@ -123,6 +157,23 @@ async function nein() {
         <BasisKnopf groesse="klein" @click="tour.starten()">Tour starten</BasisKnopf>
         <button type="button" class="vh-aktion" @click="tour.spaeter()">Später</button>
         <button type="button" class="vh-aktion tour-karte__nein" @click="nein">Nein danke</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Danach einmalig: Vereinsheim aufs Handy -->
+  <div v-if="zeigeApp" class="tour-vorschlag" role="dialog" aria-modal="true" aria-labelledby="app-hinweis-titel">
+    <div ref="appKarte" class="tour-karte tour-karte--vorschlag" tabindex="-1">
+      <p class="tour-karte__zaehler">Noch ein Tipp</p>
+      <h2 id="app-hinweis-titel" class="tour-karte__titel">Das Vereinsheim aufs Handy</h2>
+      <div class="tour-karte__text">
+        <VereinsheimAppAnleitung :geraet="app.geraet.value" />
+        <p v-if="ich?.vorstand" class="tour-karte__zusatz">Als App kann dir das Vereinsheim auch Bescheid geben, wenn neue Post da ist.</p>
+      </div>
+      <div class="tour-karte__knoepfe">
+        <BasisKnopf v-if="app.geraet.value === 'knopf'" groesse="klein" @click="appInstallieren">Installieren</BasisKnopf>
+        <BasisKnopf v-else groesse="klein" @click="appFertig()">Verstanden</BasisKnopf>
+        <button type="button" class="vh-aktion tour-karte__nein" @click="appFertig()">Nein danke</button>
       </div>
     </div>
   </div>
@@ -206,6 +257,11 @@ async function nein() {
   margin: 0;
   font-size: var(--groesse-s);
   line-height: 1.55;
+}
+
+.tour-karte__zusatz {
+  margin: var(--abstand-xs) 0 0;
+  font-size: var(--groesse-s);
 }
 
 .tour-karte__knoepfe {
