@@ -534,6 +534,11 @@ const STEMPEL: Record<string, string> = { eingereicht: 'eingereicht', genehmigt:
   .dash__hero-innen {
     grid-template-columns: 1fr;
   }
+
+  /* Post-Zettel auf dem Handy gerade (die Drehung kommt als Inline-Variable vom Notizzettel) */
+  .dash__karte {
+    --drehung: 0deg !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
