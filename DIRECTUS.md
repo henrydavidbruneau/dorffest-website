@@ -60,6 +60,7 @@ in Konfigurationen immer Punycode), Directus 12.5.0, Lizenz: Open Innovation Gra
 | `ideen` | Ideenwand „Was fehlt dir in Königsdorf?“ | create, read (published) | read, update, delete | alles |
 | `vorschlaege` | eingereichte Ideen/Angebote (Mitmachen) | create | read, update | alles |
 | `plenum_erinnerungen` | Erinnerungen ans Plenum | create | read, delete | alles |
+| `push_abos` | Geräte mit Push-Benachrichtigungen | read, delete | create, read/delete **eigene** | alles (`post` setzen) |
 | `mitgliedsantraege` | Anträge von `/mitglied-werden` | create | – | alles |
 | `mitglieder` | Mitgliederliste | – | – | alles |
 | `auslagen` (+ `auslagen_belege`) | Finanzen: Auslagen einreichen | – | create, read/update **eigene** | alles |
@@ -357,6 +358,8 @@ Sichtbar nur für die Policy `Vorstand`. Der Server-Token darf nur **anlegen**, 
 | `NUXT_BREVO_NEWSLETTER_LISTE` | ID der Newsletter-Liste in Brevo |
 | `NUXT_IMAP_HOST` / `NUXT_IMAP_BENUTZER` / `NUXT_IMAP_PASSWORT` | Kontakt-Postfach im Vereinsheim (lesen + senden; Passwort als Secret) |
 | `NUXT_TURNSTILE_SECRET_KEY` / `NUXT_PUBLIC_TURNSTILE_SITE_KEY` | Bot-Schutz für Formulare |
+| `NUXT_PUBLIC_VAPID_PUBLIC_KEY` / `NUXT_VAPID_PRIVATE_KEY` | Push-Benachrichtigungen (Schlüsselpaar: `npx web-push generate-vapid-keys`; privater Teil als Secret) |
+| `NUXT_EINGANG_ADRESSE` / `NUXT_EINGANG_SCHLUESSEL` | Push bei neuer Post: geheime Weiterleitungs-Adresse bei Brevo und Schlüssel im Webhook-Link (Secret) |
 | `NUXT_LINK_SECRET` | Schlüssel für signierte Bestätigungslinks (Newsletter, Plenum-Erinnerung; bei DPAT `NUXT_NEWSLETTER_SECRET`). Kommt mit dem Double-Opt-in. Das Vereinsheim braucht keinen eigenen Session-Schlüssel (Directus-Tokens im httpOnly-Cookie, wie DPAT). |
 
 ## Einrichtung (Skripte)
@@ -463,6 +466,9 @@ Ohne echte E-Mail gibt es kein „Passwort vergessen“ – dann setzt ein Admin
   schon 4 Kleinanzeigen veröffentlicht …“). Getestet am 18.10.2026.
 - **Aufräumen: Abgelehntes nach 6 Monaten löschen** – täglich 3 Uhr: `gastbeitraege` und
   `mitgliedsantraege` mit Status `abgelehnt`, letzte Änderung bzw. Entscheidung älter als 6 Monate.
+- **Push: Post-Benachrichtigungen bei Rollenwechsel aus** – Action-Hook auf `directus_users` (`items.update`):
+  ändern sich `role` oder `status`, setzt er `push_abos.post` der Person auf `false`. Wer (wieder) im Vorstand ist,
+  schaltet unter „Mein Profil“ neu ein bzw. öffnet die Seite – dann trägt der Server `post` wieder ein.
 
 ### Website-Anbindung
 
@@ -504,6 +510,18 @@ Ohne echte E-Mail gibt es kein „Passwort vergessen“ – dann setzt ein Admin
   darf dafür `plenum_erinnerungen` lesen und `zuletzt_erinnert_am` setzen. Im Vereinsheim stehen die Abos in der
   Anmeldeliste des Plenums; die Rundmail erreicht sie auch (`mitErinnerung`, mit Abmelde-Link).
 - **Vorstand?** = darf `mitglieder` lesen (Policy `Vorstand`).
+- **Push-Benachrichtigungen** (Web Push, keine App im Store): Das Vereinsheim ist eine installierbare Web-App
+  (`public/app/manifest.webmanifest`, Icons `public/app/` (KRZ-Schild ohne Pfosten auf Lila, Vorlage `schild.svg`), `public/sw.js` nur für Push, kein Offline-Speicher).
+  „Mein Profil“ → Benachrichtigungen (`useVereinsheimPush()`): `POST/DELETE /api/vereinsheim/push`, „Probe schicken“
+  `POST /api/vereinsheim/push/probe`; je Gerät ein Eintrag in `push_abos` (`server/utils/push.ts`, Bibliothek `web-push`).
+  iPhone/iPad: nur als App vom Home-Bildschirm (iOS 16.4+). Der Vorstand bekommt `post = true`.
+  **Neue Post ohne Nachschauen:** IONOS leitet von jeder Mail im Kontakt-Postfach eine Kopie an
+  `NUXT_EINGANG_ADRESSE` (z.B. `post-<zufall>@eingang.koenigsdorf-rueckt-zusammen.de`; DNS bei IONOS:
+  `eingang` MX 10 `inbound1.sendinblue.com`, MX 20 `inbound2.sendinblue.com`, kein Postfach). Brevo (Inbound Parsing)
+  ruft `POST /api/eingang/brevo?schluessel=<NUXT_EINGANG_SCHLUESSEL>` auf (Webhook anlegen: `scripts/brevo-eingang.mjs`);
+  die Route nimmt nur Kopien an genau diese Adresse (keinen Spam ab Score 6) und schickt „Neue Mail von … / Betreff“ an alle
+  Abos mit `post`. Antippen öffnet `/vereinsheim/post?mail=<Message-ID>` (holt frisch und öffnet die Mail). Kostet keine
+  Netlify-Rechenzeit, solange keine Mail kommt.
 - **Post** (`/vereinsheim/post`, nur Vorstand): kleines Mailprogramm fürs Kontakt-Postfach
   (`server/utils/postfach.ts`). Lesen per IMAP (`imapflow` + `mailparser`, PEEK – nichts wird als gelesen
   markiert, keine Kopie in Directus). Tempo: die IMAP-Verbindung bleibt 30 s offen (vor Wiederverwendung NOOP-Prüfung),

@@ -50,9 +50,17 @@ export default defineNuxtConfig({
     // Senden aus dem Vereinsheim (gleiche Zugangsdaten wie IMAP)
     smtpHost: 'smtp.ionos.de',
     webmailUrl: 'https://mail.ionos.de',
+    // Push-Benachrichtigungen im Vereinsheim (Web Push). Schlüsselpaar einmal mit
+    // `npx web-push generate-vapid-keys` erzeugen; der öffentliche Teil steht unter public.
+    vapidPrivateKey: '',
+    // Neue Mails im Kontakt-Postfach: IONOS leitet eine Kopie an `eingangAdresse` weiter (Subdomain bei
+    // Brevo, Inbound Parsing), Brevo ruft /api/eingang/brevo?schluessel=<eingangSchluessel> auf.
+    eingangAdresse: '',
+    eingangSchluessel: '',
     public: {
       siteUrl: 'https://königsdorf-rückt-zusammen.de',
       turnstileSiteKey: '',
+      vapidPublicKey: '',
     },
   },
 

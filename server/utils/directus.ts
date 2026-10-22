@@ -5,7 +5,7 @@
 type Abfrage = Record<string, string | number | boolean | undefined | null | object>
 
 interface DirectusOptionen {
-  method?: 'GET' | 'POST' | 'PATCH'
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
   query?: Abfrage
   body?: Record<string, unknown> | FormData
 }

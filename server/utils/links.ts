@@ -17,7 +17,7 @@ export async function signiere(zweck: string, id: number | string): Promise<stri
 }
 
 /** Vergleich in konstanter Zeit, damit die Signatur nicht Zeichen für Zeichen erraten werden kann */
-function gleich(a: string, b: string) {
+export function gleich(a: string, b: string) {
   if (a.length !== b.length) return false
   let unterschied = 0
   for (let i = 0; i < a.length; i++) unterschied |= a.charCodeAt(i) ^ b.charCodeAt(i)

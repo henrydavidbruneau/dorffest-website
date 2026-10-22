@@ -290,6 +290,19 @@ const COLLECTIONS = [
     relations: [{ field: 'fuer', related_collection: 'directus_users', schema: { on_delete: 'CASCADE' } }],
   },
   {
+    collection: 'push_abos',
+    meta: { icon: 'notifications_active', note: 'Geräte mit Push-Benachrichtigungen (Vereinsheim → Mein Profil). Wem es gehört = user_created.', display_template: '{{geraet}} · {{user_created.first_name}}' },
+    fields: [
+      idField(),
+      str('endpoint', { required: true, unique: true, max: 1000, note: 'Push-Adresse des Browsers' }),
+      str('p256dh', { required: true, width: 'half', max: 200 }),
+      str('auth', { required: true, width: 'half', max: 100 }),
+      str('geraet', { max: 80, note: 'z.B. „iPhone · Safari“' }),
+      bool('post', { note: 'Auch neue Mails im Kontakt-Postfach (nur Vorstand)' }),
+      ...systemFields(),
+    ],
+  },
+  {
     collection: 'rundbriefe',
     meta: { icon: 'campaign', note: 'Rundbriefe (Newsletter) aus dem Vereinsheim: Entwürfe und verschickte, zum Ansehen und Duplizieren. Versand über Brevo.', display_template: '{{betreff}}' },
     fields: [
@@ -671,6 +684,29 @@ const FLOWS = [
     ],
   },
   {
+    // Post-Pushes nur für den Vorstand: ändert sich Rolle oder Status, gibt es keine mehr, bis die Person
+    // sie unter „Mein Profil“ neu einschaltet (dann prüft der Server, ob sie im Vorstand ist)
+    name: 'Push: Post-Benachrichtigungen bei Rollenwechsel aus',
+    icon: 'notifications_off',
+    description: 'Setzt push_abos.post auf false, wenn sich bei einem User Rolle oder Status ändert.',
+    trigger: 'event',
+    options: { type: 'action', scope: ['items.update'], collections: ['directus_users'] },
+    operations: [
+      {
+        key: 'geaendert', name: 'Rolle oder Status geändert?', type: 'exec', options: {
+          code: [
+            'module.exports = async function (data) {',
+            '  const payload = data.$trigger.payload || {}',
+            '  return { ja: \'role\' in payload || \'status\' in payload }',
+            '}',
+          ].join('\n'),
+        },
+      },
+      { key: 'nur_dann', name: 'Nur dann', type: 'condition', options: { filter: { geaendert: { ja: { _eq: true } } } } },
+      { key: 'aus', name: 'Post-Pushes aus', type: 'item-update', options: { collection: 'push_abos', permissions: '$full', query: { filter: { user_created: { _in: '{{$trigger.keys}}' } }, limit: -1 }, payload: { post: false } } },
+    ],
+  },
+  {
     name: 'Aufräumen: Abgelehntes nach 6 Monaten löschen',
     icon: 'delete_sweep',
     description: 'Täglich um 3 Uhr: abgelehnte Gastbeiträge und Mitgliedsanträge, die älter als 6 Monate sind.',
@@ -733,6 +769,9 @@ const PERMISSIONS = {
     { collection: 'plenum_erinnerungen', action: 'update', fields: ['bestaetigt', 'abgemeldet_am', 'zuletzt_erinnert_am'] },
     { collection: 'mitgliedsantraege', action: 'create', fields: ['art', 'beitrag_stufe', 'beitrag_jahr', 'vorname', 'nachname', 'strasse', 'plz', 'ort', 'email', 'telefon', 'plenum_besucht', 'nachricht', 'satzung_anerkannt_am'] },
     { collection: 'verein', action: 'read', fields: ['*'] },
+    // Push: neue Mail (Brevo-Eingang) an alle Post-Abos; Gerät neu zuordnen und Abgelaufenes löschen
+    { collection: 'push_abos', action: 'read', fields: ['id', 'endpoint', 'p256dh', 'auth', 'post', 'user_created'] },
+    { collection: 'push_abos', action: 'delete', fields: ['*'] },
     // Vereinsheim-Login: Benutzername → E-Mail (nur aktive User mit Benutzernamen)
     { collection: 'directus_users', action: 'read', fields: ['id', 'email', 'benutzername'], permissions: { _and: [{ benutzername: { _nnull: true } }, { status: { _eq: 'active' } }] } },
     // Konten ohne E-Mail: beim ersten Login Platzhalter `<benutzername>@ohne-mail.…` eintragen (nur wenn leer)
@@ -768,6 +807,10 @@ const PERMISSIONS = {
     { collection: 'auslagen_belege', action: 'read', fields: ['*'], permissions: { auslagen_id: OWN } },
     { collection: 'auslagen_belege', action: 'update', fields: ['*'], permissions: { auslagen_id: { _and: [OWN, { status: { _eq: 'eingereicht' } }] } } },
     ...all('verein', ['read']),
+    // Push auf den eigenen Geräten; `post` (Kontakt-Postfach) setzt nur der Vorstand
+    { collection: 'push_abos', action: 'create', fields: ['endpoint', 'p256dh', 'auth', 'geraet'] },
+    { collection: 'push_abos', action: 'read', fields: ['*'], permissions: OWN },
+    { collection: 'push_abos', action: 'delete', fields: ['*'], permissions: OWN },
     // Dateien: alles außer fremden Belegen lesen, hochladen, Nicht-Belege bearbeiten
     { collection: 'directus_files', action: 'create', fields: ['*'] },
     { collection: 'directus_files', action: 'read', fields: ['*'], permissions: { _or: [{ folder: { _null: true } }, { folder: { name: { _neq: 'belege' } } }, { uploaded_by: { _eq: '$CURRENT_USER' } }] } },

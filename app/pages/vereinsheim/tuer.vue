@@ -2,6 +2,7 @@
 // Eingang zum Vereinsheim: schlichte Anmeldekarte auf lila Grund (Benutzername oder E-Mail + Passwort)
 definePageMeta({ layout: false })
 useSeoMeta({ title: 'Vereinsheim', robots: 'noindex, nofollow' })
+useVereinsheimAppKopf()
 
 const route = useRoute()
 const { ich, laden } = useVereinsheimIch()

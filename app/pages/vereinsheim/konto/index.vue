@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Mein Profil: Name, Profilbild, Passwort, die Tour zum Wiederholen und Abmelden
+// Mein Profil: Name, Profilbild, Passwort, Benachrichtigungen, die Tour zum Wiederholen und Abmelden
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
 useSeoMeta({ title: 'Mein Profil · Vereinsheim', robots: 'noindex, nofollow' })
 
@@ -67,6 +67,40 @@ async function passwortAendern() {
   sendet.value = false
 }
 
+// ---------- Benachrichtigungen auf diesem Gerät ----------
+const push = useVereinsheimPush()
+onMounted(() => push.pruefen())
+
+async function pushEin() {
+  try {
+    const r = await push.einschalten()
+    if (r) zeige(r.post ? 'Benachrichtigungen an – auch für neue Post.' : 'Benachrichtigungen an.')
+  }
+  catch (e) {
+    fehler(e)
+  }
+}
+
+async function pushAus() {
+  try {
+    await push.ausschalten()
+    zeige('Benachrichtigungen auf diesem Gerät aus.')
+  }
+  catch (e) {
+    fehler(e)
+  }
+}
+
+async function pushProbe() {
+  try {
+    await push.probe()
+    zeige('Probe ist unterwegs.')
+  }
+  catch (e) {
+    fehler(e)
+  }
+}
+
 // Abmelden: Sitzung beenden, dann neu laden – so ist auch alles Gemerkte (Post, Profil) aus dem Browser weg
 const meldetAb = ref(false)
 async function abmelden() {
@@ -98,6 +132,33 @@ async function abmelden() {
             <small>Erscheint rund oben in der Navigation. Am besten ein Foto, auf dem man dich erkennt.</small>
           </div>
         </div>
+      </div>
+
+      <div class="vh-karte konto__karte">
+        <h2>Benachrichtigungen</h2>
+        <p class="konto__info konto__tour-text">
+          {{ ich?.vorstand ? 'Bei neuer Post im Kontakt-Postfach meldet sich dein Handy oder Rechner sofort.' : 'Das Vereinsheim kann sich auf deinem Handy oder Rechner melden.' }}
+          Gilt nur für dieses Gerät.
+        </p>
+        <template v-if="push.zustand.value === 'an'">
+          <p class="konto__info konto__tour-text"><strong>An auf diesem Gerät.</strong></p>
+          <div class="konto__knoepfe">
+            <BasisKnopf variante="outline" @click="pushProbe">Probe schicken</BasisKnopf>
+            <button type="button" class="vh-aktion" :disabled="push.arbeitet.value" @click="pushAus">Ausschalten</button>
+          </div>
+        </template>
+        <BasisKnopf v-else-if="push.zustand.value === 'aus'" variante="outline" :disabled="push.arbeitet.value" @click="pushEin">{{ push.arbeitet.value ? 'Schaltet ein …' : 'Einschalten' }}</BasisKnopf>
+        <p v-else-if="push.zustand.value === 'erst-installieren'" class="konto__info">
+          Auf dem {{ push.ios.value ? 'iPhone' : 'Handy' }} geht das nur mit dem Vereinsheim als App:
+          in Safari unten auf <strong>Teilen</strong> tippen → <strong>Zum Home-Bildschirm</strong>.
+          Dann das Vereinsheim über das neue Symbol öffnen und hier einschalten.
+        </p>
+        <p v-else-if="push.zustand.value === 'blockiert'" class="konto__info">
+          Benachrichtigungen sind für diese Seite blockiert. Erlauben kannst du sie in den Einstellungen deines Browsers
+          {{ push.ios.value ? '(iPhone: Einstellungen → Mitteilungen → Vereinsheim)' : '(Schloss-Symbol neben der Adresse)' }}.
+        </p>
+        <p v-else-if="push.zustand.value === 'nicht-eingerichtet'" class="konto__info">Auf dem Server noch nicht eingerichtet – sag dem Vorstand Bescheid.</p>
+        <p v-else-if="push.zustand.value === 'nicht-moeglich'" class="konto__info">Dieser Browser kann leider keine Benachrichtigungen.</p>
       </div>
 
       <div class="vh-karte konto__karte">
@@ -219,6 +280,13 @@ input:focus-visible + .konto__hochladen,
 .konto__karte form {
   display: flex;
   flex-direction: column;
+  gap: var(--abstand-s);
+}
+
+.konto__knoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--abstand-s);
 }
 

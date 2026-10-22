@@ -12,6 +12,8 @@ const { zeige, fehler } = useVereinsheimMeldung()
 const verein = useVerein()
 const post = useVereinsheimPost()
 const mk = usePostMarkierungen()
+const route = useRoute()
+const router = useRouter()
 
 type Reiter = PostOrdner | 'fuermich'
 const reiter = ref<Reiter>('eingang')
@@ -25,9 +27,16 @@ function markierungenLaden() {
 }
 
 // Gemerkte Liste sofort zeigen, im Hintergrund nachschauen; danach jede Minute
-onMounted(() => {
-  post.aktualisieren(listenOrdner.value)
+onMounted(async () => {
   markierungenLaden()
+  const ziel = typeof route.query.mail === 'string' ? route.query.mail : ''
+  if (!ziel) return post.aktualisieren(listenOrdner.value)
+  // aus einer Push-Benachrichtigung: frisch holen und die Mail gleich öffnen
+  await post.aktualisieren('eingang', true)
+  const ohneKlammern = (id: string | null | undefined) => (id ?? '').replace(/^<|>$/g, '')
+  const m = data.value?.mails.find(x => ohneKlammern(x.messageId) === ohneKlammern(ziel))
+  router.replace({ query: {} })
+  if (m) await oeffnen('eingang', m.uid)
 })
 watch(reiter, () => {
   offen.value = null

@@ -1,0 +1,17 @@
+{
+  "name": "Vereinsheim · Königsdorf rückt zusammen",
+  "short_name": "Vereinsheim",
+  "description": "Das Vereinsheim von Königsdorf rückt zusammen e.V.",
+  "lang": "de",
+  "id": "/vereinsheim",
+  "start_url": "/vereinsheim",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fffdf7",
+  "theme_color": "#7a2a7e",
+  "icons": [
+    { "src": "/app/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/app/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/app/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

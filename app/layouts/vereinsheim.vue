@@ -4,6 +4,7 @@
 const { ich } = useVereinsheimIch()
 const { meldung } = useVereinsheimMeldung()
 const route = useRoute()
+useVereinsheimAppKopf()
 
 interface Reiter { text: string, to: string }
 const slug = (to: string) => to.split('/').pop() || 'dashboard'
