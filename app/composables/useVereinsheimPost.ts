@@ -3,8 +3,8 @@
 // Das Postfach schaut alle 3 Minuten nach neuer Post, solange es sichtbar ist; das Dashboard nur beim Öffnen.
 
 export type PostOrdner = 'eingang' | 'gesendet'
-export interface PostMailKopf { uid: number, messageId: string | null, von: string, vonAdresse: string, an: string, betreff: string, datum: string, gelesen: boolean, beantwortet: boolean }
-export interface PostMail extends PostMailKopf { text: string, anhaenge: { name: string, groesse: number }[], weitere: string[] }
+export interface PostMailKopf { uid: number, messageId: string | null, von: string, vonAdresse: string, an: string, cc: string, betreff: string, datum: string, gelesen: boolean, beantwortet: boolean }
+export interface PostMail extends PostMailKopf { text: string, anhaenge: { name: string, groesse: number }[], anAdressen: string[], ccAdressen: string[], weitereAn: string[], weitereCc: string[] }
 interface Stand { eingerichtet: boolean, webmail: string, mails: PostMailKopf[], um: number }
 
 const ALLE_MINUTE = 60_000

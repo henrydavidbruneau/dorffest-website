@@ -21,6 +21,8 @@ export interface MailKopf {
   von: string
   vonAdresse: string
   an: string
+  /** Kopie (Namen bzw. Adressen, kommagetrennt) */
+  cc: string
   betreff: string
   datum: string
   gelesen: boolean
@@ -31,8 +33,12 @@ export interface PostMail extends MailKopf {
   text: string
   anhaenge: { name: string, groesse: number }[]
   references: string[]
-  /** weitere Empfänger (An + Kopie) für „Allen antworten“, ohne Absender und ohne das eigene Postfach */
-  weitere: string[]
+  /** alle Adressen aus An bzw. Kopie (z.B. „Nochmal schreiben“ aus Gesendet) */
+  anAdressen: string[]
+  ccAdressen: string[]
+  /** für „Allen antworten“: übrige An- bzw. Kopie-Empfänger, ohne Absender und ohne das eigene Postfach */
+  weitereAn: string[]
+  weitereCc: string[]
 }
 
 /** Adresse vergleichbar machen (klein, Umlaut-Domain als xn--…) */
@@ -153,6 +159,7 @@ export async function ladePost(ordner: Ordner = 'eingang', anzahl = 30, frisch =
         von: von?.name || von?.address || 'unbekannt',
         vonAdresse: von?.address ?? '',
         an: adressen(n.envelope?.to),
+        cc: adressen(n.envelope?.cc),
         betreff: n.envelope?.subject || '(ohne Betreff)',
         datum: new Date(n.envelope?.date ?? n.internalDate ?? Date.now()).toISOString(),
         gelesen: n.flags?.has('\\Seen') ?? false,
@@ -180,14 +187,23 @@ export async function ladeMail(ordner: Ordner, uid: number): Promise<PostMail> {
     const liste = (feld: typeof m.to) => (Array.isArray(feld) ? feld : feld ? [feld] : []).flatMap(f => f.value.map(v => v.address ?? '')).filter(Boolean)
     const absender = normalAdresse(m.replyTo?.value[0]?.address ?? von?.address ?? '')
     const eigene = eigeneAdressen()
-    const weitere = [...new Map([...liste(m.to), ...liste(m.cc)].map(a => [normalAdresse(a), a] as const)).entries()]
-      .filter(([n]) => n !== absender && !eigene.has(n))
-      .map(([, a]) => a)
+    // ohne Doppelte, ohne Absender und eigenes Postfach; wer in An steht, nicht nochmal in Kopie
+    const gesehen = new Set([absender, ...eigene])
+    const ohne = (liste: string[]) => liste.filter((a) => {
+      const n = normalAdresse(a)
+      if (gesehen.has(n)) return false
+      gesehen.add(n)
+      return true
+    })
+    const weitereAn = ohne(liste(m.to))
+    const weitereCc = ohne(liste(m.cc))
+    const anzeige = (feld: typeof m.to) => (Array.isArray(feld) ? feld.map(t => t.text).join(', ') : feld?.text ?? '')
     return {
       uid,
       von: von?.name || von?.address || 'unbekannt',
       vonAdresse: m.replyTo?.value[0]?.address ?? von?.address ?? '',
-      an: Array.isArray(m.to) ? m.to.map(t => t.text).join(', ') : m.to?.text ?? '',
+      an: anzeige(m.to),
+      cc: anzeige(m.cc),
       betreff: m.subject || '(ohne Betreff)',
       datum: (m.date ?? new Date()).toISOString(),
       gelesen: n.flags?.has('\\Seen') ?? false,
@@ -196,7 +212,10 @@ export async function ladeMail(ordner: Ordner, uid: number): Promise<PostMail> {
       anhaenge: m.attachments.map(a => ({ name: a.filename ?? 'Anhang', groesse: a.size })),
       messageId: m.messageId ?? null,
       references,
-      weitere,
+      anAdressen: liste(m.to),
+      ccAdressen: liste(m.cc),
+      weitereAn,
+      weitereCc,
     }
   }))
   if (mailSpeicher.size > 100) mailSpeicher.clear()
@@ -205,7 +224,7 @@ export async function ladeMail(ordner: Ordner, uid: number): Promise<PostMail> {
 }
 
 export interface NeueMail {
-  an: string
+  an: string[]
   /** Kopie an (z.B. bei „Allen antworten“) */
   cc?: string[]
   betreff: string
@@ -246,7 +265,7 @@ export async function sendePost(neu: NeueMail): Promise<{ weg: 'postfach' | 'bre
     await $fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: { 'api-key': brevoApiKey, 'accept': 'application/json' },
-      body: { sender: { email: mailVon, name: mailVonName }, to: [{ email: neu.an }], ...(neu.cc?.length ? { cc: neu.cc.map(email => ({ email })) } : {}), subject: neu.betreff, textContent: neu.text, tags: ['vereinsheim-post'] },
+      body: { sender: { email: mailVon, name: mailVonName }, to: neu.an.map(email => ({ email })), ...(neu.cc?.length ? { cc: neu.cc.map(email => ({ email })) } : {}), subject: neu.betreff, textContent: neu.text, tags: ['vereinsheim-post'] },
     }).catch((err) => {
       console.error('[postfach] Brevo:', err?.data ?? err)
       throw fail(502, 'senden', 'Die Mail konnte gerade nicht verschickt werden.')

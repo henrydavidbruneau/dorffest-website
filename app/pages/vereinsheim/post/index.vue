@@ -138,21 +138,32 @@ function neueMail() {
   entwurfAnfang = gruss.value
 }
 
-/** `alle`: die übrigen Empfänger (An + Kopie) kommen in „Kopie an“ */
+/** gibt es außer dem Absender noch andere Empfänger? */
+const mehrere = (m: PostMail) => m.weitereAn.length + m.weitereCc.length > 0
+
+/**
+ * Antworten wie im Mailprogramm. `alle`: Absender + übrige An-Empfänger in „An“, Kopie bleibt Kopie.
+ * Aus „Gesendet“ geht es an dieselben Leute wie damals („Nochmal schreiben“).
+ */
 function antworten(m: PostMail, alle = false) {
   const zitat = m.text.split('\n').slice(0, 60).map(z => `> ${z}`).join('\n')
+  const gesendet = offenOrdner.value === 'gesendet'
+  const an = gesendet ? m.anAdressen : alle ? [m.vonAdresse, ...m.weitereAn] : [m.vonAdresse]
+  const cc = gesendet ? m.ccAdressen : alle ? m.weitereCc : []
   entwurf.value = {
-    an: m.vonAdresse,
-    cc: alle ? m.weitere.join(', ') : '',
+    an: an.join(', '),
+    cc: cc.join(', '),
     betreff: /^(re|aw):/i.test(m.betreff) ? m.betreff : `Re: ${m.betreff}`,
-    text: `Hallo ${m.von.split(' ')[0]},\n\n${gruss.value}\n\nAm ${datumLang(m.datum)} schrieb ${m.von}:\n${zitat}`,
-    antwortAuf: offenOrdner.value === 'eingang' ? m.uid : undefined,
+    text: gesendet
+      ? `Hallo,\n\n${gruss.value}\n\nAm ${datumLang(m.datum)} schrieben wir:\n${zitat}`
+      : `Hallo ${m.von.split(' ')[0]},\n\n${gruss.value}\n\nAm ${datumLang(m.datum)} schrieb ${m.von}:\n${zitat}`,
+    antwortAuf: gesendet ? undefined : m.uid,
   }
   entwurfAnfang = entwurf.value.text
 }
 
 function weiterleiten(m: PostMail) {
-  const kopf = [`Von: ${m.von} <${m.vonAdresse}>`, `Datum: ${datumLang(m.datum)}, ${uhrzeit(m.datum)} Uhr`, `Betreff: ${m.betreff}`, `An: ${m.an}`].join('\n')
+  const kopf = [`Von: ${m.von} <${m.vonAdresse}>`, `Datum: ${datumLang(m.datum)}, ${uhrzeit(m.datum)} Uhr`, `Betreff: ${m.betreff}`, `An: ${m.an}`, ...(m.cc ? [`Kopie: ${m.cc}`] : [])].join('\n')
   const anhaenge = m.anhaenge.length ? `\n\n(Anhänge nicht mit weitergeleitet: ${m.anhaenge.map(a => a.name).join(', ')} – dafür das Webmail nehmen)` : ''
   entwurf.value = {
     an: '',
@@ -248,7 +259,7 @@ const kontextGruppen = computed<KontextEintrag[][]>(() => {
   return [
     [
       { text: eingang ? 'Antworten' : 'Nochmal schreiben', aktion: () => mitMail(ordner, uid, m => antworten(m)) },
-      ...(eingang ? [{ text: 'Allen antworten', aktion: () => mitMail(ordner, uid, m => antworten(m, m.weitere.length > 0)) }] : []),
+      ...(eingang ? [{ text: 'Allen antworten', aktion: () => mitMail(ordner, uid, m => antworten(m, true)) }] : []),
       { text: 'Weiterleiten', aktion: () => mitMail(ordner, uid, weiterleiten) },
     ],
     [
@@ -277,7 +288,7 @@ const mehrGruppen = computed<KontextEintrag[][]>(() => {
   const kopf = data.value?.mails.find(x => x.uid === m.uid)
   return [
     [
-      ...(eingang && m.weitere.length ? [{ text: `Nur ${m.von.split(' ')[0]} antworten`, aktion: () => antworten(m) }] : []),
+      ...(eingang && mehrere(m) ? [{ text: `Nur ${m.von.split(' ')[0]} antworten`, aktion: () => antworten(m) }] : []),
       { text: 'Weiterleiten', aktion: () => weiterleiten(m) },
     ],
     eingang && kopf
@@ -358,7 +369,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
             >
               <span class="brief__von">
                 <span v-if="m.beantwortet" class="brief__beantwortet" title="beantwortet">↩</span>
-                {{ reiter === 'eingang' ? m.von : `an ${m.an}` }}
+                {{ reiter === 'eingang' ? m.von : `an ${m.an}${m.cc ? ` · Kopie ${m.cc}` : ''}` }}
               </span>
               <span class="brief__zeit">{{ laedt === m.uid ? '…' : wann(m.datum) }}</span>
               <span class="brief__betreff">{{ m.betreff }}</span>
@@ -378,8 +389,8 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
           <form v-if="entwurf" class="schreiben" @submit.prevent="senden">
             <p class="schreiben__titel">{{ entwurf.antwortAuf ? 'Antwort' : /^fwd?:/i.test(entwurf.betreff) ? 'Weiterleiten' : 'Neue Mail' }}</p>
             <p class="schreiben__von">von <strong>{{ verein.kontakt_email }}</strong></p>
-            <BasisFeld v-model="entwurf.an" label="An" name="an" type="email" required />
-            <BasisFeld v-model="entwurf.cc" label="Kopie an" name="cc" hinweis="mehrere Adressen mit Komma trennen" />
+            <BasisFeld v-model="entwurf.an" label="An" name="an" required hinweis="mehrere Adressen mit Komma trennen" />
+            <BasisFeld v-model="entwurf.cc" label="Kopie an" name="cc" />
             <BasisFeld v-model="entwurf.betreff" label="Betreff" name="betreff" required :maxlength="200" />
             <BasisFeld v-model="entwurf.text" label="Text" name="text" mehrzeilig :zeilen="16" required />
             <div class="schreiben__knoepfe">
@@ -396,6 +407,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
                 <p class="post__absender">
                   <strong>{{ offen.von }}</strong> &lt;{{ offen.vonAdresse }}&gt;<br>
                   <span class="post__an"><strong>An</strong> {{ offen.an }}</span>
+                  <template v-if="offen.cc"><br><span class="post__an"><strong>Kopie</strong> {{ offen.cc }}</span></template>
                   <span v-if="offen.beantwortet" class="post__beantwortet"> · beantwortet</span>
                 </p>
                 <div class="post__rechtsoben">
@@ -403,7 +415,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
                   <div class="post__aktionen" role="toolbar" aria-label="Mail bearbeiten">
                     <VereinsheimSymbolKnopf symbol="loeschen" tipp="Löschen" :disabled="loescht" @click="loeschen(offen)" />
                     <VereinsheimSymbolKnopf
-                      v-if="offenOrdner === 'eingang' && offen.weitere.length"
+                      v-if="offenOrdner === 'eingang' && mehrere(offen)"
                       symbol="alle"
                       tipp="Allen antworten"
                       @click="antworten(offen, true)"
