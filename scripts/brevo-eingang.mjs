@@ -41,7 +41,11 @@ async function brevo(method, pfad, body) {
   return text ? JSON.parse(text) : {}
 }
 
-const { webhooks = [] } = await brevo('GET', '/webhooks?type=inbound')
+// Ohne Inbound-Webhooks antwortet Brevo mit 400 „document_not_found“ statt einer leeren Liste
+const { webhooks = [] } = await brevo('GET', '/webhooks?type=inbound').catch((e) => {
+  if (e.message.includes('document_not_found')) return {}
+  throw e
+})
 // Schlüssel in der Ausgabe nicht zeigen
 const ohneSchluessel = (url) => url.replace(/schluessel=[^&]+/, 'schluessel=…')
 
