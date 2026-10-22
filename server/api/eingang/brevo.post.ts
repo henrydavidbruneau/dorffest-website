@@ -4,7 +4,8 @@
 // die Mail selbst bleibt im Postfach und wird im Vereinsheim wie immer per IMAP gelesen.
 // Einrichtung: scripts/brevo-eingang.mjs, DIRECTUS.md → „Push-Benachrichtigungen“.
 interface Postfach { Address?: string, Name?: string | null }
-interface EingangMail { MessageId?: string, From?: Postfach, Recipients?: Postfach[], Subject?: string, SpamScore?: number, Spam?: { Score?: number } }
+// Recipients kommt in der Praxis als Liste von Adressen (Text), laut Doku-Tabelle als Postfach-Objekte – beides annehmen
+interface EingangMail { MessageId?: string, From?: Postfach, Recipients?: (string | Postfach)[], Subject?: string, SpamScore?: number, Spam?: { Score?: number } }
 
 // rspamd: ab etwa 6 Punkten markiert IONOS selbst als Spam
 const SPAM_AB = 6
@@ -18,7 +19,7 @@ export default defineEventHandler(async (event) => {
   const items = (Array.isArray(body.items) ? body.items : []) as EingangMail[]
   const adresse = eingangAdresse.trim().toLowerCase()
   // nur Kopien an die (geheime) Weiterleitungs-Adresse, keine Mails, die jemand direkt an die Subdomain schickt
-  const neue = items.filter(m => (m.Recipients ?? []).some(r => r.Address?.trim().toLowerCase() === adresse)
+  const neue = items.filter(m => (m.Recipients ?? []).some(r => (typeof r === 'string' ? r : r?.Address)?.trim().toLowerCase() === adresse)
     && (m.SpamScore ?? m.Spam?.Score ?? 0) < SPAM_AB)
   if (!neue.length) return { gesendet: 0 }
 
