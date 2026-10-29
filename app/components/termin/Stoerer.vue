@@ -173,6 +173,8 @@ async function absenden() {
   box-shadow: var(--schatten-karte);
   transform: rotate(-0.8deg);
   scroll-margin-top: 7rem;
+  /* Felder richten sich nach der Breite des Zettels (schmal in der Seitenspalte, breit darunter) */
+  container-type: inline-size;
 }
 
 /* begrenzte Plätze: Rand oben in Orange als Hinweis */
@@ -285,13 +287,33 @@ async function absenden() {
   color: var(--farbe-lila);
 }
 
-@media (min-width: 40rem) {
+/* mittel (Seitenspalte): Name über die ganze Breite, darunter E-Mail + Personen */
+@container (min-width: 16rem) {
   .stoerer__felder {
-    grid-template-columns: 1fr 1fr 6.5rem;
+    grid-template-columns: 1fr 6.5rem;
+  }
+
+  .stoerer__felder > :first-child {
+    grid-column: 1 / -1;
   }
 
   .stoerer__felder--zwei {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .stoerer__felder--zwei > :first-child {
+    grid-column: auto;
+  }
+}
+
+/* breit: alles in einer Reihe */
+@container (min-width: 36rem) {
+  .stoerer__felder {
+    grid-template-columns: 1fr 1fr 6.5rem;
+  }
+
+  .stoerer__felder > :first-child {
+    grid-column: auto;
   }
 }
 </style>

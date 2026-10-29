@@ -25,6 +25,21 @@ const wann = computed(() => {
   return `${wochentag} · ${zeit}`
 })
 
+// Anmeldezettel (bzw. Mitbring-Liste) – dieselbe Bedingung wie in <TerminStoerer>
+const mitZettel = computed(() => !!termin.value && (termin.value.vergangen || termin.value.anmeldung_aktiv || termin.value.mitbringen_position !== 'aus'))
+
+// Höhe des Zettels fürs Mitlaufen: höher als das Fenster → erst mitscrollen, bis sein Ende sichtbar ist
+const rand = ref<HTMLElement>()
+const zettelHoehe = ref(0)
+let beobachter: ResizeObserver | undefined
+onMounted(() => {
+  const zettel = rand.value?.firstElementChild
+  if (!zettel) return
+  beobachter = new ResizeObserver(() => (zettelHoehe.value = Math.ceil(zettel.getBoundingClientRect().height)))
+  beobachter.observe(zettel)
+})
+onBeforeUnmount(() => beobachter?.disconnect())
+
 // zurück aus dem Austragen-Link der Anmeldebestätigung
 const ausgetragen = computed(() => route.query.ausgetragen === '1')
 
@@ -119,17 +134,19 @@ useHead(() => ({
       </div>
     </header>
 
-    <!-- Lesespalte -->
-    <div class="termin__spalte">
+    <!-- Lesespalte; der Anmeldezettel läuft am Rechner rechts daneben mit -->
+    <div class="termin__spalte" :class="{ 'termin__spalte--mit-zettel': mitZettel }">
       <section v-if="termin.beschreibung_html" class="termin__beschreibung" aria-labelledby="beschreibung-titel">
         <h2 id="beschreibung-titel" class="termin__abschnitt">Worum geht’s?</h2>
         <!-- eslint-disable-next-line vue/no-v-html -- serverseitig aus Markdown erzeugt, rohes HTML wird escaped -->
         <div class="termin__text" v-html="termin.beschreibung_html" />
       </section>
 
-      <TerminWunschliste v-if="termin.wunschliste_aktiv" :termin="termin" class="termin__wunschliste" />
+      <div v-if="mitZettel" ref="rand" class="termin__rand" :style="zettelHoehe ? { '--zettel-hoehe': `${zettelHoehe}px` } : undefined">
+        <TerminStoerer :termin="termin" class="termin__anmeldung" />
+      </div>
 
-      <TerminStoerer :termin="termin" class="termin__anmeldung" />
+      <TerminWunschliste v-if="termin.wunschliste_aktiv" :termin="termin" class="termin__wunschliste" />
     </div>
 
   </div>
@@ -334,9 +351,25 @@ useHead(() => ({
 
 /* ---------- Lesespalte ---------- */
 .termin__spalte {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'text' 'zettel' 'wunsch';
+  gap: var(--abstand-xl);
   max-width: calc(44rem + 2 * var(--seitenrand));
   margin-inline: auto;
   padding: var(--abstand-xl) var(--seitenrand) var(--abstand-sektion);
+}
+
+.termin__beschreibung {
+  grid-area: text;
+}
+
+.termin__rand {
+  grid-area: zettel;
+}
+
+.termin__wunschliste {
+  grid-area: wunsch;
 }
 
 .termin__abschnitt {
@@ -359,9 +392,21 @@ useHead(() => ({
   text-decoration-color: var(--farbe-orange);
 }
 
-.termin__anmeldung,
-.termin__wunschliste {
-  margin-top: var(--abstand-xl);
+/* Rechner: Text + Wunschliste links, Anmeldezettel rechts, klebt beim Scrollen oben */
+@media (min-width: 64rem) {
+  .termin__spalte--mit-zettel {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 25rem);
+    grid-template-areas: 'text zettel' 'wunsch zettel';
+    grid-template-rows: auto 1fr;
+    column-gap: clamp(2.5rem, 5vw, 5rem);
+    max-width: calc(var(--inhaltsbreite) + 2 * var(--seitenrand));
+  }
+
+  /* klebt unter dem Kopf; ist der Zettel höher als das Fenster, klebt er stattdessen mit dem Ende unten */
+  .termin__spalte--mit-zettel .termin__anmeldung {
+    position: sticky;
+    top: min(calc(var(--kopf-hoehe) + var(--abstand-m)), calc(100svh - var(--zettel-hoehe, 0px) - var(--abstand-m)));
+  }
 }
 
 @media (min-width: 56rem) {

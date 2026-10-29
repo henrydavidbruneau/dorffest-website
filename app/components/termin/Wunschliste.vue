@@ -25,9 +25,9 @@ const stimmenText = (n: number) => (n === 1 ? '1 Stimme' : `${n} Stimmen`)
     <h2 id="wunschliste-titel" class="wunschliste__titel">{{ termin.wunschliste_frage || 'Was wünschst du dir?' }}</h2>
     <p v-if="termin.wunschliste_text" class="wunschliste__text">{{ termin.wunschliste_text }}</p>
 
-    <div class="wunschliste__blatt">
-      <BasisKlebeband position="mitte" farbe="gelb" :drehung="-2" :breite="6" />
-      <p class="wunschliste__kopf handschrift">{{ offen ? 'Wunschliste' : 'So wurde abgestimmt' }}</p>
+    <!-- Setlist wie auf dem Plakat: Notizpapier mit Klammer, Perforation und Linien – bewusst anders als der weiße Anmeldezettel -->
+    <BasisNotizzettel farbe="papier" befestigung="klammer" :drehung="-0.6" class="wunschliste__blatt">
+      <p class="wunschliste__kopf handschrift">{{ offen ? 'Setlist' : 'So wurde abgestimmt' }}</p>
 
       <p v-if="offen && wuensche.length" class="wunschliste__anleitung">
         Tipp auf <span class="wunschliste__pfeil" aria-hidden="true">▲</span><span class="nur-screenreader">„dafür“</span>, wenn du etwas auch hören willst –
@@ -73,7 +73,7 @@ const stimmenText = (n: number) => (n === 1 ? '1 Stimme' : `${n} Stimmen`)
           {{ status === 'sendet' ? 'Kommt auf die Liste …' : 'Auf die Liste' }}
         </BasisKnopf>
       </form>
-    </div>
+    </BasisNotizzettel>
   </section>
 </template>
 
@@ -100,20 +100,19 @@ const stimmenText = (n: number) => (n === 1 ? '1 Stimme' : `${n} Stimmen`)
 
 /* Setlist-Zettel wie auf dem Plakat */
 .wunschliste__blatt {
-  position: relative;
-  margin-top: var(--abstand-l);
-  padding: clamp(2rem, 3.5vw, 2.75rem) clamp(1.25rem, 3.5vw, 2.75rem) clamp(1.5rem, 3vw, 2.25rem);
-  border-radius: var(--radius-s);
-  background: var(--farbe-weiss);
-  box-shadow: var(--schatten-karte);
-  transform: rotate(0.6deg);
+  margin-top: calc(var(--abstand-l) + 1.5rem);
+  padding: clamp(2.25rem, 3.5vw, 2.75rem) clamp(1.25rem, 3.5vw, 2.75rem) clamp(1.5rem, 3vw, 2.25rem);
+  /* Perforation oben */
+  background:
+    radial-gradient(circle, rgb(0 0 0 / 0.18) 2.5px, transparent 3px) 0.6rem 0.7rem / 1.1rem 1.1rem repeat-x,
+    var(--farbe-notizpapier);
 }
 
 .wunschliste__kopf {
   display: inline-block;
   margin: 0;
   border-bottom: 2px solid currentcolor;
-  font-size: clamp(2.25rem, 4vw, 2.75rem);
+  font-size: clamp(2.5rem, 4.5vw, 3.25rem);
   line-height: 1;
 }
 
@@ -141,7 +140,7 @@ const stimmenText = (n: number) => (n === 1 ? '1 Stimme' : `${n} Stimmen`)
   gap: 0.75rem;
   align-items: center;
   padding-block: 0.55rem;
-  border-bottom: 1px dashed rgb(122 42 126 / 0.3);
+  border-bottom: 1px solid rgb(0 0 0 / 0.14);
 }
 
 .wunsch__platz {
