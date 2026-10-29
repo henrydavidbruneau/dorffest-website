@@ -152,7 +152,7 @@ async function abmelden() {
       <div class="vh-karte konto__karte">
         <h2>Benachrichtigungen</h2>
         <p class="konto__info konto__tour-text">
-          {{ ich?.vorstand ? 'Bei neuer Post im Kontakt-Postfach meldet sich dein Handy oder Rechner sofort.' : 'Das Vereinsheim kann sich auf deinem Handy oder Rechner melden.' }}
+          {{ ich?.vorstand ? 'Bei neuer Post im Kontakt-Postfach und neuen Wünschen auf einer Wunschliste (z.B. Songwünsche) meldet sich dein Handy oder Rechner sofort.' : 'Bei neuen Wünschen auf einer Wunschliste (z.B. Songwünsche) meldet sich dein Handy oder Rechner sofort.' }}
           Gilt nur für dieses Gerät.
         </p>
         <template v-if="push.zustand.value === 'an'">

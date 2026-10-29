@@ -35,19 +35,22 @@ const FELDER = [
   'beschreibung', 'aufruf_text', 'hervorgehoben', 'anmeldung_aktiv', 'plaetze', 'mitbringen_position',
   'mitbringen_text', 'mitbringen_vorschlaege',
 ].join(',')
-// neuere Felder – fehlen sie in Directus noch, wird ohne sie gelesen
+// neuere Felder – fehlen sie in Directus noch, wird ohne sie gelesen (Stufe für Stufe)
 const FELDER_WIEDERHOLUNG = `${FELDER},wiederholung,wiederholung_bis,im_fokus,mitbringen_frage`
+const FELDER_WUNSCHLISTE = `${FELDER_WIEDERHOLUNG},wunschliste_aktiv,wunschliste_frage,wunschliste_text`
+const STUFEN = [FELDER_WUNSCHLISTE, FELDER_WIEDERHOLUNG, FELDER]
 
-// Solange `wiederholung` in Directus noch nicht angelegt ist (scripts/directus-setup.mjs), ohne lesen
-let mitWiederholung = true
+// Solange neuere Felder in Directus noch nicht angelegt sind (scripts/directus-setup.mjs), ohne sie lesen
+let stufe = 0
+const mitWiederholung = () => stufe < 2
 async function leseTermine(abfrage: Record<string, unknown>): Promise<Termin[]> {
-  if (mitWiederholung) {
+  while (stufe < STUFEN.length - 1) {
     try {
-      return await directusListe<Termin>('termine', { ...abfrage, fields: FELDER_WIEDERHOLUNG })
+      return await directusListe<Termin>('termine', { ...abfrage, fields: STUFEN[stufe] })
     }
     catch (e) {
-      console.warn('[termine] ohne Wiederholung gelesen (Feld fehlt?):', (e as Error)?.message ?? e)
-      mitWiederholung = false
+      console.warn('[termine] ohne neuere Felder gelesen (Feld fehlt?):', (e as Error)?.message ?? e)
+      stufe++
     }
   }
   return directusListe<Termin>('termine', { ...abfrage, fields: FELDER })
@@ -71,7 +74,7 @@ export async function ladeTermine(filter: TerminFilter = {}): Promise<Termin[]> 
   const bedingungen: object[] = [VEROEFFENTLICHT]
   if (filter.hervorgehoben) bedingungen.push({ hervorgehoben: { _eq: true } })
   if (filter.fokus) {
-    if (!mitWiederholung) return [] // Feld fehlt noch
+    if (!mitWiederholung()) return [] // Feld fehlt noch
     bedingungen.push({ im_fokus: { _eq: true } })
   }
   if (filter.mitDatum) bedingungen.push({ beginn: { _nnull: true } })

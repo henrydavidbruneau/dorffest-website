@@ -48,6 +48,8 @@ in Konfigurationen immer Punycode), Directus 12.5.0, Lizenz: Open Innovation Gra
 | `anmeldungen` | Anmeldungen zu Terminen (inkl. Mitbringen) | create, read (nur `termin`, `personen`) | read, update, delete | alles |
 | `beitraege` | „Was bringst du mit?“ bei Terminen ohne Anmeldung | create | read, update, delete | alles |
 | `termin_rundmails` | Mails an alle Angemeldeten (Protokoll) | – | create, read | alles |
+| `wuensche` | Wunschliste bei Terminen (z.B. Songwünsche; sofort sichtbar, moderierbar) | create, read (published) | read, update, delete | alles |
+| `wunsch_stimmen` | Stimmen für Wünsche (eine je Wunsch und Browser) | create, read, delete | read | alles |
 | `ressorts` | Ressorts des Dorfanzeigers | read | read | alles |
 | `ausgaben` | **ungenutzt seit 19.10.2026** (Dorfanzeiger ohne Ausgaben) | read | alles | alles |
 | `artikel` | Dorfanzeiger-Artikel | read (published) | alles | alles |
@@ -120,6 +122,18 @@ O2M an `termine`: Alias-Feld `anmeldungen` (für die Übersicht im Vereinsheim).
 
 ### `beitraege`
 Mitbring-Liste bei Terminen **ohne** Anmeldung: `termin` (M2O), `name`, `was`, `email` (optional).
+
+### `wuensche` + `wunsch_stimmen`
+Öffentliche Wunschliste auf der Terminseite (`termine.wunschliste_aktiv`, Überschrift `wunschliste_frage`, z.B.
+„Welche Lieder sollen wir singen?“, Einleitung `wunschliste_text`), ohne Anmeldung, wie die Ideenwand:
+`wuensche` = `termin` (M2O), `text` (≤ 120), `name` (freiwillig), `status` `published`/`hidden` (sofort sichtbar).
+`wunsch_stimmen` = `wunsch` (M2O, CASCADE), `waehler` (SHA-256 einer zufälligen Kennung aus dem httpOnly-Cookie
+`wunsch_kennung`, ~400 Tage). Eine Stimme je Wunsch und Browser; nochmal tippen nimmt sie zurück. Gezählt wird per
+Aggregat, sortiert nach Stimmen (Gleichstand: älterer Wunsch zuerst). Wer etwas wünscht, stimmt automatisch dafür;
+ein schon vorhandener Wunsch (Groß/klein, Satzzeichen egal) wird nicht doppelt angelegt, sondern bekommt die Stimme.
+Routen: `GET/POST /api/termine/:slug/wuensche`, `POST /api/termine/:slug/wuensche/:id/stimme` (`{ an }`),
+Logik in `server/utils/wuensche.ts`. Nach dem Termin ist die Liste nur noch zu sehen. Neuer Wunsch → Push an alle
+Vereinsheim-Geräte mit Benachrichtigungen (öffnet `/vereinsheim/termine/:id/wuensche`: ausblenden/löschen).
 
 ### `termin_rundmails`
 Protokoll der Mails an alle Angemeldeten: `termin` (M2O), `betreff`, `text` (Markdown),
@@ -384,6 +398,10 @@ Rechte dafür (Mitglied: lesen + eigenes Konto ändern); `termine.wiederholung` 
 (Plätze bei regelmäßigen Terminen je Runde). Fehlt ein Feld einmal, blendet das Vereinsheim es im Formular aus
 und nennt es; Directus meldet unbekannte Felder als „fehlendes Recht“ – die Meldung sagt dann, welches Feld fehlt.
 
+**Neu am 29.10.2026 (noch ausführen!):** Wunschliste bei Terminen – Felder `termine.wunschliste_aktiv`,
+`wunschliste_frage`, `wunschliste_text`; Collections `wuensche` + `wunsch_stimmen` mit Rechten (Server, Mitglied).
+Bis das Skript gelaufen ist, liest die Website Termine ohne diese Felder (keine Wunschliste) und das Vereinsheim
+blendet sie im Formular aus.
 **Neu am 23.10.2026 (ausgeführt):** Feld `directus_users.app_hinweis_am` (Popup „Vereinsheim aufs Handy“ gesehen; Mitglied: lesen + eigenes Konto ändern).
 **Neu am 22.10.2026 (ausgeführt am 22.10.2026):** Collection `push_abos` mit Rechten (Server, Mitglied, Vorstand) und
 Flow „Push: Post-Benachrichtigungen bei Rollenwechsel aus“ (mit Test-User geprüft: Statuswechsel setzt `post` auf `false`).
@@ -392,7 +410,7 @@ Flow „Push: Post-Benachrichtigungen bei Rollenwechsel aus“ (mit Test-User ge
 
 - **Systemfelder** an jeder Collection: `date_created`, `date_updated`, `user_created`,
   `user_updated`. IDs sind Ganzzahlen (Dateien/User: UUID). `verein` ist ein Singleton.
-- **Löschen:** Termin löschen löscht seine `anmeldungen`, `beitraege` und `termin_rundmails`
+- **Löschen:** Termin löschen löscht seine `anmeldungen`, `beitraege`, `wuensche` (samt Stimmen) und `termin_rundmails`
   mit. Ein Ressort mit Artikeln lässt sich nicht löschen. Sonst wird die Verknüpfung geleert.
 - `termine.anmeldungen` ist das O2M-Gegenstück zu `anmeldungen.termin`.
 - `status`-Felder legen wir selbst an (Directus 12 schlägt für neue Collections sonst

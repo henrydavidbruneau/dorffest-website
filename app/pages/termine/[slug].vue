@@ -89,6 +89,7 @@ useHead(() => ({
 
             <div class="plakat__knoepfe">
               <BasisKnopf v-if="termin.anmeldung_aktiv && !termin.vergangen" to="#anmeldung" variante="hell">Anmelden</BasisKnopf>
+              <BasisKnopf v-if="termin.wunschliste_aktiv && !termin.vergangen" to="#wunschliste" variante="hell">Mitbestimmen</BasisKnopf>
               <details v-if="kalender.ics && !termin.vergangen" class="kalender">
                 <summary class="plakat__kalender"><span aria-hidden="true">+</span> Zum Kalender hinzufügen</summary>
                 <ul class="kalender__liste">
@@ -125,6 +126,8 @@ useHead(() => ({
         <!-- eslint-disable-next-line vue/no-v-html -- serverseitig aus Markdown erzeugt, rohes HTML wird escaped -->
         <div class="termin__text" v-html="termin.beschreibung_html" />
       </section>
+
+      <TerminWunschliste v-if="termin.wunschliste_aktiv" :termin="termin" class="termin__wunschliste" />
 
       <TerminStoerer :termin="termin" class="termin__anmeldung" />
     </div>
@@ -356,7 +359,8 @@ useHead(() => ({
   text-decoration-color: var(--farbe-orange);
 }
 
-.termin__anmeldung {
+.termin__anmeldung,
+.termin__wunschliste {
   margin-top: var(--abstand-xl);
 }
 

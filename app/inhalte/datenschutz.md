@@ -1,4 +1,4 @@
-Wir freuen uns über deinen Besuch und nehmen den Schutz deiner Daten ernst. Hier erklären wir, welche Daten beim Besuch dieser Seite anfallen und was wir damit machen. Kurz gesagt: **kein Tracking, keine Werbung, keine Cookies für Besucher*innen.** Wir erheben nur, was wir für die jeweilige Sache wirklich brauchen.
+Wir freuen uns über deinen Besuch und nehmen den Schutz deiner Daten ernst. Hier erklären wir, welche Daten beim Besuch dieser Seite anfallen und was wir damit machen. Kurz gesagt: **kein Tracking, keine Werbung, keine Cookies beim normalen Besuch.** Wir erheben nur, was wir für die jeweilige Sache wirklich brauchen.
 
 ## 1. Verantwortlich
 
@@ -14,11 +14,13 @@ Diese Website wird bei **Netlify, Inc.** (USA) gehostet. Beim Aufruf jeder Seite
 
 Rechtsgrundlage ist unser berechtigtes Interesse an einem sicheren und funktionierenden Webangebot (Art. 6 Abs. 1 lit. f DSGVO). Mit Netlify besteht ein Vertrag zur Auftragsverarbeitung. Da Netlify seinen Sitz in den USA hat, können Daten in die USA übermittelt werden. Die Übermittlung erfolgt auf Grundlage des Angemessenheitsbeschlusses der EU-Kommission (EU-US Data Privacy Framework) bzw. der EU-Standardvertragsklauseln (Art. 45, 46 DSGVO).
 
-## 3. Kein Tracking, Schriften lokal, Cookies nur im Vereinsheim
+## 3. Kein Tracking, Schriften lokal, Cookies nur wo nötig
 
 Wir verwenden keine Analyse- oder Tracking-Werkzeuge. Unsere Schriften werden von unserem eigenen Server geladen – es werden dabei keine Daten an Google oder andere Schriftanbieter übertragen.
 
 Beim normalen Besuch der Seite setzen wir keine Cookies. Nur wenn sich Vereinsmitglieder im internen Bereich („Vereinsheim“) anmelden, setzen wir technisch notwendige Cookies, die die Anmeldung für höchstens sieben Tage speichern. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG und unser berechtigtes Interesse an einem sicheren Login (Art. 6 Abs. 1 lit. f DSGVO).
+
+Wenn du auf einer Wunschliste (z.B. Songwünsche bei einem Termin) etwas einträgst oder abstimmst, setzen wir ein technisch notwendiges Cookie mit einer zufälligen Kennung. Damit zählt jede Stimme nur einmal und du kannst sie wieder zurücknehmen. Das Cookie verrät nichts über dich; in unserer Datenbank steht nur ein daraus berechneter, nicht umkehrbarer Wert. Es läuft nach gut einem Jahr ab, du kannst es jederzeit in deinem Browser löschen. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG und unser berechtigtes Interesse an einer fairen Abstimmung (Art. 6 Abs. 1 lit. f DSGVO).
 
 ## 4. Wo deine Angaben gespeichert werden
 
@@ -55,9 +57,9 @@ Wenn du dich für unseren Newsletter einträgst, schicken wir dir zuerst eine Ma
 
 Mails an unsere Kontaktadresse landen in unserem Postfach bei der **IONOS SE**, Elgendorfer Str. 57, 56410 Montabaur. Der Vorstand liest und beantwortet sie über unseren internen Bereich; dabei wird keine Kopie an anderer Stelle gespeichert. Wir nutzen deine Angaben nur, um dein Anliegen zu bearbeiten (Art. 6 Abs. 1 lit. b bzw. f DSGVO), und löschen die Mails, wenn sie erledigt sind und keine Aufbewahrungspflichten bestehen.
 
-## 6. Leserbriefe und Ideenwand
+## 6. Leserbriefe, Ideenwand und Wunschlisten
 
-Leserbriefe im Dorfanzeiger und Zettel auf der Ideenwand werden **öffentlich auf dieser Website angezeigt** – zusammen mit dem Namen, den du dazu angibst. Du kannst auch nur einen Vornamen oder ein Kürzel verwenden. Wir behalten uns vor, Beiträge zu kürzen oder zu entfernen. Wenn du möchtest, dass dein Beitrag gelöscht wird, schreib uns. Rechtsgrundlage ist deine Einwilligung durch das Absenden (Art. 6 Abs. 1 lit. a DSGVO).
+Leserbriefe im Dorfanzeiger, Zettel auf der Ideenwand und Wünsche auf Wunschlisten bei Terminen werden **öffentlich auf dieser Website angezeigt** – zusammen mit dem Namen, den du dazu angibst (bei Wunschlisten ist der Name freiwillig). Du kannst auch nur einen Vornamen oder ein Kürzel verwenden. Wir behalten uns vor, Beiträge zu kürzen oder zu entfernen. Wenn du möchtest, dass dein Beitrag gelöscht wird, schreib uns. Rechtsgrundlage ist deine Einwilligung durch das Absenden (Art. 6 Abs. 1 lit. a DSGVO).
 
 ### Gastbeiträge für den Dorfanzeiger
 

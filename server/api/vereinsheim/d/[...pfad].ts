@@ -2,7 +2,7 @@
 // Die Rechte prüft Directus (Policies `Mitglied` / `Vorstand`); hier nur eine Positivliste,
 // damit das Vereinsheim nichts anderes als seine Collections, Dateien und Ordner erreicht.
 const COLLECTIONS = new Set([
-  'termine', 'anmeldungen', 'beitraege', 'termin_rundmails', 'ressorts', 'ausgaben', 'artikel',
+  'termine', 'anmeldungen', 'beitraege', 'wuensche', 'wunsch_stimmen', 'termin_rundmails', 'ressorts', 'ausgaben', 'artikel',
   'kleinanzeigen', 'leserbriefe', 'gastbeitrag_einladungen', 'gastbeitraege', 'stimmen', 'faq', 'ideen',
   'vorschlaege', 'plenum_erinnerungen', 'mitgliedsantraege', 'mitglieder', 'auslagen', 'auslagen_belege', 'verein', 'rundbriefe', 'post_markierungen',
 ])

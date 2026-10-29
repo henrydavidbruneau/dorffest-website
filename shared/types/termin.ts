@@ -55,6 +55,12 @@ export interface Termin extends DirectusEintrag {
   mitbringen_text: string | null
   /** Vorschläge zum Antippen (Directus: Tags/JSON) */
   mitbringen_vorschlaege: string[] | null
+
+  /** öffentliche Wunschliste mit Abstimmung (z.B. Songwünsche); fehlen, solange die Felder nicht angelegt sind */
+  wunschliste_aktiv?: boolean | null
+  /** Überschrift, z.B. „Welche Lieder sollen wir singen?“ */
+  wunschliste_frage?: string | null
+  wunschliste_text?: string | null
 }
 
 /** Termin-Detail: wie in Directus, plus serverseitig berechnete Felder */

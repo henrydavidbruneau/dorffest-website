@@ -21,6 +21,7 @@ async function gespeichert(daten: Record<string, unknown>) {
     <template #oben="{ daten }">
       <p v-if="id !== 'neu'" class="termin-links">
         <BasisKnopf :to="`/vereinsheim/termine/${id}/anmeldungen`" groesse="klein" variante="outline">Anmeldungen &amp; Rundmail</BasisKnopf>
+        <BasisKnopf v-if="daten.wunschliste_aktiv" :to="`/vereinsheim/termine/${id}/wuensche`" groesse="klein" variante="outline">Wunschliste</BasisKnopf>
         <a v-if="daten.status === 'published'" :href="`/termine/${daten.slug}`" target="_blank" rel="noopener">Auf der Website ansehen ↗</a>
       </p>
     </template>

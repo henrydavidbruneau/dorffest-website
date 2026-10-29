@@ -74,11 +74,15 @@ export const FELDER_TERMIN: FeldDef[] = [
   { feld: 'mitbringen_frage', gruppe: 'anmeldung', label: 'Eigene Frage', typ: 'text', breit: true, maxlength: 120, hinweis: 'leer = „Was bringst du mit?“ – z.B. „Welche Songs sollen wir singen?“', wenn: d => !!d.mitbringen_position && d.mitbringen_position !== 'aus' },
   { feld: 'mitbringen_text', gruppe: 'anmeldung', label: 'Einleitung', typ: 'mehrzeilig', breit: true, wenn: d => d.mitbringen_position !== 'aus' },
   { feld: 'mitbringen_vorschlaege', gruppe: 'anmeldung', label: 'Vorschläge zum Antippen', typ: 'tags', breit: true, hinweis: 'mit Komma trennen: Kuchen, Kaffee, Becher – oder Songtitel; mehrere antippbar', wenn: d => d.mitbringen_position !== 'aus' },
+  { feld: 'wunschliste_aktiv', gruppe: 'wunschliste', label: 'Wunschliste auf der Terminseite', typ: 'janein', hinweis: 'ohne Anmeldung: Wünsche eintragen und mit ▲ abstimmen, die meisten Stimmen stehen oben' },
+  { feld: 'wunschliste_frage', gruppe: 'wunschliste', label: 'Überschrift', typ: 'text', breit: true, maxlength: 120, hinweis: 'z.B. „Welche Lieder sollen wir singen?“ – leer = „Was wünschst du dir?“', wenn: d => !!d.wunschliste_aktiv },
+  { feld: 'wunschliste_text', gruppe: 'wunschliste', label: 'Einleitung', typ: 'mehrzeilig', breit: true, wenn: d => !!d.wunschliste_aktiv },
 ]
 
 export const GRUPPEN_TERMIN: GruppeDef[] = [
   { key: 'text', titel: 'Worum geht’s?', seite: 'haupt' },
   { key: 'anmeldung', titel: 'Anmeldung & Frage an die Gäste', seite: 'haupt' },
+  { key: 'wunschliste', titel: 'Wunschliste', seite: 'haupt', einklappbar: true, hinweis: 'z.B. Songwünsche mit Abstimmung' },
   { key: 'wann', titel: 'Wann', seite: 'rand' },
   { key: 'wo', titel: 'Wo', seite: 'rand' },
   { key: 'bild', titel: 'Bild', seite: 'rand' },
