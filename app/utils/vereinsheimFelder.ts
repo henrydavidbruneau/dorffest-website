@@ -22,6 +22,8 @@ export interface FeldDef {
   gruppe?: string
   /** große Eingabe (z.B. Titel) */
   gross?: boolean
+  /** grauer Platzhalter im leeren Feld, z.B. die automatische Adresse */
+  platzhalter?: (daten: Record<string, unknown>) => string
 }
 
 /** Abschnitt im Formular: links die Hauptspalte (Text), rechts die Randspalte (Einstellungen) */
@@ -38,12 +40,16 @@ export interface GruppeDef {
 
 export const STATUS_VEROEFFENTLICHT = { draft: 'Entwurf', published: 'Veröffentlicht', archived: 'Archiv' }
 
+// Adresse (slug): darf leer bleiben – beim Speichern kommt sie aus dem Titel (<VereinsheimFormularSeite>)
+const ADRESSE_HINWEIS = 'leer = aus dem Titel; Großbuchstaben, Umlaute und Leerzeichen werden umgewandelt'
+const adresseAusTitel = (d: Record<string, unknown>) => slugAus(String(d.titel ?? ''))
+
 // „aus“ steht als leere Auswahl („einmalig“) im Formular
 const { aus: _einmalig, ...WIEDERHOLUNGEN_AUSWAHL } = WIEDERHOLUNGEN
 
 export const FELDER_TERMIN: FeldDef[] = [
   { feld: 'titel', gruppe: 'text', gross: true, label: 'Titel', typ: 'text', pflicht: true, breit: true, maxlength: 160 },
-  { feld: 'slug', gruppe: 'website', label: 'Adresse (/termine/…)', typ: 'text', pflicht: true, hinweis: 'nur a–z, 0–9 und Bindestriche', maxlength: 120 },
+  { feld: 'slug', gruppe: 'website', label: 'Adresse (/termine/…)', typ: 'text', hinweis: ADRESSE_HINWEIS, platzhalter: adresseAusTitel, maxlength: 120 },
   { feld: 'hervorgehoben', gruppe: 'website', label: 'Auf der Startseite unter „Was kommt“', typ: 'janein' },
   { feld: 'im_fokus', gruppe: 'website', label: 'Im Nextup auf der Startseite', typ: 'janein', hinweis: 'großes Countdown-Band; nur ein Termin – ohne Auswahl der nächste' },
   { feld: 'beginn', gruppe: 'wann', label: 'Beginn', typ: 'zeitpunkt', hinweis: 'leer = Datum steht noch nicht fest; bei regelmäßigen das erste Mal' },
@@ -81,7 +87,7 @@ export const GRUPPEN_TERMIN: GruppeDef[] = [
 
 export const FELDER_ARTIKEL: FeldDef[] = [
   { feld: 'titel', gruppe: 'text', gross: true, label: 'Titel', typ: 'text', pflicht: true, breit: true, maxlength: 200 },
-  { feld: 'slug', gruppe: 'extras', label: 'Adresse (/dorfanzeiger/…)', typ: 'text', pflicht: true, maxlength: 120 },
+  { feld: 'slug', gruppe: 'extras', label: 'Adresse (/dorfanzeiger/…)', typ: 'text', hinweis: ADRESSE_HINWEIS, platzhalter: adresseAusTitel, maxlength: 120 },
   { feld: 'ressort', gruppe: 'einordnung', label: 'Ressort', typ: 'beziehung', pflicht: true },
   { feld: 'hervorgehoben', gruppe: 'einordnung', label: 'Startseite „Was bisher geschah“', typ: 'janein' },
   { feld: 'teaser_titel', gruppe: 'extras', label: 'Kurzer Titel für Teaser', typ: 'text', maxlength: 120 },

@@ -79,6 +79,7 @@ const EINGABETYP: Partial<Record<FeldDef['typ'], string>> = { zahl: 'number', da
         :type="EINGABETYP[f.typ] ?? 'text'"
         :required="f.pflicht"
         :hinweis="f.hinweis"
+        :placeholder="f.platzhalter?.(daten) || undefined"
         :maxlength="f.maxlength"
         :mehrzeilig="f.typ === 'mehrzeilig'"
         :zeilen="4"

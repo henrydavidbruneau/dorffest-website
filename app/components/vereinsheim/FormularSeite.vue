@@ -74,15 +74,45 @@ const zuletzt = computed(() => {
   return d.date_updated ? `zuletzt bearbeitet ${datumLang(d.date_updated)}${d.user_updated?.first_name ? ` von ${d.user_updated.first_name}` : ''}` : ''
 })
 
-async function speichern(neuerStatus?: string) {
-  if (daten.value.slug === '' || (daten.value.slug == null && props.felder.some(f => f.feld === 'slug'))) {
-    daten.value = { ...daten.value, slug: slugAus(String(daten.value[props.titelFeld] ?? '')) }
+// Adresse (slug): eigene Eingabe umwandeln („Mein Fest“ → „mein-fest“), leer = aus dem Titel.
+// Automatische Adressen bekommen bei Gleichstand -2, -3 …; eine selbst gewählte, schon vergebene meldet sich.
+async function adresseVorbereiten() {
+  const eigene = String(daten.value.slug ?? '').trim()
+  let slug = slugAus(eigene || String(daten.value[props.titelFeld] ?? ''))
+  if (!slug) {
+    daten.value = { ...daten.value, slug: null }
+    return true
   }
+  if (slug !== original.value.slug) {
+    try {
+      const filter = { _and: [{ slug: { _starts_with: slug } }, ...(neu.value ? [] : [{ id: { _neq: props.id } }])] }
+      const vergeben = new Set((await vh.liste<{ slug: string }>(props.collection, { fields: 'slug', filter })).map(e => e.slug))
+      if (vergeben.has(slug)) {
+        if (eigene) {
+          zeige(`Die Adresse „${slug}“ ist schon vergeben – bitte eine andere wählen oder das Feld leer lassen.`, 'fehler')
+          daten.value = { ...daten.value, slug }
+          return false
+        }
+        let nr = 2
+        while (vergeben.has(`${slug}-${nr}`)) nr++
+        slug = `${slug}-${nr}`
+      }
+    }
+    catch {
+      // Prüfung klappt nicht? Dann entscheidet Directus beim Speichern (Feld ist eindeutig)
+    }
+  }
+  daten.value = { ...daten.value, slug }
+  return true
+}
+
+async function speichern(neuerStatus?: string) {
   fehlend.value = sichtbareFelder.value
     .filter(f => f.pflicht && (!f.wenn || f.wenn(daten.value)))
     .filter(f => daten.value[f.feld] === null || daten.value[f.feld] === undefined || daten.value[f.feld] === '')
     .map(f => f.label)
   if (fehlend.value.length) return
+  if (props.felder.some(f => f.feld === 'slug') && !(await adresseVorbereiten())) return
   if (props.vorbereiten) daten.value = props.vorbereiten(daten.value, neuerStatus)
 
   status.value = 'speichert'
