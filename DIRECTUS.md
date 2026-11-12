@@ -100,7 +100,7 @@ Vorstand + Ersteller*in lesbar). Server darf Dateien lesen, die an veröffentlic
 | `hervorgehoben` | Boolean | auf der Startseite unter „Was kommt“ |
 | `im_fokus` | Boolean | im Nextup-Band (Countdown) auf der Startseite – höchstens einer, das Vereinsheim nimmt ihn beim alten weg; ohne Auswahl der nächste Termin |
 | `anmeldung_aktiv` | Boolean | Anmeldezettel anzeigen |
-| `plaetze` | Zahl, optional | leer = unbegrenzt; sonst Restplätze + Sticker |
+| `plaetze` | Zahl, optional | leer = unbegrenzt; sonst begrenzt – die Website nennt freie Plätze erst ab den letzten 20 (`PLAETZE_KNAPP_AB`) |
 | `mitbringen_position` | Auswahl: `aus` · `seite_1` · `seite_2` | „Was bringst du mit?“ aus / auf dem Anmeldezettel / als 2. Seite |
 | `mitbringen_frage` | Text, optional (max. 120) | Eigene Frage statt „Was bringst du mit?“, z.B. „Welche Songs sollen wir singen?“ (Vorschläge = Wunschliste) |
 | `mitbringen_text` | Text, optional | Einleitung, z.B. „Wir stellen einen Tisch mit Getränken …“ |

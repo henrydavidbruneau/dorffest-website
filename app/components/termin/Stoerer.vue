@@ -14,7 +14,8 @@ const seite = ref<1 | 2>(1)
 const pruefFehler = ref('')
 const zettel = ref<HTMLElement>()
 
-const begrenzt = computed(() => props.termin.plaetze_frei !== null)
+// "knapp" = nur noch wenige Plätze frei: erst dann nennt der Zettel die Zahl
+const knapp = computed(() => plaetzeKnapp(props.termin.plaetze_frei))
 const ausgebucht = computed(() => props.termin.plaetze_frei === 0)
 const offen = computed(() => !props.termin.vergangen)
 const mitAnmeldung = computed(() => offen.value && props.termin.anmeldung_aktiv && !ausgebucht.value)
@@ -37,7 +38,8 @@ const titel = computed(() => {
   if (!t.anmeldung_aktiv) return t.mitbringen_frage || 'Bringst du was mit?'
   if (ausgebucht.value) return 'Leider ausgebucht'
   if (seite.value === 2) return t.mitbringen_frage || 'Was bringst du mit?'
-  return begrenzt.value ? 'Nur begrenzte Plätze!' : 'Sag uns, dass du kommst!'
+  if (knapp.value) return props.termin.plaetze_frei === 1 ? 'Nur noch 1 Platz frei!' : `Nur noch ${props.termin.plaetze_frei} Plätze frei!`
+  return 'Sag uns, dass du kommst!'
 })
 
 const hinweis = computed(() => {
@@ -46,7 +48,7 @@ const hinweis = computed(() => {
   if (!t.anmeldung_aktiv) return 'Wenn du etwas beitragen magst, trag es hier ein – dann sehen wir, was schon da ist.'
   if (ausgebucht.value) return 'Alle Plätze sind vergeben. Schreib uns trotzdem gern – manchmal wird noch etwas frei.'
   if (seite.value === 2) return 'Ganz freiwillig – wenn nicht, komm einfach so!'
-  if (begrenzt.value) return `Es gibt nur ${t.plaetze} Plätze – noch ${t.plaetze_frei} frei. Melde dich an, damit wir für dich planen können.`
+  if (knapp.value) return 'Es wird knapp – melde dich schnell an, damit du dabei bist!'
   return 'Mit deiner Anmeldung halten wir dich zu diesem Termin auf dem Laufenden – und sie hilft uns, besser zu planen.'
 })
 
@@ -85,7 +87,7 @@ async function absenden() {
 </script>
 
 <template>
-  <section v-if="sichtbar" id="anmeldung" ref="zettel" class="stoerer" :class="{ 'stoerer--knapp': begrenzt && !ausgebucht }" aria-labelledby="stoerer-titel">
+  <section v-if="sichtbar" id="anmeldung" ref="zettel" class="stoerer" :class="{ 'stoerer--knapp': knapp }" aria-labelledby="stoerer-titel">
     <BasisKlebeband position="links" farbe="gelb" :drehung="-4" :breite="6" />
     <BasisKlebeband position="rechts" farbe="flieder" :drehung="3" :breite="6" />
 
@@ -177,7 +179,7 @@ async function absenden() {
   container-type: inline-size;
 }
 
-/* begrenzte Plätze: Rand oben in Orange als Hinweis */
+/* nur noch wenige Plätze: Rand oben in Orange als Hinweis */
 .stoerer--knapp {
   border-top: 6px solid var(--farbe-orange);
 }

@@ -7,7 +7,8 @@ const zeilen = computed(() => {
   if (t.vergangen) return ['war', 'schön!']
   if (!t.anmeldung_aktiv) return t.mitbringen_position !== 'aus' ? ['bring', 'was', 'mit!'] : []
   if (t.plaetze_frei === 0) return ['aus-', 'gebucht']
-  if (t.plaetze_frei !== null) return ['nur noch', String(t.plaetze_frei), 'Plätze!']
+  // Zahl nur, wenn es knapp wird (sonst wie unbegrenzt)
+  if (plaetzeKnapp(t.plaetze_frei)) return t.plaetze_frei === 1 ? ['nur noch', '1', 'Platz!'] : ['nur noch', String(t.plaetze_frei), 'Plätze!']
   return ['jetzt', 'anmelden!']
 })
 const gross = computed(() => zeilen.value.length === 3 && /^\d+$/.test(zeilen.value[1]!))
