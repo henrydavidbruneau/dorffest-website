@@ -16,6 +16,7 @@ const zettel = ref<HTMLElement>()
 
 // "knapp" = nur noch wenige Plätze frei: erst dann nennt der Zettel die Zahl
 const knapp = computed(() => plaetzeKnapp(props.termin.plaetze_frei))
+const begrenzt = computed(() => props.termin.plaetze_frei !== null)
 const ausgebucht = computed(() => props.termin.plaetze_frei === 0)
 const offen = computed(() => !props.termin.vergangen)
 const mitAnmeldung = computed(() => offen.value && props.termin.anmeldung_aktiv && !ausgebucht.value)
@@ -48,7 +49,7 @@ const hinweis = computed(() => {
   if (!t.anmeldung_aktiv) return 'Wenn du etwas beitragen magst, trag es hier ein – dann sehen wir, was schon da ist.'
   if (ausgebucht.value) return 'Alle Plätze sind vergeben. Schreib uns trotzdem gern – manchmal wird noch etwas frei.'
   if (seite.value === 2) return 'Ganz freiwillig – wenn nicht, komm einfach so!'
-  if (knapp.value) return 'Es wird knapp – melde dich schnell an, damit du dabei bist!'
+  if (begrenzt.value) return 'Für diese Veranstaltung gibt es nur begrenzt Plätze. Melde dich jetzt an, um dir einen zu sichern!'
   return 'Mit deiner Anmeldung halten wir dich zu diesem Termin auf dem Laufenden – und sie hilft uns, besser zu planen.'
 })
 
