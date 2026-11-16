@@ -2,11 +2,15 @@
 // Öffentliche Wunschliste eines Termins (z.B. „Welche Lieder sollen wir singen?“), ohne Anmeldung:
 // Wunsch eintragen (sofort sichtbar, das Vereinsheim moderiert) und mit ▲ dafür stimmen.
 // Eine Stimme je Wunsch, nochmal tippen nimmt sie zurück; die meisten Stimmen stehen oben.
+// Jede*r darf sich höchstens WUENSCHE_PRO_PERSON Wünsche eintragen, danach bleibt nur noch abstimmen.
 const props = defineProps<{ termin: TerminDetail }>()
 
 const { wuensche, status, fehler, meldung, wuenschen, stimmen } = useWunschliste(() => props.termin.slug)
 const form = reactive({ text: '', name: '', website: '', turnstile: '' })
 const offen = computed(() => !props.termin.vergangen)
+// höchstens WUENSCHE_PRO_PERSON eigene Wünsche je Termin (der Server prüft es auch)
+const maxWuensche = WUENSCHE_PRO_PERSON
+const uebrig = computed(() => Math.max(0, maxWuensche - wuensche.value.filter(w => w.eigener).length))
 
 async function absenden() {
   if (form.text.trim().length < 2) {
@@ -57,8 +61,16 @@ const stimmenText = (n: number) => (n === 1 ? '1 Stimme' : `${n} Stimmen`)
         </li>
       </TransitionGroup>
 
-      <form v-if="offen" class="wunschliste__formular" novalidate @submit.prevent="absenden">
+      <p v-if="offen && !uebrig" class="wunschliste__voll" role="status">
+        <template v-if="status === 'fertig'">{{ meldung }}<br></template>
+        Du hast schon {{ maxWuensche }} Wünsche eingetragen – mehr gehen nicht.
+        Stimm gern mit <span aria-hidden="true">▲</span><span class="nur-screenreader">„dafür“</span> für die anderen Wünsche!
+      </p>
+      <form v-else-if="offen" class="wunschliste__formular" novalidate @submit.prevent="absenden">
         <p class="wunschliste__plus handschrift" aria-hidden="true">+ dein Wunsch</p>
+        <p class="wunschliste__grenze">
+          Jede*r kann bis zu {{ maxWuensche }} Wünsche eintragen<template v-if="uebrig < maxWuensche"> – bei dir {{ uebrig === 1 ? 'geht noch einer' : `gehen noch ${uebrig}` }}</template>.
+        </p>
         <div class="wunschliste__felder">
           <BasisFeld v-model="form.text" label="Dein Wunsch" name="text" required :maxlength="120" placeholder="z.B. 99 Luftballons" />
           <BasisFeld v-model="form.name" label="Dein Name" name="name" autocomplete="given-name" :maxlength="60" />
@@ -222,6 +234,17 @@ const stimmenText = (n: number) => (n === 1 ? '1 Stimme' : `${n} Stimmen`)
   gap: var(--abstand-s);
   justify-items: start;
   margin-top: var(--abstand-l);
+}
+
+.wunschliste__grenze {
+  margin: 0;
+  font-size: var(--groesse-xs);
+}
+
+.wunschliste__voll {
+  margin: var(--abstand-m) 0 0;
+  padding-top: var(--abstand-s);
+  border-top: 2px dashed var(--farbe-lila);
 }
 
 .wunschliste__plus {

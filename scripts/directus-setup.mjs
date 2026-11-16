@@ -269,6 +269,7 @@ const COLLECTIONS = [
       m2o('termin', 'termine', { required: true, template: '{{titel}}' }),
       str('text', { required: true, max: 120, note: 'Der Wunsch, z.B. „99 Luftballons“' }),
       str('name', { width: 'half', max: 60, note: 'freiwillig' }),
+      str('waehler', { max: 64, note: 'Hash der Browser-Kennung (wer den Wunsch angelegt hat; höchstens 3 je Termin)' }),
       ...systemFields(),
     ],
     relations: [{ field: 'termin', related_collection: 'termine', schema: { on_delete: 'CASCADE' } }],
@@ -778,8 +779,8 @@ const PERMISSIONS = {
     { collection: 'anmeldungen', action: 'update', fields: ['status'], validation: { status: { _eq: 'abgemeldet' } } },
     { collection: 'beitraege', action: 'create', fields: ['termin', 'name', 'was', 'email'] },
     // Wunschliste: Wünsche anlegen/lesen, Stimmen setzen und zurücknehmen (zählen per Aggregat)
-    { collection: 'wuensche', action: 'create', fields: ['termin', 'text', 'name'] },
-    { collection: 'wuensche', action: 'read', fields: ['id', 'status', 'termin', 'text', 'name', 'date_created'], permissions: PUBLISHED },
+    { collection: 'wuensche', action: 'create', fields: ['termin', 'text', 'name', 'waehler'] },
+    { collection: 'wuensche', action: 'read', fields: ['id', 'status', 'termin', 'text', 'name', 'date_created', 'waehler'], permissions: PUBLISHED },
     { collection: 'wunsch_stimmen', action: 'create', fields: ['wunsch', 'waehler'] },
     { collection: 'wunsch_stimmen', action: 'read', fields: ['id', 'wunsch', 'waehler'] },
     { collection: 'wunsch_stimmen', action: 'delete', fields: ['*'] },

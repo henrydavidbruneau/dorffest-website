@@ -7,6 +7,8 @@ export interface Wunsch extends Omit<DirectusEintrag, 'status'> {
   text: string
   /** freiwillig */
   name: string | null
+  /** Hash der Browser-Kennung, wer ihn angelegt hat (nur serverseitig, für die Grenze je Person) */
+  waehler?: string | null
 }
 
 /** Wunsch, wie die Website ihn bekommt: mit Stimmenzahl und ob dieser Browser schon dafür ist */
@@ -16,4 +18,6 @@ export interface WunschMitStimmen {
   name: string | null
   stimmen: number
   meine: boolean
+  /** hat dieser Browser den Wunsch angelegt? */
+  eigener: boolean
 }

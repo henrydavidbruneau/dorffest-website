@@ -126,7 +126,12 @@ Mitbring-Liste bei Terminen **ohne** Anmeldung: `termin` (M2O), `name`, `was`, `
 ### `wuensche` + `wunsch_stimmen`
 Öffentliche Wunschliste auf der Terminseite (`termine.wunschliste_aktiv`, Überschrift `wunschliste_frage`, z.B.
 „Welche Lieder sollen wir singen?“, Einleitung `wunschliste_text`), ohne Anmeldung, wie die Ideenwand:
-`wuensche` = `termin` (M2O), `text` (≤ 120), `name` (freiwillig), `status` `published`/`hidden` (sofort sichtbar).
+`wuensche` = `termin` (M2O), `text` (≤ 120), `name` (freiwillig), `status` `published`/`hidden` (sofort sichtbar),
+`waehler` (wer ihn angelegt hat, derselbe Hash wie bei den Stimmen): **höchstens 3 eigene Wünsche je Termin und Browser**
+(`WUENSCHE_PRO_PERSON` in `shared/utils/wuensche.ts`; danach nur noch abstimmen, ein schon vorhandener Wunsch zählt
+als Stimme und geht immer). Fehlt das Feld noch, läuft die Liste ohne Grenze weiter. Prüfen, wer schon mehr als 3
+hat (auch rückwirkend über die automatische Stimme beim Anlegen): `scripts/wuensche-pruefen.mjs` (`--nachtragen`
+schreibt den erschlossenen Browser in alte Wünsche, damit sie mitzählen).
 `wunsch_stimmen` = `wunsch` (M2O, CASCADE), `waehler` (SHA-256 einer zufälligen Kennung aus dem httpOnly-Cookie
 `wunsch_kennung`, ~400 Tage). Eine Stimme je Wunsch und Browser; nochmal tippen nimmt sie zurück. Gezählt wird per
 Aggregat, sortiert nach Stimmen (Gleichstand: älterer Wunsch zuerst). Wer etwas wünscht, stimmt automatisch dafür;
@@ -400,6 +405,9 @@ und nennt es; Directus meldet unbekannte Felder als „fehlendes Recht“ – di
 
 **Neu am 29.10.2026 (noch ausführen!):** Wunschliste bei Terminen – Felder `termine.wunschliste_aktiv`,
 `wunschliste_frage`, `wunschliste_text`; Collections `wuensche` + `wunsch_stimmen` mit Rechten (Server, Mitglied).
+
+**Neu am 16.11.2026 (noch ausführen!):** `wuensche.waehler` (Server: anlegen + lesen) für die Grenze von 3 Wünschen
+je Browser; danach `node scripts/wuensche-pruefen.mjs --nachtragen`.
 Bis das Skript gelaufen ist, liest die Website Termine ohne diese Felder (keine Wunschliste) und das Vereinsheim
 blendet sie im Formular aus.
 **Neu am 23.10.2026 (ausgeführt):** Feld `directus_users.app_hinweis_am` (Popup „Vereinsheim aufs Handy“ gesehen; Mitglied: lesen + eigenes Konto ändern).

@@ -1,6 +1,7 @@
 // Wunschliste bei Terminen (z.B. „Welche Lieder sollen wir singen?“): Directus `wuensche` + `wunsch_stimmen`.
 // Ohne Anmeldung: Wünsche sind sofort sichtbar (Moderation im Vereinsheim), jede*r hat je Wunsch eine Stimme.
 // „Jede*r“ = ein Browser: beim ersten Abstimmen bekommt er ein zufälliges Cookie, in Directus steht nur dessen Hash.
+// Höchstens WUENSCHE_PRO_PERSON eigene Wünsche je Termin (`wuensche.waehler` = derselbe Hash).
 import { createHash, randomBytes } from 'node:crypto'
 import type { H3Event } from 'h3'
 
@@ -24,8 +25,22 @@ export async function terminMitWunschliste(slug: string) {
   return termin
 }
 
+// `waehler` (wer den Wunsch angelegt hat) ist neuer – fehlt das Feld in Directus noch, ohne lesen/schreiben
+// (dann greift die Grenze von WUENSCHE_PRO_PERSON noch nicht, scripts/directus-setup.mjs ausführen)
+let mitWaehler = true
+
 async function ladeWuensche(terminId: number) {
-  return directusListe<Wunsch>('wuensche', { fields: 'id,text,name,date_created', filter: { _and: [VEROEFFENTLICHT, { termin: { _eq: terminId } }] }, limit: 500 })
+  const abfrage = { filter: { _and: [VEROEFFENTLICHT, { termin: { _eq: terminId } }] }, limit: 500 }
+  if (mitWaehler) {
+    try {
+      return await directusListe<Wunsch>('wuensche', { ...abfrage, fields: 'id,text,name,date_created,waehler' })
+    }
+    catch (e) {
+      console.warn('[wuensche] ohne Feld `waehler` gelesen (noch nicht angelegt?):', (e as Error)?.message ?? e)
+      mitWaehler = false
+    }
+  }
+  return directusListe<Wunsch>('wuensche', { ...abfrage, fields: 'id,text,name,date_created' })
 }
 
 /** Wünsche eines Termins, meiste Stimmen zuerst (bei Gleichstand der ältere) */
@@ -44,7 +59,7 @@ export async function wunschliste(event: H3Event, terminId: number, waehler = wa
   const stimmen = new Map(zaehlung.map(z => [Number(z.wunsch), Number(z.count?.id) || 0]))
   const meineIds = new Set(meine.map(m => Number(m.wunsch)))
   return wuensche
-    .map(w => ({ id: w.id, text: w.text, name: w.name, stimmen: stimmen.get(w.id) ?? 0, meine: meineIds.has(w.id), datum: w.date_created }))
+    .map(w => ({ id: w.id, text: w.text, name: w.name, stimmen: stimmen.get(w.id) ?? 0, meine: meineIds.has(w.id), eigener: !!waehler && w.waehler === waehler, datum: w.date_created }))
     .sort((a, b) => b.stimmen - a.stimmen || Date.parse(a.datum) - Date.parse(b.datum))
     .map(({ datum: _datum, ...w }) => w)
 }
@@ -59,15 +74,19 @@ export async function stimmeSetzen(waehler: string, wunschId: number, an: boolea
 /** gleich geschrieben? (Groß/klein, Leer- und Satzzeichen egal) */
 const vergleichbar = (t: string) => t.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
 
-/** Wunsch eintragen; gibt es ihn schon, zählt stattdessen eine Stimme dafür */
+/** Wunsch eintragen; gibt es ihn schon, zählt stattdessen eine Stimme dafür (das geht auch über der Grenze) */
 export async function wunschEintragen(event: H3Event, terminId: number, wunsch: { text: string, name: string }) {
   const waehler = waehlerVon(event, true)!
-  const doppelt = (await ladeWuensche(terminId)).find(w => vergleichbar(w.text) === vergleichbar(wunsch.text))
+  const vorhanden = await ladeWuensche(terminId)
+  const doppelt = vorhanden.find(w => vergleichbar(w.text) === vergleichbar(wunsch.text))
   if (doppelt) {
     await stimmeSetzen(waehler, doppelt.id, true)
     return { id: doppelt.id, doppelt: true }
   }
-  const neu = await directusAnlegen<{ id: number }>('wuensche', { termin: terminId, text: wunsch.text, name: wunsch.name || null })
+  if (vorhanden.filter(w => w.waehler === waehler).length >= WUENSCHE_PRO_PERSON) {
+    throw fail(409, 'zu_viele', `Du hast schon ${WUENSCHE_PRO_PERSON} Wünsche eingetragen – mehr gehen nicht. Stimm gern mit ▲ für die anderen!`)
+  }
+  const neu = await directusAnlegen<{ id: number }>('wuensche', { termin: terminId, text: wunsch.text, name: wunsch.name || null, ...(mitWaehler ? { waehler } : {}) })
   // Wer etwas wünscht, ist auch dafür
   if (neu?.id) await stimmeSetzen(waehler, neu.id, true)
   return { id: neu?.id ?? null, doppelt: false }
