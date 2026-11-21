@@ -189,6 +189,7 @@ onBeforeUnmount(() => document.removeEventListener('click', schliessen))
               <button type="button" class="termin__mehr-knopf" :aria-expanded="menue === t.id" :aria-label="`Mehr zu ${t.titel}`" @click="menue = menue === t.id ? null : t.id">⋯</button>
               <ul v-if="menue === t.id" class="termin__menue">
                 <li><NuxtLink :to="`/vereinsheim/termine/${t.id}/anmeldungen`">Anmeldungen &amp; Rundmail</NuxtLink></li>
+                <li><NuxtLink :to="`/vereinsheim/termine/${t.id}/verteiler`">Rundmail an Vereine</NuxtLink></li>
                 <li v-if="t.status === 'published'"><a :href="`/termine/${t.slug}`" target="_blank" rel="noopener">Auf der Website ansehen ↗</a></li>
                 <li><button type="button" @click="duplizieren(t)">Duplizieren</button></li>
                 <li><button type="button" class="termin__weg" @click="loeschen(t)">Löschen</button></li>

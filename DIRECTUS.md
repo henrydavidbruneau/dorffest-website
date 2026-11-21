@@ -50,6 +50,8 @@ in Konfigurationen immer Punycode), Directus 12.5.0, Lizenz: Open Innovation Gra
 | `termin_rundmails` | Mails an alle Angemeldeten (Protokoll) | – | create, read | alles |
 | `wuensche` | Wunschliste bei Terminen (z.B. Songwünsche; sofort sichtbar, moderierbar) | create, read (published) | read, update, delete | alles |
 | `wunsch_stimmen` | Stimmen für Wünsche (eine je Wunsch und Browser) | create, read, delete | read | alles |
+| `verteiler` | Verteiler Zivilgesellschaft (Vereine, Initiativen, Gruppen) | – | alles | alles |
+| `verteiler_mails` | Protokoll der Rundmails an den Verteiler | – | create, read | alles |
 | `ressorts` | Ressorts des Dorfanzeigers | read | read | alles |
 | `ausgaben` | **ungenutzt seit 19.10.2026** (Dorfanzeiger ohne Ausgaben) | read | alles | alles |
 | `artikel` | Dorfanzeiger-Artikel | read (published) | alles | alles |
@@ -143,6 +145,16 @@ Vereinsheim-Geräte mit Benachrichtigungen (öffnet `/vereinsheim/termine/:id/wu
 Protokoll der Mails an alle Angemeldeten: `termin` (M2O), `betreff`, `text` (Markdown),
 `empfaenger_anzahl`, `gesendet_am`, `user_created` (wer geschickt hat). Versand über Brevo
 (transaktional, BCC-frei: einzeln je Empfänger*in).
+
+### `verteiler` + `verteiler_mails`
+Verteiler Zivilgesellschaft: Vereine, Initiativen und Gruppen, die wir zu Terminen einladen. `verteiler` =
+`organisation` (Pflicht), `ansprechperson` (freiwillig), `email` (Pflicht), `aktiv` (aus = pausiert), `notiz` (intern).
+Gepflegt im Vereinsheim unter **Diverses → Verteiler** (`/vereinsheim/verteiler`). Versand über die Terminliste:
+**⋯ → Rundmail an Vereine** (`/vereinsheim/termine/:id/verteiler`): Betreff/Text mit den Termindaten und Link
+vorbefüllt, Vorschau, dann `POST /api/vereinsheim/termine/:id/verteiler-mail` – einzeln je aktiver Adresse
+(doppelte nur einmal), Anrede „Hallo {Ansprechperson},“ bzw. „Hallo liebe Leute von {Organisation},“
+(`shared/utils/verteiler.ts`), Brevo-Tag `verteiler`, Protokoll in `verteiler_mails` (`termin` M2O, SET NULL).
+Läuft mit dem Token der Person (alle Mitglieder).
 
 ### Vereinsheim: Termine
 - Liste aller Termine (kommend / vergangen / Entwürfe) mit Datum, Status, Anmeldezahl,
@@ -407,6 +419,9 @@ und nennt es; Directus meldet unbekannte Felder als „fehlendes Recht“ – di
 
 **Neu am 16.11.2026 (noch ausführen!):** `wuensche.waehler` (Server: anlegen + lesen) für die Grenze von 3 Wünschen
 je Browser.
+
+**Neu am 21.11.2026 (noch ausführen!):** Collections `verteiler` + `verteiler_mails` mit Rechten (Mitglied) für die
+Rundmail an Vereine.
 Bis das Skript gelaufen ist, liest die Website Termine ohne diese Felder (keine Wunschliste) und das Vereinsheim
 blendet sie im Formular aus.
 **Neu am 23.10.2026 (ausgeführt):** Feld `directus_users.app_hinweis_am` (Popup „Vereinsheim aufs Handy“ gesehen; Mitglied: lesen + eigenes Konto ändern).

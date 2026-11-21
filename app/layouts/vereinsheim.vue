@@ -19,6 +19,7 @@ const reiter = computed<Reiter[]>(() => [
 // seltener gebraucht: unter „Diverses“
 const diverses = computed<Reiter[]>(() => [
   { text: 'Ideensammlung', to: '/vereinsheim/ideensammlung' },
+  { text: 'Verteiler', to: '/vereinsheim/verteiler' },
   { text: 'Über uns', to: '/vereinsheim/ueber-uns' },
   ...(ich.value?.vorstand ? [{ text: 'Mitglieder', to: '/vereinsheim/mitglieder' }] : []),
 ])

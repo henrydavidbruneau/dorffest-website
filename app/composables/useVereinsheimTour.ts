@@ -30,7 +30,7 @@ const SCHRITTE: TourSchritt[] = [
   { seite: '/vereinsheim/dorfanzeiger/artikel/neu', ziel: 'formular-leiste', titel: 'Speichern & veröffentlichen', text: 'Die Leiste bleibt immer unten: speichern (Entwurf), veröffentlichen oder die Vorschau im Zeitungslook ansehen. Keine Sorge – dieser Artikel wird nicht angelegt.' },
   { seite: '/vereinsheim', ziel: 'nav-kasse', titel: 'Kasse', text: 'Etwas für den Verein bezahlt? Hier mit Foto vom Kassenbon einreichen, der Vorstand überweist es dir zurück.' },
   { seite: '/vereinsheim', ziel: 'nav-post', titel: 'Post', text: 'Das Kontakt-Postfach des Vereins: Mails lesen, beantworten und neue schreiben.', vorstand: true },
-  { seite: '/vereinsheim', ziel: 'nav-diverses', titel: 'Diverses', text: 'Seltener gebraucht: die Ideensammlung, die Stimmen und Fragen für „Über uns“ – und für den Vorstand die Mitglieder.' },
+  { seite: '/vereinsheim', ziel: 'nav-diverses', titel: 'Diverses', text: 'Seltener gebraucht: die Ideensammlung, der Verteiler mit Vereinen und Initiativen, die Stimmen und Fragen für „Über uns“ – und für den Vorstand die Mitglieder.' },
   { seite: '/vereinsheim', ziel: 'profil', titel: 'Dein Profil', text: 'Name, Profilbild und Passwort änderst du hier. Dort kannst du auch diese Tour wiederholen.' },
   { seite: '/vereinsheim', titel: 'Fertig – schön, dass du da bist!', text: 'Wenn was hakt oder fehlt: sag im Plenum Bescheid. Wer zuletzt geht, macht das Licht aus.' },
 ]

@@ -300,6 +300,33 @@ const COLLECTIONS = [
     relations: [{ field: 'termin', related_collection: 'termine', schema: { on_delete: 'CASCADE' } }],
   },
   {
+    collection: 'verteiler',
+    meta: { icon: 'diversity_3', note: 'Verteiler Zivilgesellschaft: Vereine, Initiativen, Gruppen im Ort. Bekommen Einladungen zu Terminen (Vereinsheim → Termine → ⋯ → Rundmail an Vereine).', display_template: '{{organisation}} · {{email}}' },
+    fields: [
+      idField(),
+      str('organisation', { required: true, width: 'half', max: 160, note: 'z.B. „Freiwillige Feuerwehr Königsdorf“' }),
+      str('ansprechperson', { width: 'half', max: 120, note: 'freiwillig – sonst „Hallo liebe Leute von …“' }),
+      email('email', { required: true }),
+      bool('aktiv', { def: true, note: 'aus = bekommt vorerst keine Rundmails' }),
+      text('notiz', { note: 'intern' }),
+      ...systemFields(),
+    ],
+  },
+  {
+    collection: 'verteiler_mails',
+    meta: { icon: 'campaign', note: 'Protokoll der Rundmails an den Verteiler Zivilgesellschaft.', display_template: '{{betreff}}' },
+    fields: [
+      idField(),
+      m2o('termin', 'termine', { template: '{{titel}}' }),
+      str('betreff', { required: true, max: 200 }),
+      markdown('text', { required: true }),
+      int('empfaenger_anzahl'),
+      timestamp('gesendet_am'),
+      ...systemFields(),
+    ],
+    relations: [{ field: 'termin', related_collection: 'termine', schema: { on_delete: 'SET NULL' } }],
+  },
+  {
     collection: 'post_markierungen',
     meta: { icon: 'push_pin', note: 'Mails im Kontakt-Postfach für eine Person markiert (Vereinsheim → Post). Wer markiert hat = user_created.', display_template: '{{betreff}} → {{fuer.first_name}}' },
     fields: [
@@ -824,6 +851,8 @@ const PERMISSIONS = {
     ...all('wuensche', ['read', 'update', 'delete']),
     ...all('wunsch_stimmen', ['read']),
     ...all('termin_rundmails', ['create', 'read']),
+    ...all('verteiler'),
+    ...all('verteiler_mails', ['create', 'read']),
     ...all('ressorts', ['read']),
     ...all('ausgaben'),
     ...all('artikel'),
