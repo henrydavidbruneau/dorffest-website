@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // „Rundmail an Vereine“: Einladung zu einem Termin an den Verteiler Zivilgesellschaft
-// (Diverses → Verteiler). Text ist mit den Termindaten vorbefüllt, Vorschau wie bei der Rundmail.
+// (Diverses → Verteiler). Schlichte Textmail mit gemeinsamer Anrede, mit den Termindaten vorbefüllt.
 definePageMeta({ layout: 'vereinsheim', middleware: 'vereinsheim' })
 useSeoMeta({ title: 'Rundmail an Vereine · Vereinsheim', robots: 'noindex, nofollow' })
 
@@ -44,10 +44,11 @@ function vorschlag(t: NonNullable<typeof termin.value>) {
     : (t.datum_text || 'Datum folgt')
   const wo = [t.ort, t.adresse].filter(Boolean).join(', ')
   return [
-    `wir vom Verein „Königsdorf rückt zusammen“ laden euch herzlich ein – und freuen uns, wenn ihr die Einladung in eurem Verein, eurer Gruppe oder Initiative weitersagt:`,
-    `**${t.titel}**\n${wann}${t.rhythmus ? ` · ${t.rhythmus}` : ''}${wo ? `\n${wo}` : ''}`,
+    'Liebe Vereine, Initiativen und Engagierte in Königsdorf,',
+    'wir vom Verein „Königsdorf rückt zusammen“ laden euch herzlich ein – und freuen uns, wenn ihr die Einladung in euren Gruppen weitersagt:',
+    `${t.titel}\n${wann}${t.rhythmus ? ` · ${t.rhythmus}` : ''}${wo ? `\n${wo}` : ''}`,
     ...(t.kurzbeschreibung ? [t.kurzbeschreibung.trim()] : []),
-    `[Alles zum Termin](${websiteLink.value})`,
+    `Alles zum Termin: ${websiteLink.value}`,
     'Wir freuen uns auf euch!',
   ].join('\n\n')
 }
@@ -64,12 +65,9 @@ function zuruecksetzen() {
   mail.text = vorschlag(termin.value)
 }
 
-// Vorschau, so wie die Mail beim ersten Eintrag ankommt
+// Vorschau: genau der Text, der ankommt (schlichte Textmail, unser Gruß darunter)
 const vorschauAn = computed(() => kontakte.value[0] ?? null)
-const vorschauHtml = computed(() => mailHtml(
-  [vorschauAn.value ? verteilerAnrede(vorschauAn.value) : 'Hallo liebe Leute von …,', mail.text.trim() || '…', GRUSS].join('\n\n'),
-  { basis: window.location.origin, rubrik: 'Einladung' },
-))
+const vorschauText = computed(() => mailText([mail.text.trim() || '…', GRUSS].join('\n\n')))
 
 const sendet = ref(false)
 async function senden() {
@@ -106,7 +104,7 @@ async function senden() {
 
       <div v-else class="vh-karte">
         <p class="vm__info">
-          Geht einzeln an <strong>{{ empfaengerAnzahl }} Adressen</strong>, jede mit eigener Anrede („Hallo …“) und unserem Gruß darunter – niemand sieht die anderen.
+          Geht als schlichte Textmail an <strong>{{ empfaengerAnzahl }} Adressen</strong> – alle bekommen denselben Text mit unserem Gruß darunter, aber jede einzeln, damit niemand die anderen Adressen sieht.
         </p>
         <details class="vm__wer">
           <summary>Wer bekommt die Mail?</summary>
@@ -117,7 +115,7 @@ async function senden() {
 
         <form class="vm__form" @submit.prevent="senden">
           <BasisFeld v-model="mail.betreff" label="Betreff" name="betreff" required :maxlength="200" />
-          <BasisFeld v-model="mail.text" label="Text" name="text" required mehrzeilig :zeilen="12" hinweis="Leerzeile = neuer Absatz. **fett** · [Knopftext](https://…) allein in einer Zeile wird ein Knopf." />
+          <BasisFeld v-model="mail.text" label="Text" name="text" required mehrzeilig :zeilen="12" hinweis="Reiner Text, ohne Formatierung. Links einfach als Adresse hineinschreiben." />
           <button type="button" class="vm__zurueck" @click="zuruecksetzen">Text auf den Vorschlag zurücksetzen</button>
 
           <div class="vm__vorschau" aria-live="polite">
@@ -126,7 +124,7 @@ async function senden() {
               <dt>An</dt><dd>{{ vorschauAn?.organisation }}{{ empfaengerAnzahl > 1 ? ` (und ${empfaengerAnzahl - 1} weitere, jede*r einzeln)` : '' }}</dd>
               <dt>Betreff</dt><dd>{{ mail.betreff || '…' }}</dd>
             </dl>
-            <iframe :srcdoc="vorschauHtml" title="Vorschau der Mail" class="vm__vorschau-mail" sandbox="" />
+            <pre class="vm__vorschau-mail">{{ vorschauText }}</pre>
           </div>
           <BasisKnopf type="submit" :disabled="sendet || !empfaengerAnzahl">{{ sendet ? 'Wird gesendet …' : `An ${empfaengerAnzahl} schicken` }}</BasisKnopf>
         </form>
@@ -214,7 +212,7 @@ async function senden() {
   font-size: var(--groesse-s);
 }
 
-/* Vorschau: sieht aus wie eine schlichte Mail (wie bei der Rundmail an Angemeldete) */
+/* Vorschau: schlichte Textmail */
 .vm__vorschau {
   padding: var(--abstand-s) var(--abstand-m);
   border: 1px solid var(--vh-rand);
@@ -251,12 +249,13 @@ async function senden() {
 }
 
 .vm__vorschau-mail {
-  display: block;
-  width: 100%;
-  height: 34rem;
-  margin-top: var(--abstand-xs);
-  border: 0;
+  margin: var(--abstand-xs) 0 0;
+  padding: var(--abstand-s);
   border-radius: var(--vh-radius);
-  background: var(--farbe-lila);
+  background: var(--farbe-weiss);
+  font: inherit;
+  font-size: var(--groesse-s);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 </style>

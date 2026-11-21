@@ -97,14 +97,14 @@ function csv() {
 
     <p class="vt__info">
       Wer hier steht, bekommt Einladungen zu unseren Terminen: in der Terminliste beim jeweiligen Termin über
-      <strong>⋯ → Rundmail an Vereine</strong>. Jede Adresse bekommt die Mail einzeln mit eigener Anrede, niemand sieht die anderen.
+      <strong>⋯ → Rundmail an Vereine</strong>. Alle bekommen denselben Text, aber jede Adresse einzeln – niemand sieht die anderen.
     </p>
 
     <form ref="formEl" class="vh-karte vt__form" novalidate @submit.prevent="speichern">
       <h2>{{ bearbeitet ? 'Eintrag ändern' : 'Neu in den Verteiler' }}</h2>
       <div class="vt__felder">
         <BasisFeld v-model="form.organisation" label="Verein / Gruppe" name="organisation" required :maxlength="160" placeholder="z.B. Freiwillige Feuerwehr" />
-        <BasisFeld v-model="form.ansprechperson" label="Ansprechperson" name="ansprechperson" :maxlength="120" hinweis="freiwillig – sonst „Hallo liebe Leute von …“" />
+        <BasisFeld v-model="form.ansprechperson" label="Ansprechperson" name="ansprechperson" :maxlength="120" hinweis="freiwillig, nur für uns" />
         <BasisFeld v-model="form.email" label="E-Mail" type="email" name="email" required :maxlength="254" />
         <BasisFeld v-model="form.notiz" label="Notiz (intern)" name="notiz" :maxlength="500" />
       </div>

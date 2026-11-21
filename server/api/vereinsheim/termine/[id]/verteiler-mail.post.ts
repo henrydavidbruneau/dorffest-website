@@ -1,5 +1,6 @@
 // POST /api/vereinsheim/termine/:id/verteiler-mail – Rundmail an den Verteiler Zivilgesellschaft
-// (Vereine, Initiativen, Gruppen; Diverses → Verteiler). Einzeln je Adresse, ohne BCC, mit Anrede.
+// (Vereine, Initiativen, Gruppen; Diverses → Verteiler). Schlichte Textmail (kein Website-Look), gemeinsame
+// Anrede steht im Text; trotzdem einzeln je Adresse verschickt, damit niemand die anderen sieht.
 // Läuft mit dem Token der Person (Recht: verteiler lesen), Protokoll in `verteiler_mails`.
 export default defineEventHandler(async (event) => {
   rateLimit(event, 'vereinsheim-verteiler-mail', 10)
@@ -25,8 +26,8 @@ export default defineEventHandler(async (event) => {
       an: k.email.trim(),
       betreff,
       tags: ['verteiler'],
-      rubrik: 'Einladung',
-      text: [verteilerAnrede(k), inhalt, GRUSS].join('\n\n'),
+      nurText: true,
+      text: [inhalt, GRUSS].join('\n\n'),
     }).then(() => gesendet++, e => console.error('[verteiler-mail]', k.email, e?.data ?? e))
   }
   await directusPerson(event, '/items/verteiler_mails', {

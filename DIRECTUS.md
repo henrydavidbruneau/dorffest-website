@@ -152,8 +152,8 @@ Verteiler Zivilgesellschaft: Vereine, Initiativen und Gruppen, die wir zu Termin
 Gepflegt im Vereinsheim unter **Diverses → Verteiler** (`/vereinsheim/verteiler`). Versand über die Terminliste:
 **⋯ → Rundmail an Vereine** (`/vereinsheim/termine/:id/verteiler`): Betreff/Text mit den Termindaten und Link
 vorbefüllt, Vorschau, dann `POST /api/vereinsheim/termine/:id/verteiler-mail` – einzeln je aktiver Adresse
-(doppelte nur einmal), Anrede „Hallo {Ansprechperson},“ bzw. „Hallo liebe Leute von {Organisation},“
-(`shared/utils/verteiler.ts`), Brevo-Tag `verteiler`, Protokoll in `verteiler_mails` (`termin` M2O, SET NULL).
+(doppelte nur einmal), als **schlichte Textmail** (`sendeMail({ nurText: true })`, kein Website-Look) mit
+gemeinsamer Anrede im Text, Brevo-Tag `verteiler`, Protokoll in `verteiler_mails` (`termin` M2O, SET NULL).
 Läuft mit dem Token der Person (alle Mitglieder).
 
 ### Vereinsheim: Termine

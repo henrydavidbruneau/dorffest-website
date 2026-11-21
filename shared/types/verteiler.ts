@@ -3,7 +3,7 @@ import type { DirectusEintrag } from './directus'
 /** Directus-Collection `verteiler`: Verteiler Zivilgesellschaft (Vereine, Initiativen, Gruppen im Ort) */
 export interface VerteilerKontakt extends Omit<DirectusEintrag, 'status'> {
   organisation: string
-  /** freiwillig – sonst „Hallo liebe Leute von …“ */
+  /** freiwillig, nur für uns */
   ansprechperson: string | null
   email: string
   /** aus = bekommt vorerst keine Rundmails */

@@ -20,6 +20,8 @@ export interface Mail {
   rubrik?: string
   /** großes „Bis bald im Dorf!“ statt Kontaktdaten (Rundbrief-Test) */
   grosserGruss?: boolean
+  /** schlichte Textmail ohne HTML im Website-Look (z.B. Rundmail an Vereine) */
+  nurText?: boolean
 }
 
 /** Adresse der Website für Logo, Schriften und Links in Mails (Punycode – Umlaut-Domains machen in Mails Ärger) */
@@ -28,7 +30,7 @@ export function mailBasis() {
   return new URL(mailBasis || siteUrl).origin
 }
 
-export async function sendeMail({ an, betreff, text, antwortAn, tags, abmelden, rubrik, grosserGruss }: Mail): Promise<void> {
+export async function sendeMail({ an, betreff, text, antwortAn, tags, abmelden, rubrik, grosserGruss, nurText }: Mail): Promise<void> {
   const { brevoApiKey, mailVon, mailVonName } = useRuntimeConfig()
   if (!brevoApiKey) {
     console.info(`[mail] Kein NUXT_BREVO_API_KEY – nicht gesendet.\n  An: ${an}\n  Betreff: ${betreff}\n-----\n${mailText(text)}${abmelden ? `\n\nAbmelden: ${abmelden}` : ''}\n-----`)
@@ -42,7 +44,7 @@ export async function sendeMail({ an, betreff, text, antwortAn, tags, abmelden, 
       to: [{ email: an }],
       subject: betreff,
       textContent: mailText(text) + (abmelden ? `\n\nAbmelden: ${abmelden}` : ''),
-      htmlContent: mailHtml(text, { basis: mailBasis(), abmelden, rubrik, grosserGruss, vorschau: betreff }),
+      ...(nurText ? {} : { htmlContent: mailHtml(text, { basis: mailBasis(), abmelden, rubrik, grosserGruss, vorschau: betreff }) }),
       ...(antwortAn ? { replyTo: { email: antwortAn } } : {}),
       ...(tags?.length ? { tags } : {}),
     },

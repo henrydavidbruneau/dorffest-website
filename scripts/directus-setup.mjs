@@ -305,7 +305,7 @@ const COLLECTIONS = [
     fields: [
       idField(),
       str('organisation', { required: true, width: 'half', max: 160, note: 'z.B. „Freiwillige Feuerwehr Königsdorf“' }),
-      str('ansprechperson', { width: 'half', max: 120, note: 'freiwillig – sonst „Hallo liebe Leute von …“' }),
+      str('ansprechperson', { width: 'half', max: 120, note: 'freiwillig, nur für uns' }),
       email('email', { required: true }),
       bool('aktiv', { def: true, note: 'aus = bekommt vorerst keine Rundmails' }),
       text('notiz', { note: 'intern' }),
