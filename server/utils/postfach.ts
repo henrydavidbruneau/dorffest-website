@@ -11,7 +11,6 @@ import { ImapFlow } from 'imapflow'
 import { simpleParser } from 'mailparser'
 import nodemailer from 'nodemailer'
 import MailComposer from 'nodemailer/lib/mail-composer'
-import sanitizeHtml from 'sanitize-html'
 
 export type Ordner = 'eingang' | 'gesendet'
 
@@ -202,7 +201,20 @@ export const anhangUrl = (ordner: Ordner, uid: number, nr: number) => `/api/vere
 
 const cidSchluessel = (cid: string) => cid.trim().replace(/^<|>$/g, '').toLowerCase()
 
-function bereinigeHtml(html: string, cidZuUrl: (cid: string) => string | null): string {
+/** null, wenn das Bereinigen scheitert – dann zeigt das Vereinsheim die Mail als Text statt eines Fehlers */
+async function bereinigeHtml(html: string, cidZuUrl: (cid: string) => string | null): Promise<string | null> {
+  try {
+    // erst hier laden: geht dabei etwas schief, bleibt der Rest des Postfachs (und der Website) heil
+    const { default: sanitizeHtml } = await import('sanitize-html')
+    return bereinige(sanitizeHtml, html, cidZuUrl)
+  }
+  catch (e) {
+    console.error('[postfach] HTML nicht bereinigt:', (e as Error).message)
+    return null
+  }
+}
+
+function bereinige(sanitizeHtml: typeof import('sanitize-html'), html: string, cidZuUrl: (cid: string) => string | null): string {
   return sanitizeHtml(html, {
     allowedTags: [
       ...sanitizeHtml.defaults.allowedTags,
@@ -275,7 +287,7 @@ export async function ladeMail(ordner: Ordner, uid: number): Promise<PostMail> {
     })
     const imText = new Set<number>()
     const html = typeof m.html === 'string' && m.html.trim()
-      ? bereinigeHtml(m.html.slice(0, HTML_GRENZE), (cid) => {
+      ? await bereinigeHtml(m.html.slice(0, HTML_GRENZE), (cid) => {
           const nr = cids.get(cidSchluessel(cid))
           if (nr === undefined) return null
           imText.add(nr)
