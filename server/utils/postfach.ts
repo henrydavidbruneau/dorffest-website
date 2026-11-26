@@ -11,6 +11,7 @@ import { ImapFlow } from 'imapflow'
 import { simpleParser } from 'mailparser'
 import nodemailer from 'nodemailer'
 import MailComposer from 'nodemailer/lib/mail-composer'
+import sanitizeHtml from 'sanitize-html'
 
 export type Ordner = 'eingang' | 'gesendet'
 
@@ -29,9 +30,25 @@ export interface MailKopf {
   beantwortet: boolean
 }
 
+export interface PostAnhang {
+  /** Nummer in der Mail (für /api/vereinsheim/post/:uid/anhang/:nr) */
+  nr: number
+  name: string
+  groesse: number
+  typ: string
+  /** steckt als Bild im HTML-Text (cid:) – nicht nochmal unten zeigen */
+  imText: boolean
+  /** zu groß für eine Netlify-Antwort (≈6 MB inkl. Base64) – dann übers Webmail */
+  zuGross: boolean
+}
+
 export interface PostMail extends MailKopf {
   text: string
-  anhaenge: { name: string, groesse: number }[]
+  /** bereinigtes HTML (ohne Skripte, Formulare …), null bei reinen Textmails */
+  html: string | null
+  /** HTML lädt Bilder von fremden Servern (erst nach Klick, wegen Zählpixeln) */
+  externeBilder: boolean
+  anhaenge: PostAnhang[]
   references: string[]
   /** alle Adressen aus An bzw. Kopie (z.B. „Nochmal schreiben“ aus Gesendet) */
   anAdressen: string[]
@@ -172,6 +189,71 @@ export async function ladePost(ordner: Ordner = 'eingang', anzahl = 30, frisch =
   return mails.slice(0, anzahl)
 }
 
+// ---------- HTML-Mails ----------
+// Das HTML wird hier bereinigt (keine Skripte, Formulare, eingebetteten Seiten) und im Browser zusätzlich
+// in einem abgeschotteten iframe ohne Skripte gezeigt. Bilder aus der Mail selbst (cid:) kommen über die
+// Anhang-Route; Bilder von fremden Servern blockt das iframe, bis man sie freigibt (Zählpixel).
+
+const HTML_GRENZE = 400_000
+/** Netlify-Funktionen antworten mit höchstens ~6 MB (Binärdaten als Base64) */
+export const ANHANG_GRENZE = 4_300_000
+
+export const anhangUrl = (ordner: Ordner, uid: number, nr: number) => `/api/vereinsheim/post/${uid}/anhang/${nr}?ordner=${ordner}`
+
+const cidSchluessel = (cid: string) => cid.trim().replace(/^<|>$/g, '').toLowerCase()
+
+function bereinigeHtml(html: string, cidZuUrl: (cid: string) => string | null): string {
+  return sanitizeHtml(html, {
+    allowedTags: [
+      ...sanitizeHtml.defaults.allowedTags,
+      'img', 'style', 'center', 'font', 'span', 'div', 'u', 's', 'strike', 'small', 'big', 'sub', 'sup', 'hr', 'br',
+      'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th', 'caption', 'colgroup', 'col',
+    ],
+    // Mails stecken ihr Layout in style-Attribute und <style>; im iframe ohne Skripte ist das harmlos
+    allowVulnerableTags: true,
+    allowedAttributes: {
+      '*': ['style', 'class', 'align', 'valign', 'width', 'height', 'bgcolor', 'color', 'dir', 'lang', 'title'],
+      'a': ['href', 'name', 'target', 'rel'],
+      'img': ['src', 'alt', 'width', 'height', 'border'],
+      'font': ['face', 'size', 'color'],
+      'table': ['border', 'cellpadding', 'cellspacing', 'background'],
+      'td': ['colspan', 'rowspan', 'nowrap', 'background'],
+      'th': ['colspan', 'rowspan', 'nowrap', 'background'],
+      'col': ['span'],
+      'colgroup': ['span'],
+    },
+    allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+    allowedSchemesByTag: { img: ['http', 'https', 'data'] },
+    allowProtocolRelative: false,
+    transformTags: {
+      a: (tagName, attribs) => ({ tagName, attribs: { ...attribs, target: '_blank', rel: 'noopener noreferrer' } }),
+      img: (tagName, attribs) => {
+        const src = attribs.src ?? ''
+        if (/^cid:/i.test(src)) {
+          const url = cidZuUrl(src.slice(4))
+          return url ? { tagName, attribs: { ...attribs, src: url } } : { tagName, attribs: { ...attribs, src: '' } }
+        }
+        return { tagName, attribs }
+      },
+    },
+  })
+}
+
+/** lädt das HTML Bilder (oder Hintergründe) von fremden Servern? */
+const hatExterneBilder = (html: string) => /<img[^>]+src="https?:|url\(\s*['"]?https?:|background="https?:/i.test(html)
+
+/** einen Anhang einer Mail holen (für die Anhang-Route) */
+export async function ladeAnhang(ordner: Ordner, uid: number, nr: number) {
+  return verbinden(imap => mitOrdner(imap, ordner, false, async () => {
+    const n = await imap.fetchOne(String(uid), { uid: true, source: true }, { uid: true })
+    if (!n || !n.source) throw fail(404, 'mail', 'Diese Mail gibt es nicht (mehr).')
+    const m = await simpleParser(n.source, { skipImageLinks: true, skipTextToHtml: true })
+    const a = m.attachments[nr]
+    if (!a) throw fail(404, 'anhang', 'Diesen Anhang gibt es nicht (mehr).')
+    return { name: a.filename ?? `anhang-${nr + 1}`, typ: a.contentType || 'application/octet-stream', inhalt: a.content }
+  }))
+}
+
 export async function ladeMail(ordner: Ordner, uid: number): Promise<PostMail> {
   const schluessel = `${ordner}:${uid}`
   const gemerkt = mailSpeicher.get(schluessel)
@@ -179,10 +261,27 @@ export async function ladeMail(ordner: Ordner, uid: number): Promise<PostMail> {
   const mail = await verbinden(imap => mitOrdner(imap, ordner, false, async () => {
     const n = await imap.fetchOne(String(uid), { uid: true, source: true, flags: true }, { uid: true })
     if (!n || !n.source) throw fail(404, 'mail', 'Diese Mail gibt es nicht (mehr).')
-    const m = await simpleParser(n.source)
+    // skipImageLinks: cid-Bilder nicht als riesige data:-URLs einbetten, die biegen wir selbst auf die Anhang-Route
+    const m = await simpleParser(n.source, { skipImageLinks: true, skipTextToHtml: true })
     const von = m.from?.value[0]
     const text = m.text?.trim()
-      || (typeof m.html === 'string' ? m.html.replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim() : '')
+      || (typeof m.html === 'string' ? m.html.replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<a\s[^>]*href="(https?:[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, (_, url, inhalt) => `${inhalt} (${url})`).replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|tr|h[1-6])>/gi, '\n\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim() : '')
+
+    // Anhänge, die als Bild im HTML stecken (cid:)
+    const cids = new Map<string, number>()
+    m.attachments.forEach((a, nr) => {
+      if (a.contentId) cids.set(cidSchluessel(a.contentId), nr)
+      if (a.cid) cids.set(cidSchluessel(a.cid), nr)
+    })
+    const imText = new Set<number>()
+    const html = typeof m.html === 'string' && m.html.trim()
+      ? bereinigeHtml(m.html.slice(0, HTML_GRENZE), (cid) => {
+          const nr = cids.get(cidSchluessel(cid))
+          if (nr === undefined) return null
+          imText.add(nr)
+          return anhangUrl(ordner, uid, nr)
+        })
+      : null
     const references = Array.isArray(m.references) ? m.references : m.references ? [m.references] : []
     const liste = (feld: typeof m.to) => (Array.isArray(feld) ? feld : feld ? [feld] : []).flatMap(f => f.value.map(v => v.address ?? '')).filter(Boolean)
     const absender = normalAdresse(m.replyTo?.value[0]?.address ?? von?.address ?? '')
@@ -209,7 +308,9 @@ export async function ladeMail(ordner: Ordner, uid: number): Promise<PostMail> {
       gelesen: n.flags?.has('\\Seen') ?? false,
       beantwortet: n.flags?.has('\\Answered') ?? false,
       text: text.slice(0, 50_000),
-      anhaenge: m.attachments.map(a => ({ name: a.filename ?? 'Anhang', groesse: a.size })),
+      html,
+      externeBilder: html ? hatExterneBilder(html) : false,
+      anhaenge: m.attachments.map((a, nr) => ({ nr, name: a.filename ?? (a.contentType?.startsWith('image/') ? 'Bild' : 'Anhang'), groesse: a.size, typ: a.contentType || 'application/octet-stream', imText: imText.has(nr), zuGross: a.size > ANHANG_GRENZE })),
       messageId: m.messageId ?? null,
       references,
       anAdressen: liste(m.to),

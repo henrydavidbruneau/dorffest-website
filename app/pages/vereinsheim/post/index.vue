@@ -314,7 +314,6 @@ function wann(iso: string) {
   return Date.now() - Date.parse(iso) < 86_400_000 ? uhrzeit(iso) : tagMonat(iso)
 }
 
-const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1000))} KB`)
 </script>
 
 <template>
@@ -460,12 +459,7 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
               </ul>
 
             </header>
-            <div class="post__text">{{ offen.text || '(kein Text)' }}</div>
-            <p v-if="offen.anhaenge.length" class="post__anhaenge">
-              📎 {{ offen.anhaenge.map(a => `${a.name} (${kb(a.groesse)})`).join(' · ') }} –
-              <a v-if="data?.webmail" :href="data.webmail" target="_blank" rel="noopener">Anhänge im Webmail öffnen</a>
-              <template v-else>Anhänge im Webmail öffnen</template>
-            </p>
+            <VereinsheimMailInhalt :mail="offen" :ordner="offenOrdner" :webmail="data?.webmail" />
           </article>
 
           <p v-else class="post__hinweis">Mail links auswählen oder eine neue schreiben.</p>
@@ -654,18 +648,6 @@ const kb = (b: number) => (b > 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : 
 
 .post__beantwortet {
   color: var(--farbe-orange-text);
-}
-
-.post__text {
-  margin-top: var(--abstand-m);
-  padding-top: var(--abstand-m);
-  border-top: 1px solid var(--vh-rand);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.post__anhaenge {
-  font-size: var(--groesse-xs);
 }
 
 .post__kopfzeile {
